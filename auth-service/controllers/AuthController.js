@@ -85,7 +85,7 @@ const Register = async (req, res) => {
         lastName,
         userName
     } = req.body;
-
+    console.log(req.body)
     const encypted_password = await Bcrypt.hash(password, saltRounds);
 
     try {
