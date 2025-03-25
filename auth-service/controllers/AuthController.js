@@ -88,27 +88,29 @@ const Register = async (req, res) => {
     console.log(req.body)
     const encypted_password = await Bcrypt.hash(password, saltRounds);
 
-    try {
-        const user = new TempUserModel({
-            email,
-            phoneNumber,
-            address,
-            password: encypted_password,
-            firstName,
-            lastName,
-            userName,
-            status: "Pending verification"
-        })
-        user.save();
-        const module = await generateOTP(user._id, "registered by");
-        // await SendMail(user.email, "opt", "your otp is " + module);
-        const token = generateToken(user);
-        return (
-            res.json(reply.success(Lang.LOGIN_SUCCESS, { token }))
-        )
-    } catch (err) {
-        return res.json(err)
-    }
+    console.log(req.body)
+
+    // try {
+    //     const user = new TempUserModel({
+    //         email,
+    //         phoneNumber,
+    //         address,
+    //         password: encypted_password,
+    //         firstName,
+    //         lastName,
+    //         userName,
+    //         status: "Pending verification"
+    //     })
+    //     user.save();
+    //     const module = await generateOTP(user._id, "registered by");
+    //     // await SendMail(user.email, "opt", "your otp is " + module);
+    //     const token = generateToken(user);
+    //     return (
+    //         res.json(reply.success(Lang.LOGIN_SUCCESS, { token }))
+    //     )
+    // } catch (err) {
+    //     return res.json(err)
+    // }
 }
 
 const handleteam = async (req, res) => {

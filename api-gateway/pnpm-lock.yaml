@@ -17,6 +17,9 @@ importers:
       express-http-proxy:
         specifier: ^2.1.1
         version: 2.1.1
+      kafkajs:
+        specifier: ^2.2.4
+        version: 2.2.4
       pm2:
         specifier: ^5.4.3
         version: 5.4.3
@@ -454,6 +457,10 @@ packages:
 
   json-stringify-safe@5.0.1:
     resolution: {integrity: sha512-ZClg6AaYvamvYEE82d3Iyd3vSSIjQ+odgjaTzRuO3s7toCdFKczob2i0zCh7JE8kWn17yvAWhUVxvqGwUalsRA==}
+
+  kafkajs@2.2.4:
+    resolution: {integrity: sha512-j/YeapB1vfPT2iOIUn/vxdyKEuhuY2PxMBvf5JWux6iSaukAccrMtXEY/Lb7OvavDhOWME589bpLrEdnVHjfjA==}
+    engines: {node: '>=14.0.0'}
 
   lazy@1.0.11:
     resolution: {integrity: sha512-Y+CjUfLmIpoUCCRl0ub4smrYtGGr5AOa2AKOaWelGHOGz33X/Y/KizefGqbkwfz44+cnq/+9habclf8vOmu2LA==}
@@ -1261,6 +1268,8 @@ snapshots:
 
   json-stringify-safe@5.0.1:
     optional: true
+
+  kafkajs@2.2.4: {}
 
   lazy@1.0.11: {}
 

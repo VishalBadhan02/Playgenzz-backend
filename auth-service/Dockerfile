@@ -4,11 +4,11 @@ FROM node:18
 # 2️⃣ Set working directory
 WORKDIR /app
 
-# 3️⃣ Copy package.json and pnpm-lock.yaml
+# 3️⃣ Copy package.json and pnpm-lock.yaml (ensures better caching)
 COPY package.json pnpm-lock.yaml ./
 
-# 4️⃣ Install dependencies
-RUN npm install -g pnpm && pnpm install
+# 4️⃣ Enable corepack and install dependencies with pnpm
+RUN corepack enable && pnpm install --frozen-lockfile
 
 # 5️⃣ Copy all source code
 COPY . .

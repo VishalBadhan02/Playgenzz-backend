@@ -5,6 +5,12 @@ const proxy = require('express-http-proxy');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Log incoming requests
+app.use((req, res, next) => {
+    console.log(`Incoming Request: ${req.method} ${req.url}`);
+    next();
+});
+
 // Dynamically Load Microservice URLs
 const services = {
     auth: process.env.AUTH_SERVICE_URL,
@@ -17,18 +23,48 @@ const services = {
     notification: process.env.NOTIFICATION_SERVICE_URL
 };
 
-// Forward requests to microservices
-app.use('/auth', proxy(services.auth));
-app.use('/user', proxy(services.user));
-app.use('/tournament', proxy(services.tournament));
-app.use('/product', proxy(services.product));
-app.use('/scoring', proxy(services.scoring));
-app.use('/team', proxy(services.team));
-app.use('/venue', proxy(services.venue));
-app.use('/notifications', proxy(services.notification));
+// Validate all services are defined
+Object.entries(services).forEach(([key, value]) => {
+    if (!value) {
+        console.error(`Missing environment variable for ${key.toUpperCase()}_SERVICE_URL`);
+        process.exit(1);
+    }
+});
 
+// Log resolved services
+console.log("Resolved Services:");
+console.table(services);
+
+// Log proxying
+const proxyWithLogging = (target) => proxy(target, {
+    proxyReqPathResolver: (req) => {
+        const fullIncomingPath = req.originalUrl; // Logs full frontend request path (e.g., /auth/register)
+        const finalProxiedPath = req.url; // Logs only the path that will be forwarded to the microservice
+
+        console.log(`Incoming Request: ${req.method} ${fullIncomingPath}`);
+        console.log(`Proxying request to: ${target}${finalProxiedPath}`);
+
+        return fullIncomingPath;
+    },
+    proxyErrorHandler: (err, req, res, next) => {
+        console.error(`Proxy error for ${req.method} ${req.originalUrl}:`, err);
+        res.status(500).json({ error: "Proxy failed" });
+    }
+});
+
+
+// Forward requests to microservices
+app.use('/auth', proxyWithLogging(services.auth));
+app.use('/user', proxyWithLogging(services.user));
+app.use('/tournament', proxyWithLogging(services.tournament));
+app.use('/product', proxyWithLogging(services.product));
+app.use('/scoring', proxyWithLogging(services.scoring));
+app.use('/team', proxyWithLogging(services.team));
+app.use('/venue', proxyWithLogging(services.venue));
+app.use('/notifications', proxyWithLogging(services.notification));
+
+// Start server
 app.listen(PORT, () => {
     console.log(`API Gateway running on port ${PORT}`);
-    console.log(`Routing requests to:`);
     console.table(services);
 });
