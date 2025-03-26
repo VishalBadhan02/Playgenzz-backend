@@ -2,6 +2,8 @@ const UserModel = require("../models/user")
 const OTPModel = require("../models/otps")
 const moment = require("moment");
 const prisma = require("../prisma/prisma");
+const bcrypt = require("bcryptjs")
+const saltRounds = 16;
 // const reply = require('./reply');
 // const lang = require('../language/en');
 
@@ -14,21 +16,22 @@ const prisma = require("../prisma/prisma");
 //     return (check) ? true : false;
 // }
 
-
-const generateOTP = async (email, phone, tempUserId) => {
+// function to generate otp
+const generateOTP = async (email, phone, userId) => {
     // ✅ Ensures a 4-digit OTP
     const oneTimePassword = Math.floor(1000 + Math.random() * 9000).toString();
+    const hashedOTP = await bcrypt.hash(oneTimePassword.toString(), saltRounds); // 🔒 Hash OTP
 
     // ✅ Store OTP in PostgreSQL using Prisma
     const OTPModule = await prisma.oTP.create({
         data: {
             email: email || null, // If email exists, store it
             phone: phone || null, // If phone exists, store it
-            code: oneTimePassword, // ✅ Store hashed OTP
+            code: hashedOTP, // ✅ Store hashed OTP
             attempts: 0, // Initial attempt count
             isUsed: false, // OTP is not used yet
             expiresAt: moment().add(10, "minutes").toDate(), // ⏳ Expiry after 10 minutes
-            tempUserId: tempUserId || null, // Associate OTP with temp user
+            userId: userId || null, // Associate OTP with temp user
         }
     });
     if (!OTPModule) false;
@@ -36,39 +39,12 @@ const generateOTP = async (email, phone, tempUserId) => {
     return { otp: oneTimePassword, OTPModule }; // Returning plain OTP for sending via email/SMS
 };
 
-// const generateOTP = async (userId, comment) => {
-//     const oneTimePassword = Math.floor(Math.random(0) * (10000 - 999 + 1) + 999);
-//     const setoneTimePassword = oneTimePassword.toString();
-
-//     const OTPModule = new OTPModel();
-//     OTPModule.userId = userId;
-//     OTPModule.otp = setoneTimePassword;
-//     OTPModule.comment = comment;
-//     OTPModule.expiredate = moment(new Date()).add(10, 'minutes').toDate();
-//     OTPModule.save()
-//     return OTPModule;
-// }
-
-// const verifyOTP = async (userId, otp) => {
-//     const OTPRecord = await OTPModel.findOne({ userId: userId }).sort({ "createdAt": "desc" });
-//     if (OTPRecord.otp === otp) {
-//         return { status: true, msg: "otp verified successfully" }
-//     }
-//     if (!OTPRecord) {
-//         return { status: false, msg: "otp not found" }
-//     }
-
-// }
-
-
-const verifyOTP = async (emailOrPhone, enteredOTP) => {
+// this function only verify the otp
+const verifyOTP = async (userId, enteredOTP) => {
     // ✅ Find latest OTP by email or phone
     const storedOTP = await prisma.oTP.findFirst({
         where: {
-            OR: [
-                { email: emailOrPhone },
-                { phone: emailOrPhone }
-            ],
+            userId,
             isUsed: false // Only check unused OTPs
         },
         orderBy: { createdAt: "desc" }, // Get latest OTP
@@ -102,9 +78,41 @@ const verifyOTP = async (emailOrPhone, enteredOTP) => {
     return { success: true, message: "OTP verified successfully" };
 };
 
+const registerUser = async (id) => {
+    try {
+        const user = await prisma.tempUser.findUnique({ where: { id } });
+        if (!user) {
+            return { success: false, message: "User not found" };
+        }
+
+        // ✅ Store user in User table
+        const newUser = await prisma.user.create({
+            data: {
+                firstName: user.firstName,
+                lastName: user.lastName,
+                userName: user.userName,
+                email: user.email,
+                phoneNumber: user.phoneNumber,
+                password: user.password,
+                address: user.address,
+                status: "active",
+                userType: user.userType,
+            }
+        });
+
+        if (!newUser) {
+            return { success: false, message: "Failed to create user" };
+        }
+
+        return { success: true, message: "User registered successfully" };
+    } catch (error) {
+        return { success: false, message: error.message };
+    }
+}
+
 
 const handleUpdate = (user_id, value) => {
     const dd = new UserModel.updateOne(user_id, value);
 }
 
-module.exports = { generateOTP, verifyOTP }
+module.exports = { generateOTP, verifyOTP, registerUser }

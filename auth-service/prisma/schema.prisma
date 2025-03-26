@@ -28,8 +28,8 @@ model OTP {
   isUsed     Boolean   @default(false)
   expiresAt  DateTime
   createdAt  DateTime  @default(now())
-  tempUserId String?   @unique
-  tempUser   TempUser? @relation(fields: [tempUserId], references: [id])
+  userId     String?   @unique
+  tempUser   TempUser? @relation(fields: [userId], references: [id])
 }
 
 model TempUser {

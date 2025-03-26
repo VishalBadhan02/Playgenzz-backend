@@ -2,7 +2,7 @@ const Lang = {
     "TOURNAMENT_FETCHED": "Tournament fetched successfully",
     "TEAM_FOUND": "Teams fetched successfully",
     "HANDLE_SCORE_FAILS": "Error handling score",
-    "HANDLE_SCORE": "Score updated successfully",        
+    "HANDLE_SCORE": "Score updated successfully",
     "SCORE_FETCHED": "Score fetched successfully",
     "TOSS_PENDING": "Toss is pending yet",
     "TOURNAMENT_SUCCESS": "Tournament registered successfully",
@@ -17,7 +17,8 @@ const Lang = {
     "MATCHES_FETCHED": "Matches fetched successfully",
     "TEAM_NOT_FOUND": "You don't have any registered team",
     "TOURNAMENT_NOT_FOUND": "Tournament not found",
-    "MATCHES_FETCH_FAILED": "Matches fetch failed"
+    "MATCHES_FETCH_FAILED": "Matches fetch failed",
+    "REGISTER_FAILED": "Failed to register user",
 };
 
 module.exports = Lang;

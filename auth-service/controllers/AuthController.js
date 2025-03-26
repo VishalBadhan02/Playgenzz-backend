@@ -3,7 +3,7 @@ const reply = require('../helper/reply');
 const lang = require('../language/en');
 const { generateToken } = require('../services/JWT');
 const Lang = require('../language/en');
-const { generateOTP, verifyOTP } = require('../helper/index')
+const { generateOTP, verifyOTP, registerUser } = require('../helper/index')
 const SendMail = require('../services/mail')
 const Razorpay = require("razorpay")
 const Bcrypt = require("bcryptjs")
@@ -87,64 +87,66 @@ const Register = async (req, res) => {
         return res.status(400).json(reply.error("Missing required fields"));
     }
     console.log(req.body)
-    return res.json(reply.success("success", { token: "token", email: req.body.email, phoneNumber: req.body.phoneNumber }))
-    // ✅ Check for existing user (Prevent Duplicate Accounts)
-    // const existingUser = await prisma.tempUser.findFirst({
-    //     where: {
-    //         OR: [{ email }, { phoneNumber }]
-    //     }
-    // });
 
-    // if (existingUser) {
-    //     return res.status(409).json(reply.failure("User already exists"));
-    // }
+    // ✅ Check for existing user (Prevent Duplicate Accounts)
+    const existingUser = await prisma.tempUser.findFirst({
+        where: {
+            OR: [{ email }, { phoneNumber }]
+        }
+    });
+
+    if (existingUser) {
+        return res.status(409).json(reply.failure("User already exists"));
+    }
 
     // // ✅ Hash password securely
-    // const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
 
-    // try {
-    //     // ✅ Store user in TempUser table
-    //     const user = await prisma.tempUser.create({
-    //         data: {
-    //             firstName,
-    //             lastName,
-    //             userName,
-    //             email,
-    //             phoneNumber,
-    //             password: hashedPassword,
-    //             address,
-    //             status: "pending",
-    //             userType: userType || "user", // Default to 'user'
-    //             expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-    //         }
-    //     });
+    try {
+        // ✅ Store user in TempUser table
+        const user = await prisma.tempUser.create({
+            data: {
+                firstName,
+                lastName,
+                userName,
+                email,
+                phoneNumber,
+                password: hashedPassword,
+                address,
+                status: "pending",
+                userType: userType || "user", // Default to 'user'
+                expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+            }
+        });
 
-    //     if (!user) {
-    //         return res.status(500).json(reply.failure("Failed to create user"));
-    //     }
+        if (!user) {
+            return res.status(500).json(reply.failure("Failed to create user"));
+        }
 
-    //     // Generate OTP
-    //     const module = await generateOTP(user.email, user.phoneNumber, user.id);
+        // Generate OTP
+        const module = await generateOTP(user.email, user.phoneNumber, user.id);
 
-    //     if (!module) {
-    //         return res.status(500).json(reply.failure("Failed to generate OTP"));
-    //     }
-    //     // Send OTP via Email or SMS
-    //     // await SendMail(user.email, "opt", "your otp is " + module);
+        console.log(module.otp)
 
-    //     // Generate JWT Token
-    //     const token = await generateToken({ id: user.id, email: user.email, userType: user.userType });
-    //     if (!token) {
-    //         return res.status(500).json(reply.failure("Failed to generate token"));
-    //     }
+        if (!module) {
+            return res.status(500).json(reply.failure("Failed to generate OTP"));
+        }
+        // Send OTP via Email or SMS
+        // await SendMail(user.email, "opt", "your otp is " + module);
 
-    //     return (
-    //         res.status(202).json(reply.success(Lang.LOGIN_SUCCESS, { token, email: user.email, phoneNumber: req.body.phoneNumber }))
-    //     )
-    // } catch (err) {
-    //     return res.status(500).json(reply.failure(err.message));
-    // }
+        // Generate JWT Token
+        const token = await generateToken({ id: user.id, email: user.email, userType: user.userType });
+        if (!token) {
+            return res.status(500).json(reply.failure("Failed to generate token"));
+        }
+
+        return (
+            res.status(202).json(reply.success(Lang.LOGIN_SUCCESS, { token, email: user.email, phoneNumber: req.body.phoneNumber }))
+        )
+    } catch (err) {
+        return res.status(500).json(reply.failure(err.message));
+    }
 }
 
 const handleteam = async (req, res) => {
@@ -156,29 +158,23 @@ const handleteam = async (req, res) => {
     }
 }
 
+
+
 const handleOTpverification = async (req, res) => {
     try {
         const { otp } = req.body;
-        console.log("res.body")
-
-        const isverified = await verifyOTP(req.user._id, otp);
-        const check = await OTPModel.findOne({ userId: req.user._id })
-        let count = 1;
+        const isverified = await verifyOTP(req.user.id, otp);
 
         if (!isverified) {
-            if (check.attempt) {
-                let count = check.attempt;
-                if (count === 4) {
-                    const isverified = await TempUserModel.findOneAndDelete({ userId: req.user._id })
-                    return res.json(reply.failure({ msg: lang.ACCOUNT_DELETED, attempt: 0 }))
-                }
-                count++
-                await OTPModel.findOneAndUpdate({ userId: req.user._id }, { $set: { attempt: count } })
-                return res.json(reply.failure({ msg: lang.WRONG_OTP, attempt: 3 }))
-            }
-            const isverified = await OTPModel.findOneAndUpdate({ userId: req.user._id }, { $set: { attempt: count } })
-            return res.json(reply.failure({ msg: lang.WRONG_OTP, attempt: 3 - check.attempt }))
+            return res.json(reply.failure(lang.WRONG_OTP))
         }
+
+        const registerUser = registerUser(req.user.id);
+
+        if (!registerUser) {
+            return res.json(reply.failure(lang.REGISTER_FAILED))
+        }
+
         return res.json(reply.success(lang.OTP_VERIFIED, req.body.type))
     } catch (error) {
         return res.json("error in otp verification", error)
