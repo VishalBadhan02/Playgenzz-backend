@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const proxy = require('express-http-proxy');
+const verifyJWT = require('./middlewares/verifyJWT');
 
 const app = express();
 const PORT = process.env.PORT || 5000;

@@ -88,13 +88,10 @@ const registerUser = async (id) => {
         // ✅ Store user in User table
         const newUser = await prisma.user.create({
             data: {
-                firstName: user.firstName,
-                lastName: user.lastName,
-                userName: user.userName,
+                name: user.userName,
                 email: user.email,
                 phoneNumber: user.phoneNumber,
                 password: user.password,
-                address: user.address,
                 status: "active",
                 userType: user.userType,
             }

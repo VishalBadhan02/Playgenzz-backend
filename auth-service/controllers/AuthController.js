@@ -32,7 +32,7 @@ const login = async (req, res) => {
             return res.json(reply.failure(lang.PASSWORD_NOTFOUND))
         }
 
-        const module = await generateOTP(user._id, "otp for login");
+        const module = await generateOTP(user.id, "otp for login");
 
         // await SendMail(user.email, "opt", "Otp for login " + module.otp);
 
@@ -47,36 +47,36 @@ const login = async (req, res) => {
     }
 }
 
-const verifyUser = async (req, res) => {
-    try {
-        const tempUser = await TempUserModel.findOne({ _id: req.user._id })
-        const email = tempUser.email
-        const phoneNumber = tempUser.phoneNumber
-        const address = tempUser.address
-        const password = tempUser.password
-        const firstName = tempUser.firstName
-        const lastName = tempUser.lastName
-        const userName = tempUser.userName
+// const verifyUser = async (req, res) => {
+//     try {
+//         const tempUser = await TempUserModel.findOne({ _id: req.user._id })
+//         const email = tempUser.email
+//         const phoneNumber = tempUser.phoneNumber
+//         const address = tempUser.address
+//         const password = tempUser.password
+//         const firstName = tempUser.firstName
+//         const lastName = tempUser.lastName
+//         const userName = tempUser.userName
 
-        const user = new UserModel({
-            email,
-            phoneNumber,
-            address,
-            password,
-            firstName,
-            lastName,
-            userName,
-            status: "Verified"
+//         const user = new UserModel({
+//             email,
+//             phoneNumber,
+//             address,
+//             password,
+//             firstName,
+//             lastName,
+//             userName,
+//             status: "Verified"
 
-        })
-        user.save();
-        await TempUserModel.findOneAndDelete({ _id: req.user._id })
-        const token = generateToken(user);
-        return res.json(reply.success(lang.REGISTER_SUCCESFULLY, { token }))
-    } catch (error) {
-        return res.json(reply.failure(error.message));
-    }
-}
+//         })
+//         user.save();
+//         await TempUserModel.findOneAndDelete({ _id: req.user._id })
+//         const token = generateToken(user);
+//         return res.json(reply.success(lang.REGISTER_SUCCESFULLY, { token }))
+//     } catch (error) {
+//         return res.json(reply.failure(error.message));
+//     }
+// }
 
 const Register = async (req, res) => {
     //Extract user data safely
@@ -206,4 +206,4 @@ const createOrder = async (ammout, currency = "IND") => {
 }
 
 
-module.exports = { login, Register, handleOTpverification, handleforgot, handleteam, verifyUser }
+module.exports = { login, Register, handleOTpverification, handleforgot, handleteam }
