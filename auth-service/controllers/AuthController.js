@@ -12,10 +12,13 @@ const saltRounds = 16;
 // const { TeamModel } = require("../models/team");
 const OTPModel = require('../models/otps');
 const TempUserModel = require('../models/tempUser');
+const { default: pr } = require('../prisma/prisma')
+const { PrismaClient } = require("@prisma/client");
+const prisma = require('../prisma/prisma');
 
 const login = async (req, res) => {
     const { password, email } = req.body;
-    // console.log(req.body)
+    console.log(req.body)
     try {
         const user = await UserModel.findOne({ email });
 
@@ -76,40 +79,71 @@ const verifyUser = async (req, res) => {
 }
 
 const Register = async (req, res) => {
-    const {
-        email,
-        phoneNumber,
-        address,
-        password,
-        firstName,
-        lastName,
-        userName
-    } = req.body;
-    console.log(req.body)
-    const encypted_password = await Bcrypt.hash(password, saltRounds);
+    //Extract user data safely
+    const { firstName, lastName, userName, email, phoneNumber, password, address, userType } = req.body;
 
+    // Input Validation (Prevent Empty Fields)
+    if (!firstName || !lastName || !email || !password || !address) {
+        return res.status(400).json(reply.error("Missing required fields"));
+    }
     console.log(req.body)
+    return res.json(reply.success("success", { token: "token", email: req.body.email, phoneNumber: req.body.phoneNumber }))
+    // ✅ Check for existing user (Prevent Duplicate Accounts)
+    // const existingUser = await prisma.tempUser.findFirst({
+    //     where: {
+    //         OR: [{ email }, { phoneNumber }]
+    //     }
+    // });
+
+    // if (existingUser) {
+    //     return res.status(409).json(reply.failure("User already exists"));
+    // }
+
+    // // ✅ Hash password securely
+    // const hashedPassword = await bcrypt.hash(password, saltRounds);
+
 
     // try {
-    //     const user = new TempUserModel({
-    //         email,
-    //         phoneNumber,
-    //         address,
-    //         password: encypted_password,
-    //         firstName,
-    //         lastName,
-    //         userName,
-    //         status: "Pending verification"
-    //     })
-    //     user.save();
-    //     const module = await generateOTP(user._id, "registered by");
+    //     // ✅ Store user in TempUser table
+    //     const user = await prisma.tempUser.create({
+    //         data: {
+    //             firstName,
+    //             lastName,
+    //             userName,
+    //             email,
+    //             phoneNumber,
+    //             password: hashedPassword,
+    //             address,
+    //             status: "pending",
+    //             userType: userType || "user", // Default to 'user'
+    //             expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    //         }
+    //     });
+
+    //     if (!user) {
+    //         return res.status(500).json(reply.failure("Failed to create user"));
+    //     }
+
+    //     // Generate OTP
+    //     const module = await generateOTP(user.email, user.phoneNumber, user.id);
+
+    //     if (!module) {
+    //         return res.status(500).json(reply.failure("Failed to generate OTP"));
+    //     }
+    //     // Send OTP via Email or SMS
     //     // await SendMail(user.email, "opt", "your otp is " + module);
-    //     const token = generateToken(user);
+
+    //     // Generate JWT Token
+    //     const token = await generateToken({ id: user.id, email: user.email, userType: user.userType });
+    //     if (!token) {
+    //         return res.status(500).json(reply.failure("Failed to generate token"));
+    //     }
+
     //     return (
-    //         res.json(reply.success(Lang.LOGIN_SUCCESS, { token }))
+    //         res.status(202).json(reply.success(Lang.LOGIN_SUCCESS, { token, email: user.email, phoneNumber: req.body.phoneNumber }))
     //     )
     // } catch (err) {
-    //     return res.json(err)
+    //     return res.status(500).json(reply.failure(err.message));
     // }
 }
 

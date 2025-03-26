@@ -22,26 +22,28 @@ services:
       - "4001:4001"
     depends_on:
       - postgres
+    volumes:
+      - ./auth-service:/app # Mounts local directory into the container
     environment:
       - "postgresql://vishal:playgenz@my_postgres:5432/auth_db"
-  # user-service:
-  #   build: ./user-service
-  #   ports:
-  #     - "4002:4002"
-  #   depends_on:
-  #     - db
-  #   environment:
-  #     - DATABASE_URL=postgres://user:password@db:5432/userdb
+    # user-service:
+    #   build: ./user-service
+    #   ports:
+    #     - "4002:4002"
+    #   depends_on:
+    #     - db
+    #   environment:
+    #     - DATABASE_URL=postgres://user:password@db:5432/userdb
 
-  # db:
-  #   image: postgres:15
-  #   restart: always
-  #   environment:
-  #     POSTGRES_USER: user
-  #     POSTGRES_PASSWORD: password
-  #     POSTGRES_DB: main_db
-  #   ports:
-  #     - "5432:5432"
+    # db:
+    #   image: postgres:15
+    #   restart: always
+    #   environment:
+    #     POSTGRES_USER: user
+    #     POSTGRES_PASSWORD: password
+    #     POSTGRES_DB: main_db
+    #   ports:
+    #     - "5432:5432"
 
 volumes:
   postgres_data: # <-- This defines a persistent volume
