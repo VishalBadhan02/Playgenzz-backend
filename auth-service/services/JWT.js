@@ -23,6 +23,7 @@ const generateToken = (user) => {
 const verifyJWT = (req, res, next) => {
     const token = req?.headers?.authorization;
     if (!token) {
+        console.log("here", token);
         return res.json({ status: false, msg: "Token not verified" })
     }
 

@@ -5,7 +5,7 @@ const { verifyJWT } = require('../services/JWT');
 
 router.post("/login", AuthController.login);
 router.post("/register", AuthController.Register);
-router.post("/otpverify", AuthController.handleOTpverification);
+router.post("/otpverify", verifyJWT, AuthController.handleOTpverification);
 
 router.put("/setpassword", AuthController.handleforgot);
 

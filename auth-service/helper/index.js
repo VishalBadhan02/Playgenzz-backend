@@ -2,7 +2,8 @@ const UserModel = require("../models/user")
 const OTPModel = require("../models/otps")
 const moment = require("moment");
 const prisma = require("../prisma/prisma");
-const bcrypt = require("bcryptjs")
+const bcrypt = require("bcryptjs");
+const { generateToken } = require("../services/JWT");
 const saltRounds = 16;
 // const reply = require('./reply');
 // const lang = require('../language/en');
@@ -90,7 +91,6 @@ const registerUser = async (id) => {
             data: {
                 name: user.userName,
                 email: user.email,
-                phoneNumber: user.phoneNumber,
                 password: user.password,
                 status: "active",
                 userType: user.userType,
@@ -101,8 +101,17 @@ const registerUser = async (id) => {
             return { success: false, message: "Failed to create user" };
         }
 
-        return { success: true, message: "User registered successfully" };
+        await prisma.tempUser.delete({
+            where: {
+                id: user.id
+            }
+        });
+
+        const token = await generateToken(newUser); // Generate
+
+        return { success: true, token };
     } catch (error) {
+        console.error("Failed to register user", error);
         return { success: false, message: error.message };
     }
 }

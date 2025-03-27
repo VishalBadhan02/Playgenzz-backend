@@ -86,7 +86,6 @@ const Register = async (req, res) => {
     if (!firstName || !lastName || !email || !password || !address) {
         return res.status(400).json(reply.error("Missing required fields"));
     }
-    console.log(req.body)
 
     // ✅ Check for existing user (Prevent Duplicate Accounts)
     const existingUser = await prisma.tempUser.findFirst({
@@ -100,8 +99,7 @@ const Register = async (req, res) => {
     }
 
     // // ✅ Hash password securely
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
+    const hashedPassword = await Bcrypt.hash(password, saltRounds);
 
     try {
         // ✅ Store user in TempUser table
@@ -145,6 +143,7 @@ const Register = async (req, res) => {
             res.status(202).json(reply.success(Lang.LOGIN_SUCCESS, { token, email: user.email, phoneNumber: req.body.phoneNumber }))
         )
     } catch (err) {
+        console.log(err)
         return res.status(500).json(reply.failure(err.message));
     }
 }
@@ -169,14 +168,15 @@ const handleOTpverification = async (req, res) => {
             return res.json(reply.failure(lang.WRONG_OTP))
         }
 
-        const registerUser = registerUser(req.user.id);
+        const registerUse = await registerUser(req.user.id);
 
-        if (!registerUser) {
+        if (!registerUse.success) {
             return res.json(reply.failure(lang.REGISTER_FAILED))
         }
 
-        return res.json(reply.success(lang.OTP_VERIFIED, req.body.type))
+        return res.json(reply.success(lang.OTP_VERIFIED, { token: registerUse.token }))
     } catch (error) {
+        console.log(error)
         return res.json("error in otp verification", error)
 
     }
