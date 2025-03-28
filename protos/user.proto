@@ -2,17 +2,61 @@ syntax = "proto3";
 
 package user;
 
+// The user service definition.
 service UserService {
-  rpc CreateUser (UserRequest) returns (UserResponse);
+  // Retrieves a user by ID.
+  rpc GetUser (GetUserRequest) returns (GetUserResponse);
+  // Creates a new user.
+  rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
 }
 
-message UserRequest {
-  string name = 1;
-  string email = 2;
-  string password = 3;
+// The request message containing the user ID.
+message GetUserRequest {
+  string user_id = 1;
 }
 
-message UserResponse {
-  string userId = 1;
-  string message = 2;
+// The response message containing the user details.
+message GetUserResponse {
+  User user = 1;
+}
+
+// The request message containing the user details for creation.
+message CreateUserRequest {
+  string firstName = 1;
+  string lastName = 10;
+  string authId = 2;
+  string userName = 4;
+  string phoneNumber = 5;
+  string email = 6;
+  Address address = 7;
+  string status = 8;
+  string userType = 9;
+}
+
+// The response message containing the created user's details.
+message CreateUserResponse {
+  User user = 1;
+}
+
+// The User message definition.
+message User {
+  string id = 1;
+  string first_name = 2;
+  string auth_id = 3;
+  string last_name = 4;
+  string user_name = 5;
+  string phone_number = 6;
+  string email = 7;
+  Address address = 8;
+  string status = 9;
+  string user_type = 10;
+}
+
+// The Address message definition.
+message Address {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+  string postal_code = 4;
+  string country = 5;
 }
