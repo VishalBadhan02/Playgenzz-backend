@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const UserRouter = require('./routes/user');
+const verifyJWT = require('./middlewares/verifyJWT');
 
 const app = express();
 const PORT = process.env.PORT || 4002;
@@ -20,7 +21,7 @@ mongoose.connect(process.env.DATABASE_URL, {
   .catch(err => console.error('❌ DB Connection Error:', err));
 
 // Routes
-app.use('/user', UserRouter);
+app.use('/user', verifyJWT, UserRouter);
 
 // Start Server
 app.listen(PORT, () => {
