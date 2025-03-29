@@ -1,5 +1,5 @@
 const UserModel = require("../models/user")
-const reply = require("../helper/reply");
+const reply = require("../helper/reply")
 // const Lang = require("../language/en")
 // const { CountryModel } = require("../model/country")
 // const { TournamentModel } = require("../model/tournament")
@@ -9,103 +9,82 @@ const reply = require("../helper/reply");
 // const { FriendModel } = require("../model/useFriends")
 // const { ProductModel } = require("../model/product")
 // const { AddTeamMemberModel } = require("../model/addTeamMember")
+// const TournamentTeamsModel = require("../model/tournamentEntry")
 // const { MessageModel } = require("../model/messages")
 // const { NotificationModel } = require("../model/notification")
 // const { ScheduledMatchModel } = require("../model/scheduledMatch")
 // const { setFriends, setTeams } = require("../utils/getFriend")
 // const WebSocket = require('ws');
 
-const registerUser = async (req, res) => {
-    try {
-        const { userName, email, phoneNumber, authId, address, lastName, firstName, userType } = req.body;
-        const user = new UserModel({
-            firstName,
-            authId,
-            lastName,
-            userName,
-            phoneNumber,
-            email,
-            address,
-            status: "active",
-            userType
-        });
-        await user.save();
-        console.log("User registered successfully")
-        return res.json(reply.success("User registered successfully", { _id: user._id, status: user.status, userName: user.userName, authId: user.authId }));
+
+
+const getProfile = async (req, res) => {
+    console.log("req.user")
+    return
+    let userId;
+
+    if (req.params.id) {
+        userId = req.params.id;
+    } else {
+        userId = req.user?.id;
     }
-    catch (err) {
-        console.log("Error handling the user registration", err.message)
-        return res.status(500).json({ error: err.message });
+
+    try {
+        const user = await UserModel.findOne({ _id: userId });
+
+        if (!user) {
+            // const team = await TeamModel.findOne({ _id: userId });
+
+            // if (!team) {
+            //     return res.status(404).json(reply.failure("User does not exist"));
+            // }
+            return res.json(reply.success("team", "team"));
+
+        }
+
+        // Fetch teams created by the user
+        // const teams = await TeamModel.find({ user_id: userId });
+
+        // // Extract teamIds from the user's teams
+        // const teamIds = teams.map(team => team._id);
+
+        // // Find other teams where the user is a member, excluding their own teams
+        // const filteredTeams = await AddTeamMemberModel.find({
+        //     teamId: { $nin: teamIds },
+        //     playerId: userId
+        // });
+
+        // // Initialize user.otherTeams if not already initialized
+        // user.otherTeams = [];
+
+        // // Fetch data for teams where the user is a member but not the owner
+        // const otherTeamsWithDetails = await Promise.all(filteredTeams.map(async (team) => {
+        //     const teamData = await TeamModel.findOne({ _id: team.teamId });
+        //     const membersCount = await AddTeamMemberModel.countDocuments({ teamId: team.teamId });
+        //     return { ...teamData.toObject(), status: team.status, members: membersCount };
+        // }));
+
+        // user.otherTeams.push(...otherTeamsWithDetails);
+
+        // // Fetch team members count for each team in parallel
+        // const teamsWithMembers = await Promise.all(teams.map(async (team) => {
+        //     const membersCount = await AddTeamMemberModel.countDocuments({ teamId: team._id });
+        //     return { ...team.toObject(), members: membersCount };
+        // }));
+
+        // //fetching friends of user
+        // const friends = await setFriends(userId);
+
+        // // Add the teams with members to the user object
+        // user.userTeams = teamsWithMembers;
+        // user.friends = friends
+
+        return res.status(200).json(reply.success("Profile fetched successfully", user));
+    } catch (err) {
+        console.log("kjsdn")
+        return res.status(500).json(reply.failure(err.message));
     }
 };
-
-
-
-
-// const getProfile = async (req, res) => {
-//     let userId;
-//     if (req.params.id) {
-//         userId = req.params.id;
-//     } else {
-//         userId = req.user._id;
-//     }
-
-//     try {
-//         const user = await UserModel.findOne({ _id: userId });
-
-//         if (!user) {
-//             const team = await TeamModel.findOne({ _id: userId });
-
-//             if (!team) {
-//                 return res.status(404).json(reply.failure("User does not exist"));
-//             }
-//             return res.json(reply.success("team", team));
-
-//         }
-
-//         // Fetch teams created by the user
-//         const teams = await TeamModel.find({ user_id: userId });
-
-//         // Extract teamIds from the user's teams
-//         const teamIds = teams.map(team => team._id);
-
-//         // Find other teams where the user is a member, excluding their own teams
-//         const filteredTeams = await AddTeamMemberModel.find({
-//             teamId: { $nin: teamIds },
-//             playerId: userId
-//         });
-
-//         // Initialize user.otherTeams if not already initialized
-//         user.otherTeams = [];
-
-//         // Fetch data for teams where the user is a member but not the owner
-//         const otherTeamsWithDetails = await Promise.all(filteredTeams.map(async (team) => {
-//             const teamData = await TeamModel.findOne({ _id: team.teamId });
-//             const membersCount = await AddTeamMemberModel.countDocuments({ teamId: team.teamId });
-//             return { ...teamData.toObject(), status: team.status, members: membersCount };
-//         }));
-
-//         user.otherTeams.push(...otherTeamsWithDetails);
-
-//         // Fetch team members count for each team in parallel
-//         const teamsWithMembers = await Promise.all(teams.map(async (team) => {
-//             const membersCount = await AddTeamMemberModel.countDocuments({ teamId: team._id });
-//             return { ...team.toObject(), members: membersCount };
-//         }));
-
-//         //fetching friends of user
-//         const friends = await setFriends(userId);
-
-//         // Add the teams with members to the user object
-//         user.userTeams = teamsWithMembers;
-//         user.friends = friends
-
-//         return res.status(200).json(reply.success("Profile fetched successfully", user));
-//     } catch (err) {
-//         console.log("kjsdn")
-//         return res.status(500).json(reply.failure(err.message));
-//     }
-// };
 
 // const UpdateProfile = async (req, res) => {
 //     const { userName, email, phoneNumber, address, } = req.body;
@@ -766,6 +745,8 @@ const registerUser = async (req, res) => {
 
 
 module.exports = {
-    // getProfile, setteam, getcountry, getstate, getcity, UpdateProfile, getFriends, getFriend, getProduct, handleDelete, getTournamentInfo, handleApproval, getUserFriends, getTeams, addFriend, getPlayers, messageControl, getChat, getRecivedMessage, searchFriends, searching, getPlayingFriends, statusControl
-    registerUser
+    getProfile,
+
+    // setteam, getcountry, getstate, getcity, UpdateProfile, getFriends, getFriend, getProduct, handleDelete, getTournamentInfo, handleApproval, getUserFriends, getTeams, addFriend, getPlayers, messageControl, getChat, getRecivedMessage, searchFriends, searching, getPlayingFriends, statusControl 
+
 }

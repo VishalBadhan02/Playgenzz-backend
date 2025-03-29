@@ -1,9 +1,8 @@
-const UserModel = require("../models/user")
-const OTPModel = require("../models/otps")
 const moment = require("moment");
 const prisma = require("../prisma/prisma");
 const bcrypt = require("bcryptjs");
 const { generateToken } = require("../services/JWT");
+const client = require("../client");
 const saltRounds = 16;
 // const reply = require('./reply');
 // const lang = require('../language/en');
@@ -86,9 +85,29 @@ const registerUser = async (id) => {
             return { success: false, message: "User not found" };
         }
 
+        // ✅ Create user in gRPC server(user - service) using Protobuf message format (user.proto)
+        const userService = await client.userClient(user)
+
+        if (!userService.success) {
+            await prisma.tempUser.delete({
+                where: {
+                    id: user.id
+                }
+            });
+            console.error("Failed to create user in user-service", userService.message);
+            return { success: false, message: "Failed to create user in user-service" };
+        }
+
+        // ✅ Generate JWT token
+        const token = await generateToken(userService.response.user);
+
+        if (!token) {
+            return { success: false, message: "Failed to generate token" };
+        }
         // ✅ Store user in User table
         const newUser = await prisma.user.create({
             data: {
+                id: user.id,
                 name: user.userName,
                 email: user.email,
                 password: user.password,
@@ -107,8 +126,6 @@ const registerUser = async (id) => {
             }
         });
 
-        const token = await generateToken(newUser); // Generate
-
         return { success: true, token };
     } catch (error) {
         console.error("Failed to register user", error);
@@ -118,7 +135,7 @@ const registerUser = async (id) => {
 
 
 const handleUpdate = (user_id, value) => {
-    const dd = new UserModel.updateOne(user_id, value);
+    // const dd = new UserModel.updateOne(user_id, value);
 }
 
 module.exports = { generateOTP, verifyOTP, registerUser }

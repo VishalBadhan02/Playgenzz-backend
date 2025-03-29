@@ -22,13 +22,13 @@ message GetUserResponse {
 
 // The request message containing the user details for creation.
 message CreateUserRequest {
+  string id = 3;
   string firstName = 1;
-  string lastName = 10;
-  string authId = 2;
+  string lastName = 2;
   string userName = 4;
   string phoneNumber = 5;
   string email = 6;
-  Address address = 7;
+  string address = 7;
   string status = 8;
   string userType = 9;
 }
@@ -40,16 +40,15 @@ message CreateUserResponse {
 
 // The User message definition.
 message User {
-  string id = 1;
-  string first_name = 2;
-  string auth_id = 3;
-  string last_name = 4;
-  string user_name = 5;
-  string phone_number = 6;
-  string email = 7;
-  Address address = 8;
-  string status = 9;
-  string user_type = 10;
+  string _id = 3;
+  string firstName = 1;
+  string lastName = 2;
+  string userName = 4;
+  string phoneNumber = 5;
+  string email = 6;
+  string address = 7;
+  string status = 8;
+  string userType = 9;
 }
 
 // The Address message definition.

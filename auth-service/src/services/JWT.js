@@ -7,7 +7,7 @@ const Config = {
 
 const generateToken = (user) => {
     const payload = {
-        id: user.id,
+        _id: user.id || user._id,
         email: user.email,
         userType: user.userType
     };

@@ -1,82 +1,44 @@
-const UserModel = require('../models/user');
 const reply = require('../helper/reply');
 const lang = require('../language/en');
 const { generateToken } = require('../services/JWT');
 const Lang = require('../language/en');
 const { generateOTP, verifyOTP, registerUser } = require('../helper/index')
 const SendMail = require('../services/mail')
-const Razorpay = require("razorpay")
 const Bcrypt = require("bcryptjs")
 const saltRounds = 16;
 // const Config = require("../config/index")
-// const { TeamModel } = require("../models/team");
-const OTPModel = require('../models/otps');
-const TempUserModel = require('../models/tempUser');
-const { default: pr } = require('../prisma/prisma')
-const { PrismaClient } = require("@prisma/client");
 const prisma = require('../prisma/prisma');
 
 const login = async (req, res) => {
     const { password, email } = req.body;
     console.log(req.body)
     try {
-        const user = await UserModel.findOne({ email });
+        // const user = await UserModel.findOne({ email });
 
-        if (!user) {
-            return (
-                res.status(200).json(reply.failure(lang.LOGIN_NOTFOUND))
-            )
-        }
-        const isMatch = await Bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.json(reply.failure(lang.PASSWORD_NOTFOUND))
-        }
+        // if (!user) {
+        //     return (
+        //         res.status(200).json(reply.failure(lang.LOGIN_NOTFOUND))
+        //     )
+        // }
+        // const isMatch = await Bcrypt.compare(password, user.password);
+        // if (!isMatch) {
+        //     return res.json(reply.failure(lang.PASSWORD_NOTFOUND))
+        // }
 
-        const module = await generateOTP(user.id, "otp for login");
+        // const module = await generateOTP(user.id, "otp for login");
 
-        // await SendMail(user.email, "opt", "Otp for login " + module.otp);
+        // // await SendMail(user.email, "opt", "Otp for login " + module.otp);
 
-        const token = generateToken(user);
-        return (
-            res.status(200).json(reply.success(Lang.LOGIN_SUCCESS, { token: token, type: req.body.type }))
+        // const token = generateToken(user);
+        // return (
+        //     res.status(200).json(reply.success(Lang.LOGIN_SUCCESS, { token: token, type: req.body.type }))
 
-        )
+        // )
     }
     catch (err) {
         return res.json(reply.failure(err.message));
     }
 }
-
-// const verifyUser = async (req, res) => {
-//     try {
-//         const tempUser = await TempUserModel.findOne({ _id: req.user._id })
-//         const email = tempUser.email
-//         const phoneNumber = tempUser.phoneNumber
-//         const address = tempUser.address
-//         const password = tempUser.password
-//         const firstName = tempUser.firstName
-//         const lastName = tempUser.lastName
-//         const userName = tempUser.userName
-
-//         const user = new UserModel({
-//             email,
-//             phoneNumber,
-//             address,
-//             password,
-//             firstName,
-//             lastName,
-//             userName,
-//             status: "Verified"
-
-//         })
-//         user.save();
-//         await TempUserModel.findOneAndDelete({ _id: req.user._id })
-//         const token = generateToken(user);
-//         return res.json(reply.success(lang.REGISTER_SUCCESFULLY, { token }))
-//     } catch (error) {
-//         return res.json(reply.failure(error.message));
-//     }
-// }
 
 const Register = async (req, res) => {
     //Extract user data safely
@@ -162,7 +124,7 @@ const handleteam = async (req, res) => {
 const handleOTpverification = async (req, res) => {
     try {
         const { otp } = req.body;
-        const isverified = await verifyOTP(req.user.id, otp);
+        const isverified = await verifyOTP(req.user._id, otp);
 
         if (!isverified) {
             return res.json(reply.failure(lang.WRONG_OTP))
@@ -176,7 +138,7 @@ const handleOTpverification = async (req, res) => {
 
         return res.json(reply.success(lang.OTP_VERIFIED, { token: registerUse.token }))
     } catch (error) {
-        console.log(error)
+        console.log("Error occuring in the handleOTpverification", error.message)
         return res.json("error in otp verification", error)
 
     }
@@ -185,7 +147,7 @@ const handleOTpverification = async (req, res) => {
 
 const handleforgot = async (req, res) => {
     const value = req.body;
-    const changepassword = await UserModel.findOne({ email: value })
+    // const changepassword = await UserModel.findOne({ email: value })
     const module = await generateOTP(changepassword._id, "otp for forgottn password ");
     await SendMail(user.email, "opt", "your otp is " + module);
     return res.json(changepassword)

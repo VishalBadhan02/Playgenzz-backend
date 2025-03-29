@@ -16,9 +16,9 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 
 const userProto = grpc.loadPackageDefinition(packageDefinition).user;
 
+const string = "mongodb://localhost:27017/user-db"
 
-
-mongoose.connect(process.env.DATABASE_URL).then(() => console.log('✅ User Service connected to MongoDB'))
+mongoose.connect(string).then(() => console.log('✅ User Service connected to MongoDB'))
     .catch(err => console.error('❌ DB Connection Error:', err));
 
 
@@ -30,7 +30,7 @@ function main() {
         GetUser: getUser,
     });
 
-    const GRPC_PORT = process.env.GRPC_PORT || '50051';
+    const GRPC_PORT = process.env.GRPC_PORT || '5002';
     server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
         if (err) {
             console.error(`❌ Server binding failed: ${err.message}`);
