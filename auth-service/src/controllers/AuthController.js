@@ -8,34 +8,43 @@ const Bcrypt = require("bcryptjs")
 const saltRounds = 16;
 // const Config = require("../config/index")
 const prisma = require('../prisma/prisma');
+const { getUser } = require('../client');
 
 const login = async (req, res) => {
     const { password, emailOrPhone } = req.body;
-    console.log(req.body)
     try {
         const Validation = await ExistUser(emailOrPhone)
 
-        // const user = await UserModel.findOne({ email });
+        if (!Validation.status) {
+            return (
+                res.status(200).json(reply.failure(lang.LOGIN_NOTFOUND))
+            )
+        }
 
-        // if (!user) {
-        //     return (
-        //         res.status(200).json(reply.failure(lang.LOGIN_NOTFOUND))
-        //     )
-        // }
-        // const isMatch = await Bcrypt.compare(password, user.password);
-        // if (!isMatch) {
-        //     return res.json(reply.failure(lang.PASSWORD_NOTFOUND))
-        // }
+        const user = Validation.user
+
+        const isMatch = await Bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.json(reply.failure(lang.PASSWORD_NOTFOUND))
+        }
 
         // const module = await generateOTP(user.id, "otp for login");
 
+        const userService = await getUser(user.id)
+
+        if (!userService.success) {
+            return res.status(409).json(reply.failure(lang.PASSWORD_NOTFOUND))
+        }
+
         // // await SendMail(user.email, "opt", "Otp for login " + module.otp);
 
-        // const token = generateToken(user);
-        // return (
-        //     res.status(200).json(reply.success(Lang.LOGIN_SUCCESS, { token: token, type: req.body.type }))
+        const token = generateToken(userService.response.user);
+        if (!token) {
+            return res.status(409).json(reply.failure(lang.PASSWORD_NOTFOUND))
+        }
+        return res.status(200).json(reply.success(Lang.LOGIN_SUCCESS, { token: token, type: req.body.type }))
 
-        // )
+
     }
     catch (err) {
         return res.json(reply.failure(err.message));
@@ -119,13 +128,18 @@ const Register = async (req, res) => {
 const handleOTpverification = async (req, res) => {
     try {
         const { otp } = req.body;
+
+        if (!req.user._id) {
+            return res.status(200).json(reply.failure("id not found"))
+        }
+
         const isverified = await verifyOTP(req.user._id, otp);
 
         if (!isverified) {
             return res.json(reply.failure(lang.WRONG_OTP))
         }
 
-        const registerUse = await registerUser(req.user.id);
+        const registerUse = await registerUser(req.user._id);
 
         if (!registerUse.success) {
             return res.json(reply.failure(lang.REGISTER_FAILED))

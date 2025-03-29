@@ -11,6 +11,7 @@ datasource db {
 model User {
   id        String   @unique
   email     String   @unique
+  phoneNumber String?  @unique
   name      String?
   password  String
   status    String

@@ -7,7 +7,7 @@ const saltRounds = 16;
 // const reply = require('./reply');
 // const lang = require('../language/en');
 
-const ExistUser = async (email) => {
+const ExistUser = async (userInput) => {
     const user = await prisma.user.findFirst({
         where: {
             OR: [
@@ -16,7 +16,9 @@ const ExistUser = async (email) => {
             ]
         }
     });
-    return (check) ? true : false;
+    if (!user) return false
+
+    return (user) ? { status: true, user } : false;
 }
 
 // function to generate otp
@@ -107,11 +109,13 @@ const registerUser = async (id) => {
         if (!token) {
             return { success: false, message: "Failed to generate token" };
         }
+        
         // ✅ Store user in User table
         const newUser = await prisma.user.create({
             data: {
                 id: user.id,
                 name: user.userName,
+                phoneNumber: user.phoneNumber,
                 email: user.email,
                 password: user.password,
                 status: "active",

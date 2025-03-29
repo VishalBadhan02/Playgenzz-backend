@@ -35,23 +35,44 @@ async function createUser(call, callback) {
     }
 }
 
-function getUser(call, callback) {
-    const authId = call.request.authId;
-    User.findOne({ authId }, (err, user) => {
-        if (err) {
-            callback({
-                code: grpc.status.INTERNAL,
-                message: 'Internal server error',
-            });
-        } else if (!user) {
+async function getUser(call, callback) {
+    const authId = call.request.user_id;
+    try {
+        const user = await UserModel.findOne({ _id: authId })
+        if (!user) {
             callback({
                 code: grpc.status.NOT_FOUND,
                 message: 'User not found',
-            });
-        } else {
-            callback(null, user.toObject());
+
+            })
         }
-    });
+        return callback(null, { user: user.toObject() });
+    } catch (error) {
+        console.error("Error creating user:", error);
+
+        // Invoke the callback with the error and return immediately
+        callback({
+            code: grpc.status.INTERNAL,
+            message: 'Internal server error',
+            details: error.message,
+        });
+        return;
+    }
+    // await UserModel.findOne({ authId }, (err, user) => {
+    //     if (err) {
+    //         callback({
+    //             code: grpc.status.INTERNAL,
+    //             message: 'Internal server error',
+    //         });
+    //     } else if (!user) {
+    //         callback({
+    //             code: grpc.status.NOT_FOUND,
+    //             message: 'User not found',
+    //         });
+    //     } else {
+    //         callback(null, user.toObject());
+    //     }
+    // });
 }
 
 
