@@ -19,14 +19,11 @@ const reply = require("../helper/reply")
 
 
 const getProfile = async (req, res) => {
-    console.log("req.user")
-    return
     let userId;
-
     if (req.params.id) {
         userId = req.params.id;
     } else {
-        userId = req.user?.id;
+        userId = req.user?._id;
     }
 
     try {
