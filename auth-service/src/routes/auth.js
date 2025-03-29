@@ -10,7 +10,6 @@ router.post("/otpverify", verifyJWT, AuthController.handleOTpverification);
 router.put("/setpassword", AuthController.handleforgot);
 
 
-router.get("/getTeam", verifyJWT, AuthController.handleteam);
 
 
 module.exports = router;

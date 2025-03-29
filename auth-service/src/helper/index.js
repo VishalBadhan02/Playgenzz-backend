@@ -7,14 +7,17 @@ const saltRounds = 16;
 // const reply = require('./reply');
 // const lang = require('../language/en');
 
-// const ExistUser = async (email) => {
-//     if (await type === "mobile") {
-//         const check = await UserModel.findOne({ email })
-//         return (check) ? true : false;
-//     }
-//     const check = await UserModel.findOne({ email: typeValue })
-//     return (check) ? true : false;
-// }
+const ExistUser = async (email) => {
+    const user = await prisma.user.findFirst({
+        where: {
+            OR: [
+                { email: userInput },
+                { phoneNumber: userInput }
+            ]
+        }
+    });
+    return (check) ? true : false;
+}
 
 // function to generate otp
 const generateOTP = async (email, phone, userId) => {
@@ -138,4 +141,4 @@ const handleUpdate = (user_id, value) => {
     // const dd = new UserModel.updateOne(user_id, value);
 }
 
-module.exports = { generateOTP, verifyOTP, registerUser }
+module.exports = { generateOTP, verifyOTP, registerUser, ExistUser }
