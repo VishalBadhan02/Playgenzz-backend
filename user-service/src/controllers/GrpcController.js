@@ -1,5 +1,6 @@
 const grpc = require('@grpc/grpc-js');
 const UserModel = require('../models/user');
+const teamClient = require('../gRPCClient');
 
 
 
@@ -58,25 +59,25 @@ async function getUser(call, callback) {
         });
         return;
     }
-    // await UserModel.findOne({ authId }, (err, user) => {
-    //     if (err) {
-    //         callback({
-    //             code: grpc.status.INTERNAL,
-    //             message: 'Internal server error',
-    //         });
-    //     } else if (!user) {
-    //         callback({
-    //             code: grpc.status.NOT_FOUND,
-    //             message: 'User not found',
-    //         });
-    //     } else {
-    //         callback(null, user.toObject());
-    //     }
-    // });
 }
+
+const getTeamByUser = (userId) => {
+    return new Promise((resolve, reject) => {
+        teamClient.GetTeamByUser({ user_id: userId }, (error, response) => {
+            if (error) {
+                console.error('Error fetching team data:', error);
+                reject(error);
+            } else {
+                resolve(response);
+            }
+        });
+    });
+};
+
 
 
 module.exports = {
     createUser,
     getUser,
+    getTeamByUser
 };

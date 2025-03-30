@@ -1,5 +1,6 @@
 const UserModel = require("../models/user")
-const reply = require("../helper/reply")
+const reply = require("../helper/reply");
+const { getTeamByUser } = require("./GrpcController");
 // const Lang = require("../language/en")
 // const { CountryModel } = require("../model/country")
 // const { TournamentModel } = require("../model/tournament")
@@ -38,6 +39,16 @@ const getProfile = async (req, res) => {
             return res.json(reply.success("team", "team"));
 
         }
+
+        const teams = await getTeamByUser(userId)
+            .then((teamData) => {
+                console.log('Team Data:', teamData);
+                // Process the team data as needed
+            })
+            .catch((error) => {
+                console.error('Failed to retrieve team data:', error);
+                // Handle the error appropriately
+            });
 
         // Fetch teams created by the user
         // const teams = await TeamModel.find({ user_id: userId });
