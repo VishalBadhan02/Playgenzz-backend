@@ -7,7 +7,7 @@ const upload = require('../services/multer');
 
 {
     router.get("/getProfile/:id?", UserController.getProfile);
-    // router.get("/getcountry", UserController.getcountry);
+    router.get("/getcountry", UserController.getcountry);
     // router.get("/getstate/:country", UserController.getstate);
     // router.get("/getcity/:state", UserController.getcity);
     // router.get("/getFriend", UserController.getFriends)

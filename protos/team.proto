@@ -14,23 +14,28 @@ message GetTeamRequest {
 
 // Response message containing the team details
 message GetTeamResponse {
- repeated teamRes teams = 1;
+  repeated teamRes teams = 1;
+  repeated otherTeam otherTeamsWithDetails = 2;
 }
 
 message teamRes {
   string teamName = 1;
-   string user_id = 2;
-   string email = 3;
-   string phoneNumber = 4;
-   string noOfPlayers = 5;
-   string substitute = 6;
-   string homeGround = 7;
-   string addressOfGround = 8;
-   string pinCode = 9;
-   string logo = 10;
-   string games = 11;
-   string description = 12;
-   string teamMembers = 13;
-   string members = 14;
-   string joinTeam = 15;
+  string user_id = 2;
+  string email = 3;
+  string phoneNumber = 4;
+  int32 noOfPlayers = 5;
+  int32 substitute = 6;
+  string homeGround = 7;
+  string addressOfGround = 8;
+  string pinCode = 9;
+  string logo = 10;
+  string games = 11;
+  string description = 12;
+  int32 members = 14;
+  repeated string joinTeam = 15;
+}
+
+message otherTeam {
+  int32 status = 1;
+  int32 members = 2;
 }
