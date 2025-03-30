@@ -13,7 +13,6 @@ const verifyJWT = (req, res, next) => {
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded; // Attach decoded user info to request
-        console.log(decoded)
         next(); // Allow request to proceed
     } catch (err) {
         return res.status(403).json({ message: "Forbidden: Invalid token" });

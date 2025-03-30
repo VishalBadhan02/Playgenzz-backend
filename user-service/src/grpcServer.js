@@ -1,6 +1,6 @@
-require('dotenv').config();
-const grpc = require('@grpc/grpc-js');
 const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const mongoose = require('mongoose');
 const { createUser, getUser } = require('./controllers/GrpcController');
@@ -16,11 +16,8 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 
 const userProto = grpc.loadPackageDefinition(packageDefinition).user;
 
-const string = "mongodb://localhost:27017/user-db"
-
-mongoose.connect(string).then(() => console.log('✅ User Service connected to MongoDB'))
+mongoose.connect(process.env.DATABASE_URL).then(() => console.log('✅ User Service connected to MongoDB'))
     .catch(err => console.error('❌ DB Connection Error:', err));
-
 
 function main() {
     const server = new grpc.Server();

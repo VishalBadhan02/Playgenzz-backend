@@ -4,12 +4,12 @@ const Config = {
     JWTSECRETKEY: "vishal123"
 }
 
-
 const generateToken = (user) => {
     const payload = {
         _id: user.id || user._id,
         email: user.email,
-        userType: user.userType
+        userType: user.userType,
+        userName: user?.userName
     };
     const token = jwt.sign(payload, Config.JWTSECRETKEY);
     return token;
@@ -23,7 +23,6 @@ const generateToken = (user) => {
 const verifyJWT = (req, res, next) => {
     const token = req?.headers?.authorization;
     if (!token) {
-        console.log("here", token);
         return res.json({ status: false, msg: "Token not verified" })
     }
 

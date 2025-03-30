@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package team;
+
+// Define the TeamService
+service TeamService {
+  rpc GetTeamByUser (GetTeamRequest) returns (GetTeamResponse);
+}
+
+// Request message to fetch a user's team
+message GetTeamRequest {
+  string user_id = 1;
+}
+
+// Response message containing the team details
+message GetTeamResponse {
+   string teamName = 1;
+   string user_id = 2;
+   string email = 3;
+   string phoneNumber = 4;
+   string noOfPlayers = 5;
+   string substitute = 6;
+   string homeGround = 7;
+   string addressOfGround = 8;
+   string pinCode = 9;
+   string logo = 10;
+   string games = 11;
+   string description = 12;
+   string teamMembers = 13;
+   string members = 14;
+   string joinTeam = 15;
+}

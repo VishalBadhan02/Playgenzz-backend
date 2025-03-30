@@ -39,13 +39,20 @@ console.table(services);
 // Log proxying
 const proxyWithLogging = (target) => proxy(target, {
     proxyReqPathResolver: (req) => {
-        const fullIncomingPath = req.originalUrl; // Logs full frontend request path (e.g., /auth/register)
-        const finalProxiedPath = req.url; // Logs only the path that will be forwarded to the microservice
+        const fullIncomingPath = req.originalUrl;
+        const finalProxiedPath = req.url;
 
         console.log(`Incoming Request: ${req.method} ${fullIncomingPath}`);
         console.log(`Proxying request to: ${target}${finalProxiedPath}`);
 
         return fullIncomingPath;
+    },
+    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+        if (srcReq.user) {
+            // Forward user information as a JSON-encoded string in a custom header
+            proxyReqOpts.headers['X-User-Data'] = encodeURIComponent(JSON.stringify(srcReq.user));
+        }
+        return proxyReqOpts;
     },
     proxyErrorHandler: (err, req, res, next) => {
         console.error(`Proxy error for ${req.method} ${req.originalUrl}:`, err);
@@ -54,9 +61,10 @@ const proxyWithLogging = (target) => proxy(target, {
 });
 
 
+
 // Forward requests to microservices
 app.use('/auth', proxyWithLogging(services.auth));
-app.use('/user', proxyWithLogging(services.user));
+app.use('/user', verifyJWT, proxyWithLogging(services.user));
 app.use('/tournament', proxyWithLogging(services.tournament));
 app.use('/product', proxyWithLogging(services.product));
 app.use('/scoring', proxyWithLogging(services.scoring));
