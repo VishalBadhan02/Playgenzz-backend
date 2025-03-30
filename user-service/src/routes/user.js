@@ -11,7 +11,7 @@ const upload = require('../services/multer');
     router.get("/getcountry", LocationController.getcountry);
     router.get("/getstate/:country", LocationController.getstate);
     router.get("/getcity/:state", LocationController.getcity);
-    // router.get("/getFriend", UserController.getFriends)
+    router.get("/getFriend", UserController.getFriends)
     // router.get("/search", UserController.searchFriends)
     // router.get("/getInfo/:id", UserController.getTournamentInfo)
     // router.get("/userFriends", UserController.getUserFriends)

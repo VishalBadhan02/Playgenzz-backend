@@ -77,37 +77,37 @@ const getProfile = async (req, res) => {
 
 // }
 
-// const getFriends = async (req, res) => {
-//     try {
-//         const session_id = req.user._id;
-//         const searchTerm = req.query.q || ''; // Get the search query from the request, default to empty string if not provided
-//         const users = await UserModel.find({ _id: { $ne: session_id }, userName: { $regex: `^${searchTerm}`, $options: 'i' } })
-//             .select("_id userName team profilePicture");
+const getFriends = async (req, res) => {
+    try {
+        const session_id = req.user._id;
+        const searchTerm = req.query.q || ''; // Get the search query from the request, default to empty string if not provided
+        const users = await UserModel.find({ _id: { $ne: session_id }, userName: { $regex: `^${searchTerm}`, $options: 'i' } })
+            .select("_id userName team profilePicture");
+x
+        const friendRequests = await FriendModel.find({
+            $or: [
+                { user_id: session_id },
+                { request: session_id }
+            ]
+        });
 
-//         const friendRequests = await FriendModel.find({
-//             $or: [
-//                 { user_id: session_id },
-//                 { request: session_id }
-//             ]
-//         });
+        const friendStatusMap = {};
+        friendRequests.forEach((request) => {
+            const key = request.user_id === session_id ? request.request : request.user_id;
+            friendStatusMap[key] = request;
+        });
 
-//         const friendStatusMap = {};
-//         friendRequests.forEach((request) => {
-//             const key = request.user_id === session_id ? request.request : request.user_id;
-//             friendStatusMap[key] = request;
-//         });
+        const userList = users.map((user) => ({
+            ...user.toObject(),
+            friends: friendStatusMap[user._id] || null
+        }));
 
-//         const userList = users.map((user) => ({
-//             ...user.toObject(),
-//             friends: friendStatusMap[user._id] || null
-//         }));
-
-//         const check = friendRequests.filter((request) => request.request === session_id);
-//         return res.json(reply.success("Users fetched successfully", { users: userList, check }));
-//     } catch (err) {
-//         res.status(500).json({ error: err.message });
-//     }
-// };
+        const check = friendRequests.filter((request) => request.request === session_id);
+        return res.json(reply.success("Users fetched successfully", { users: userList, check }));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
 
 // const searchFriends = async (req, res) => {
 //     try {
@@ -686,7 +686,7 @@ const getProfile = async (req, res) => {
 
 module.exports = {
     getProfile,
-    // getFriends,
+    getFriends,
     // setteam,    UpdateProfile,  getFriend, getProduct, handleDelete, getTournamentInfo, handleApproval, getUserFriends, getTeams, addFriend, getPlayers, messageControl, getChat, getRecivedMessage, searchFriends, searching, getPlayingFriends, statusControl 
 
 }
