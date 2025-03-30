@@ -1,6 +1,6 @@
 const grpc = require('@grpc/grpc-js');
 const UserModel = require('../models/user');
-const teamClient = require('../gRPCClient');
+const { teamClient } = require('../gRPCClient');
 
 
 
@@ -63,10 +63,10 @@ async function getUser(call, callback) {
 
 const getTeamByUser = (userId) => {
     return new Promise((resolve, reject) => {
-        teamClient.GetTeamByUser({ user_id: userId }, (error, response) => {
+        teamClient.getTeamByUser({ user_id: userId }, (error, response) => {
             if (error) {
                 console.error('Error fetching team data:', error);
-                reject(error);
+                // reject(error);
             } else {
                 resolve(response);
             }

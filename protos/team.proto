@@ -14,7 +14,11 @@ message GetTeamRequest {
 
 // Response message containing the team details
 message GetTeamResponse {
-   string teamName = 1;
+ repeated teamRes teams = 1;
+}
+
+message teamRes {
+  string teamName = 1;
    string user_id = 2;
    string email = 3;
    string phoneNumber = 4;

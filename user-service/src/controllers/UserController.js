@@ -42,7 +42,8 @@ const getProfile = async (req, res) => {
 
         const teams = await getTeamByUser(userId)
             .then((teamData) => {
-                console.log('Team Data:', teamData);
+                return teamData.teams;
+                // console.log('Team Data:', teamData);
                 // Process the team data as needed
             })
             .catch((error) => {

@@ -17,9 +17,10 @@ const teamProto = grpc.loadPackageDefinition(packageDefinition).team;
 
 
 const teamClient = new teamProto.TeamService(
-    `0.0.0.0:${process.env.GRPC_PORT || 5006}`,
+    `0.0.0.0:${process.env.USER_GRPC_PORT || 5006}`,
     grpc.credentials.createInsecure()
 );
 
-module.exports = teamClient
+
+module.exports = { teamClient }
 
