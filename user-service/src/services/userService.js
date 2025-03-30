@@ -1,3 +1,4 @@
+const { FriendModel } = require("../models/useFriends");
 const UserModel = require("../models/user");
 
 class UserService {
@@ -17,6 +18,17 @@ class UserService {
         }).select("_id userName team profilePicture");
 
         return users; // Always returns an array (empty if no users found)
+    }
+
+    async friendRequests(session_id) {
+        const friendRequests = await FriendModel.find({
+            $or: [
+                { user_id: session_id },
+                { request: session_id }
+            ]
+        });
+
+        return friendRequests; // Always returns an array (empty if no users found)
     }
 }
 

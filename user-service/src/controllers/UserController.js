@@ -83,7 +83,9 @@ const getFriends = async (req, res) => {
         const searchTerm = req.query.q || ''; // Get the search query from the request, default to empty string if not provided
         const users = await UserModel.find({ _id: { $ne: session_id }, userName: { $regex: `^${searchTerm}`, $options: 'i' } })
             .select("_id userName team profilePicture");
-x
+
+
+        //Fetching user current friends
         const friendRequests = await FriendModel.find({
             $or: [
                 { user_id: session_id },
@@ -94,7 +96,10 @@ x
         const friendStatusMap = {};
         friendRequests.forEach((request) => {
             const key = request.user_id === session_id ? request.request : request.user_id;
+            console.log("key", key)
             friendStatusMap[key] = request;
+            console.log("key", friendStatusMap)
+
         });
 
         const userList = users.map((user) => ({
