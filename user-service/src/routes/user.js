@@ -23,6 +23,7 @@ const upload = require('../services/multer');
     // router.get("/searchFriend/:search", UserController.searching)
 }
 
+
 {
     // router.post("/registerUser", UserController.registerUser)
     // router.post("/friendRequest", UserController.getFriend)
