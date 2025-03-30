@@ -1,15 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const UserController = require('../controllers/UserController');
+const LocationController = require('../controllers/LocationController');
 // const { verifyJWT } = require('../services/JWT');
 const upload = require('../services/multer');
 
 
 {
     router.get("/getProfile/:id?", UserController.getProfile);
-    router.get("/getcountry", UserController.getcountry);
-    // router.get("/getstate/:country", UserController.getstate);
-    // router.get("/getcity/:state", UserController.getcity);
+    router.get("/getcountry", LocationController.getcountry);
+    router.get("/getstate/:country", LocationController.getstate);
+    router.get("/getcity/:state", LocationController.getcity);
     // router.get("/getFriend", UserController.getFriends)
     // router.get("/search", UserController.searchFriends)
     // router.get("/getInfo/:id", UserController.getTournamentInfo)

@@ -1,13 +1,8 @@
-const UserModel = require("../models/user")
 const reply = require("../helper/reply");
-const { getTeamByUser } = require("./GrpcController");
-const { setFriends } = require("../helper/getUserFriends");
-// const Lang = require("../language/en")
-// const { CountryModel } = require("../model/country")
+const Lang = require("../language/en")
+const UserModel = require("../models/user")
 // const { TournamentModel } = require("../model/tournament")
 // const { TeamModel } = require("../model/team")
-// const { StateModel } = require("../model/state")
-// const { CityModel } = require("../model/city")
 // const { FriendModel } = require("../model/useFriends")
 // const { ProductModel } = require("../model/product")
 // const { AddTeamMemberModel } = require("../model/addTeamMember")
@@ -15,8 +10,12 @@ const { setFriends } = require("../helper/getUserFriends");
 // const { MessageModel } = require("../model/messages")
 // const { NotificationModel } = require("../model/notification")
 // const { ScheduledMatchModel } = require("../model/scheduledMatch")
-// const { setFriends, setTeams } = require("../utils/getFriend")
-// const WebSocket = require('ws');
+const { getTeamByUser } = require("./GrpcController");
+const { setFriends } = require("../helper/getUserFriends");
+const userService = require("../services/userService");
+const WebSocket = require('ws');
+const { FriendModel } = require("../models/useFriends");
+
 
 
 
@@ -29,16 +28,11 @@ const getProfile = async (req, res) => {
     }
 
     try {
-        const user = await UserModel.findOne({ _id: userId });
+        // const user = await UserModel.findOne({ _id: userId });
+        const user = await userService.findUser(userId);
 
         if (!user) {
-            // const team = await TeamModel.findOne({ _id: userId });
-
-            // if (!team) {
-            //     return res.status(404).json(reply.failure("User does not exist"));
-            // }
-            return res.json(reply.success("team", "team"));
-
+            return res.status(409).json(reply.failure(Lang.USER_NOT_FOUND));
         }
 
         const teams = await getTeamByUser(userId)
@@ -57,9 +51,9 @@ const getProfile = async (req, res) => {
         user.userTeams = teams.teams
         user.friends = friends
 
-        return res.status(200).json(reply.success("Profile fetched successfully", user));
+        return res.status(200).json(reply.success(Lang.USER_PROFILE, user));
     } catch (err) {
-        console.log("kjsdn")
+        console.log("Error in getProfile", err)
         return res.status(500).json(reply.failure(err.message));
     }
 };
@@ -82,38 +76,6 @@ const getProfile = async (req, res) => {
 //     }
 
 // }
-
-const getcountry = async (req, res) => {
-    try {
-        const country = await CountryModel.find();
-        return res.json(reply.success("", country))
-    } catch (err) {
-        res.send(err.message)
-    }
-}
-
-// const getstate = async (req, res) => {
-//     try {
-//         const state = await StateModel.find({ country_name: req.params.country });
-//         return res.json(reply.success("", state))
-
-//     } catch (err) {
-//         res.send(err.message)
-//     }
-// }
-
-// const getcity = async (req, res) => {
-//     try {
-//         const city = await CityModel.find({
-//             state_name: req.params.state
-//         });
-//         return res.json(reply.success("", city))
-
-//     } catch (err) {
-//         res.send(err.message)
-//     }
-// }
-
 
 // const getFriends = async (req, res) => {
 //     try {
@@ -724,7 +686,7 @@ const getcountry = async (req, res) => {
 
 module.exports = {
     getProfile,
-
-    // setteam, getcountry, getstate, getcity, UpdateProfile, getFriends, getFriend, getProduct, handleDelete, getTournamentInfo, handleApproval, getUserFriends, getTeams, addFriend, getPlayers, messageControl, getChat, getRecivedMessage, searchFriends, searching, getPlayingFriends, statusControl 
+    // getFriends,
+    // setteam,    UpdateProfile,  getFriend, getProduct, handleDelete, getTournamentInfo, handleApproval, getUserFriends, getTeams, addFriend, getPlayers, messageControl, getChat, getRecivedMessage, searchFriends, searching, getPlayingFriends, statusControl 
 
 }
