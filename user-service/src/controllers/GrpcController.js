@@ -2,8 +2,6 @@ const grpc = require('@grpc/grpc-js');
 const UserModel = require('../models/user');
 const { teamClient } = require('../gRPCClient');
 
-
-
 async function createUser(call, callback) {
     const user = call.request;
     try {
@@ -18,14 +16,14 @@ async function createUser(call, callback) {
             userType: user.userType,
             status: "active",
         });
-
         await newUser.save();
+
+
 
         // Send the created user back to the client
         callback(null, { user: newUser.toObject() });
     } catch (error) {
         console.error("Error creating user:", error);
-
         // Invoke the callback with the error and return immediately
         callback({
             code: grpc.status.INTERNAL,
@@ -40,13 +38,17 @@ async function getUser(call, callback) {
     const authId = call.request.user_id;
     try {
         const user = await UserModel.findOne({ _id: authId })
+
         if (!user) {
+            // ✅ Correct status: User not found (404)
             callback({
                 code: grpc.status.NOT_FOUND,
                 message: 'User not found',
-
+                details: error.message,
             })
         }
+
+        // ✅ Correct status: Found user (200 OK)
         return callback(null, { user: user.toObject() });
     } catch (error) {
         console.error("Error creating user:", error);
@@ -66,7 +68,20 @@ const getTeamByUser = (userId) => {
         teamClient.getTeamByUser({ user_id: userId }, (error, response) => {
             if (error) {
                 console.error('Error fetching team data:', error);
-                // reject(error);
+
+                // ✅ Return appropriate gRPC error codes
+                if (error.code === grpc.status.NOT_FOUND) {
+                    return reject({
+                        code: grpc.status.NOT_FOUND,
+                        message: "Team not found for the user.",
+                    });
+                }
+                return reject({
+                    code: grpc.status.INTERNAL,
+                    message: "Error fetching team data.",
+                    details: error.message,
+                });
+
             } else {
                 resolve(response);
             }
@@ -74,10 +89,41 @@ const getTeamByUser = (userId) => {
     });
 };
 
+async function checkUniquenes(call, callback) {
+    const userName = call.request.userName;
+    try {
+        const user = await UserModel.findOne({ userName });
+
+        if (user) {
+            // ✅ Username already exists, return 409 Conflict
+            return callback({
+                code: grpc.status.ALREADY_EXISTS,
+                message: 'Username is already taken',
+                isUnique: false
+            });
+        }
+
+        // ✅ Username is unique, return success
+        return callback(null, { isUnique: true });
+
+    } catch (error) {
+        console.error("Error checking username uniqueness:", error);
+
+        // ✅ Only return INTERNAL if there's an actual server error
+        return callback({
+            code: grpc.status.INTERNAL,
+            message: 'Internal server error',
+            details: error.message,
+        });
+    }
+}
+
+
 
 
 module.exports = {
     createUser,
     getUser,
-    getTeamByUser
+    getTeamByUser,
+    checkUniquenes
 };

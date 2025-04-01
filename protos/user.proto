@@ -8,6 +8,8 @@ service UserService {
   rpc GetUser (GetUserRequest) returns (GetUserResponse);
   // Creates a new user.
   rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
+  // Check unique userName.
+  rpc GetUserName (userName) returns (UniqueUserNameResponse);
 }
 
 // The request message containing the user ID.
@@ -58,4 +60,14 @@ message Address {
   string state = 3;
   string postal_code = 4;
   string country = 5;
+}
+
+// The unique userName message definition
+message userName {
+  string userName = 1;
+}
+
+//Reaponse in boolean for unique userName
+message UniqueUserNameResponse {
+  bool isUnique = 1;
 }

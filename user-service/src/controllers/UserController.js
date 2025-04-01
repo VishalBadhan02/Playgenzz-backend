@@ -13,8 +13,9 @@ const UserModel = require("../models/user")
 const { getTeamByUser } = require("./GrpcController");
 const { setFriends } = require("../helper/getUserFriends");
 const userService = require("../services/userService");
+const { getFriendStatusMap, mapUserListWithFriends } = require("../utils/friends");
 const WebSocket = require('ws');
-const { FriendModel } = require("../models/useFriends");
+
 
 
 
@@ -58,165 +59,135 @@ const getProfile = async (req, res) => {
     }
 };
 
-// const UpdateProfile = async (req, res) => {
-//     const { userName, email, phoneNumber, address, } = req.body;
-//     const updateData = { userName, email, phoneNumber, address };
-//     if (req.file) {
-//         updateData.profilePicture = req.file.location; // S3 URL
-//     }
-
-//     try {
-//         await UserModel.findOneAndUpdate({ _id: req.user._id }, { $set: updateData }, {
-//             new: true
-//         });
-//         return res.json(reply.success())
-
-//     } catch (err) {
-//         res.send(err)
-//     }
-
-// }
-
-const getFriends = async (req, res) => {
+const searchUsers = async (req, res) => {
     try {
         const session_id = req.user._id;
-        const searchTerm = req.query.q || ''; // Get the search query from the request, default to empty string if not provided
-        const users = await UserModel.find({ _id: { $ne: session_id }, userName: { $regex: `^${searchTerm}`, $options: 'i' } })
-            .select("_id userName team profilePicture");
+        const searchTerm = req.query.q || '';
 
+        if (!session_id) {
+            return res.status(401).json(reply.failure("Unauthorized: User not authenticated"));
+        }
 
-        //Fetching user current friends
-        const friendRequests = await FriendModel.find({
-            $or: [
-                { user_id: session_id },
-                { request: session_id }
-            ]
-        });
+        // ✅ Fetch users excluding the session user
+        const users = await userService.findFriends(session_id, searchTerm);
 
-        const friendStatusMap = {};
-        friendRequests.forEach((request) => {
-            const key = request.user_id === session_id ? request.request : request.user_id;
-            console.log("key", key)
-            friendStatusMap[key] = request;
-            console.log("key", friendStatusMap)
+        // ✅ Fetch friend requests
+        const friendRequests = await userService.friendRequests(session_id);
 
-        });
+        if (!users.length) {
+            return res.status(404).json(reply.failure("No users found"));
+        }
 
-        const userList = users.map((user) => ({
-            ...user.toObject(),
-            friends: friendStatusMap[user._id] || null
-        }));
+        // ✅ Process friend status using utility function
+        const friendStatusMap = getFriendStatusMap(friendRequests, session_id);
+
+        // ✅ Process user list using utility function
+        const userList = mapUserListWithFriends(users, friendStatusMap);
 
         const check = friendRequests.filter((request) => request.request === session_id);
-        return res.json(reply.success("Users fetched successfully", { users: userList, check }));
+
+        return res.status(200).json(reply.success("Users fetched successfully", { users: userList, check }));
+
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error("Error fetching friends:", err);
+        return res.status(500).json({ error: "Internal Server Error" });
     }
 };
 
-// const searchFriends = async (req, res) => {
-//     try {
-//         const session_id = req.user._id;
-//         const searchQuery = req.query.q || ''; // Get the search query from the request, default to empty string if not provided
+const UpdateProfile = async (req, res) => {
+    try {
+        const { userName, email, phoneNumber, address } = req.body;
+        const updateData = { userName, email, phoneNumber, address };
 
-//         // Find users whose usernames start with the search query and exclude the session user
-//         var users = await UserModel.find({
-//             _id: { $ne: session_id },
-//             userName: { $regex: `^${searchQuery}`, $options: 'i' } // Case-insensitive regex search
-//         });
-
-//         // Add friends data to the users
-//         for (let i = 0; i < users.length; i++) {
-//             const data = await FriendModel.findOne({ request: users[i]._id, user_id: session_id });
-//             users[i].friends = data ? data : null;
-//         }
-
-//         // Fetch all teams
-//         const teams = await TeamModel.find();
-
-//         return res.json(reply.success("Users fetched successfully", { users, teams }));
-//     } catch (err) {
-//         res.status(500).json({ error: err.message });
-//     }
-// };
-
-// // const searchFriends = async (req, res) => {
-// //     try {
-// //         const session_id = req.user._id
-// //         var users = await UserModel.find({ _id: { $ne: session_id } });
-// //         // users = users.filter((e) => e._id != session_id)
-// //         for (let i = 0; i < users.length; i++) {
-// //             const data = await FriendModel.findOne({ request: users[i]._id, user_id: session_id });
-// //             users[i].friends = (data) ? data : null;
-// //         }
-// //         const teams = await TeamModel.find()
-// //         return res.json(reply.success("Users fetched successfully", { users, teams }));
-// //     } catch (err) {
-// //         res.status(500).json({ error: err.message });
-// //     }
-// // }
+        if (req.file) {
+            updateData.profilePicture = req.file.location; // S3 URL
+        }
 
 
-// const getFriend = async (req, res) => {
-//     try {
-//         const { request, type, team, teamName } = req.body;
-//         const messageType = (type === "team request") ? "teamRequest" : "Friend Request"
-//         let type_id
-//         const message = await UserModel.findOne({ _id: req.user._id })
-//         const user = await UserModel.findOne({ _id: request });
+        // ✅ Ensure user ID exists
+        if (!req.user || !req.user._id) {
+            return res.status(401).json(reply.failure(Lang.UNAUTHORIZED));
+        }
 
-//         if (type === "team request") {
-//             const reques = new AddTeamMemberModel({
-//                 userId: req.user._id,
-//                 playerId: request,
-//                 userName: user.userName,
-//                 teamId: team,
-//                 status: 0,
-//                 commit: "Player"
-//             });
-//             type_id = reques._id
-//             reques.save();
-//         }
-//         if (type === "Friend Request") {
-//             const Request = new FriendModel({
-//                 user_id: req.user._id,
-//                 request: request,
-//                 status: 0,
-//                 commit: "add request",
-//                 type: "request"
-//             });
-//             type_id = Request._id
-//             Request.save();
-//         }
-//         const notification = new NotificationModel({
-//             type_id,
-//             user_id: request,
-//             type: "request",
-//             message: {
-//                 name: message.userName,
-//                 type: messageType,
-//                 team: team,
-//                 teamName: teamName
-//             },
-//             status: 0
-//         })
+        // ✅ Validate Input (Optional but Recommended)
+        if (!userName && !email && !phoneNumber && !address) {
+            return res.status(400).json(reply.failure("No valid fields to update"));
+        }
 
-//         notification.save();
+        const uniqueUserName = await userService.UniqueUserName(req.user._id, userName)
 
-//         return res.json(reply.success())
-//     } catch (err) {
-//         res.json({ error: err.message });
-//     }
-// }
+        if (!uniqueUserName) {
+            return res.status(400).json(reply.failure({ type: "userName", message: Lang.USER_NAME_EXIST }));
+        }
 
-// const getProduct = async (req, res) => {
-//     try {
-//         const products = await ProductModel.find();
-//         return res.json(products);
-//     } catch (err) {
-//         return res.status(500).json({ message: "Error fetching products" }, err);
-//     }
-// }
+
+        // ✅ Update User Profile
+        const updatedUser = await userService.updateProfile(req.user._id, updateData);
+
+        if (!updatedUser) {
+            return res.status(404).json(reply.failure(Lang.USER_NOT_FOUND));
+        }
+
+        return res.status(200).json(reply.success(Lang.USER_UPDATED, { user: updatedUser }));
+    } catch (err) {
+        console.error("Error updating profile:", err);
+        return res.status(500).json(reply.failure("Internal Server Error"));
+    }
+};
+
+const handleRequest = async (req, res) => {
+    try {
+        const { request, type, team, teamName } = req.body;
+        const messageType = (type === "team request") ? "teamRequest" : "Friend Request"
+        let type_id
+        const message = await UserModel.findOne({ _id: req.user._id })
+        const user = await UserModel.findOne({ _id: request });
+
+        if (type === "team request") {
+            const reques = new AddTeamMemberModel({
+                userId: req.user._id,
+                playerId: request,
+                userName: user.userName,
+                teamId: team,
+                status: 0,
+                commit: "Player"
+            });
+            type_id = reques._id
+            reques.save();
+        }
+        if (type === "Friend Request") {
+            const Request = new FriendModel({
+                user_id: req.user._id,
+                request: request,
+                status: 0,
+                commit: "add request",
+                type: "request"
+            });
+            type_id = Request._id
+            Request.save();
+        }
+        const notification = new NotificationModel({
+            type_id,
+            user_id: request,
+            type: "request",
+            message: {
+                name: message.userName,
+                type: messageType,
+                team: team,
+                teamName: teamName
+            },
+            status: 0
+        })
+
+        notification.save();
+
+        return res.json(reply.success())
+    } catch (err) {
+        res.json({ error: err.message });
+    }
+}
+
+
 
 
 
@@ -325,6 +296,8 @@ const getFriends = async (req, res) => {
 //         return res.status(500).json({ error: err.message });
 //     }
 // };
+
+
 // const getUserFriends = async (req, res) => {
 //     try {
 //         const user_id = req.user._id;
@@ -360,81 +333,8 @@ const getFriends = async (req, res) => {
 // };
 
 
-// const getTeams = async (req, res) => {
-//     try {
-//         const game = req.params.game;
-//         const Teams = await TeamModel.find();
-//         return res.json(Teams)
-//     } catch (err) {
-//         return res.json(err)
-//     }
-// }
-
-// const setteam = async (req, res) => {
-//     try {
-//         const {
-//             games,
-//             teamName,
-//             email,
-//             phoneNumber,
-//             noOfPlayers,
-//             substitute,
-//             homeGround,
-//             addressOfGround,
-//             pinCode,
-//             description,
-//             members,
-//             logo
-//         } = req.body
-
-//         const team = new TeamModel({
-//             user_id: req.user._id,
-//             teamName,
-//             email,
-//             phoneNumber,
-//             noOfPlayers,
-//             substitute,
-//             homeGround,
-//             addressOfGround,
-//             pinCode,
-//             description,
-//             members,
-//             games,
-//             joinTeam: false,
-//         })
-//         const player = new AddTeamMemberModel({
-//             userId: req.user._id,
-//             playerId: req.user._id,
-//             userName: req.user.userName,
-//             teamId: team._id,
-//             status: 1,
-//             commit: "Captain"
-//         });
-
-//         await UserModel.findOneAndUpdate({ _id: req.user._id }, {
-//             $set: {
-//                 team: {
-//                     team_Id: team._id,
-//                     team_name: teamName,
-//                     logo: logo || "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&h=400&fit=crop"
-//                 }
-//             }
-//         })
-
-//         team.save();
-//         player.save();
-
-//         return (
-//             res.json(reply.success(Lang.REGISTER_SUCCESS, team.
-//                 _id))
-//         )
-//     } catch (err) {
-//         res.status(402).json({ error: err.message });
 
 
-//     }
-
-// }
 
 
 // const addFriend = async (req, res) => {
@@ -691,7 +591,9 @@ const getFriends = async (req, res) => {
 
 module.exports = {
     getProfile,
-    getFriends,
-    // setteam,    UpdateProfile,  getFriend, getProduct, handleDelete, getTournamentInfo, handleApproval, getUserFriends, getTeams, addFriend, getPlayers, messageControl, getChat, getRecivedMessage, searchFriends, searching, getPlayingFriends, statusControl 
+    searchUsers,
+    UpdateProfile,
+    handleRequest,
+    //   handleDelete, getTournamentInfo, handleApproval, getUserFriends,  addFriend, getPlayers, messageControl, getChat, getRecivedMessage, searching, getPlayingFriends, statusControl 
 
 }

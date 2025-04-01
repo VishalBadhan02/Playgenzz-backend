@@ -8,6 +8,8 @@ const Config = {
         URL: process.env.DATABASE_URL,
     },
     "JWTSECRETKEY": process.env.JWTACCESSKEY,
+    "SECRETACCESSKEY": process.env.SECRETACCESSKEY,
+    "ACESSKEYID": process.env.ACESSKEYID,
 }
 
 module.exports = Config

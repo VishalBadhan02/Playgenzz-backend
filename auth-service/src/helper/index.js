@@ -16,10 +16,13 @@ const ExistUser = async (userInput) => {
             ]
         }
     });
-    if (!user) return false
 
     return (user) ? { status: true, user } : false;
 }
+
+
+
+
 
 // function to generate otp
 const generateOTP = async (email, phone, userId) => {
@@ -109,7 +112,7 @@ const registerUser = async (id) => {
         if (!token) {
             return { success: false, message: "Failed to generate token" };
         }
-        
+
         // ✅ Store user in User table
         const newUser = await prisma.user.create({
             data: {

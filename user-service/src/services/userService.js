@@ -30,6 +30,36 @@ class UserService {
 
         return friendRequests; // Always returns an array (empty if no users found)
     }
+
+    async updateProfile(_id, updateData) {
+        const user = await UserModel.findOneAndUpdate({ _id }, { $set: updateData }, {
+            new: true
+        });
+        return user
+    }
+
+    async UniqueUserName(_id, userName) {
+        try {
+            const user = await UserModel.findOne({
+                _id: { $ne: _id },
+                userName,
+            });
+            return user ? false : true;
+        } catch (error) {
+            return error
+        }
+    }
+
+    async addFriend(friendData) {
+        try {
+            const request = new FriendModel({
+                ...friendData
+            })
+            await request.save()
+        } catch (error) {
+            return error
+        }
+    }
 }
 
 module.exports = new UserService();

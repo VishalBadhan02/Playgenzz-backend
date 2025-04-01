@@ -2,8 +2,7 @@ const express = require('express');
 const router = express.Router();
 const UserController = require('../controllers/UserController');
 const LocationController = require('../controllers/LocationController');
-// const { verifyJWT } = require('../services/JWT');
-const upload = require('../services/multer');
+const upload = require('../middlewares/multer');
 
 
 {
@@ -11,12 +10,10 @@ const upload = require('../services/multer');
     router.get("/getcountry", LocationController.getcountry);
     router.get("/getstate/:country", LocationController.getstate);
     router.get("/getcity/:state", LocationController.getcity);
-    router.get("/searching", UserController.getFriends)
-    // router.get("/search", UserController.searchFriends)
+    router.get("/searching", UserController.searchUsers)
     // router.get("/getInfo/:id", UserController.getTournamentInfo)
     // router.get("/userFriends", UserController.getUserFriends)
     // router.get("/playingOnes", UserController.getPlayingFriends)
-    // router.get("/getProduct", UserController.getProduct)
     // router.get("/getPlayer/:type?", UserController.getPlayers)
     // router.get("/getChat/:id", UserController.getChat)
     // router.get("/getRecievedMessages", UserController.getRecivedMessage)
@@ -25,7 +22,7 @@ const upload = require('../services/multer');
 
 {
     // router.post("/registerUser", UserController.registerUser)
-    // router.post("/friendRequest", UserController.getFriend)
+    router.post("/friendRequest", UserController.handleRequest)
     // router.post("/addPlayer", UserController.addFriend)
     // router.post("/teamcontrol", UserController.setteam);
     // router.post("/postMessage", UserController.messageControl)
@@ -35,11 +32,11 @@ const upload = require('../services/multer');
 //     router.delete("/deleteRequest", UserController.handleDelete)
 // }
 
-// {
-//     router.put("/approvalRequest", UserController.handleApproval)
-//     router.put("/updateProfile", upload.single('profilePicture'), UserController.UpdateProfile);
+{
+    //     router.put("/approvalRequest", UserController.handleApproval)
+    router.put("/updateProfile", upload.single('profilePicture'), UserController.UpdateProfile);
 
-// }
+}
 
 
 module.exports = router;

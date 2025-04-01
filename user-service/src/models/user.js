@@ -24,6 +24,8 @@ const userSchema = mongoose.Schema({
     lastActiveAt: { type: Date },
 }, { timestamps: true })
 
+userSchema.index({ userName: 1 });
+
 const UserModel = mongoose.model("users", userSchema);
 
 module.exports = UserModel;

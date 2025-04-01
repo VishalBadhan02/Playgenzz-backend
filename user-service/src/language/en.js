@@ -1,5 +1,4 @@
 const Lang = {
-    "TOURNAMENT_FETCHED": "Tournament fetched successfully",
     "USER_PROFILE": "User profile fetched succesfully",
     "COUNTRY": "Countries fetched succesfully",
     "COUNTRY_NOT_FOUND": "Countries not found",
@@ -8,24 +7,16 @@ const Lang = {
     "STATE": "State fetched succesfully",
     "CITY": "City fetched succesfully",
     "TEAM_FOUND": "Teams fetched successfully",
-    "HANDLE_SCORE_FAILS": "Error handling score",
-    "HANDLE_SCORE": "Score updated successfully",
-    "SCORE_FETCHED": "Score fetched successfully",
-    "TOSS_PENDING": "Toss is pending yet",
-    "TOURNAMENT_SUCCESS": "Tournament registered successfully",
-    "TEAM_FETCH": "Team fetched successfully",
+    "TEAM_NOT_FETCHED": "Team not found",
     "USER_FETCH": "User fetched successfully",
     "USER_NOT_FOUND": "User not found",
     "FRIEND_REQUEST_FETCHED": "Friend requests fetched",
-    "TEAM_FETCHED": "Team fetched successfully",
-    "TEAM_NOT_FETCHED": "Team not found",
     "SUCCESS": "Success",
-    "TEAM_FETCH_FAILED": "Team fetch failed",
-    "MATCHES_FETCH_FAILED": "Matches fetch failed",
-    "MATCHES_FETCHED": "Matches fetched successfully",
-    "TEAM_NOT_FOUND": "You don't have any registered team",
-    "TOURNAMENT_NOT_FOUND": "Tournament not found",
-    "MATCHES_FETCH_FAILED": "Matches fetch failed"
+    "TOKEN_FAILED": "Failed generating token",
+    "OTP_FAILED": "Failed generating token",
+    "USER_UPDATED": "User updated successfully",
+    "UNAUTHORIZED": "Unauthorized: User not authenticated",
+    "USER_NAME_EXIST": "User name already in use"
 };
 
 module.exports = Lang;
