@@ -536,6 +536,117 @@ const fetchScoreCards = async (req, res) => {
     }
 }
 
+
+const handleTeamRequest = async (req, res) => {
+    try {
+        const { request, type, team, teamName } = req.body;
+        const messageType = (type === "team request") ? "teamRequest" : "Friend Request"
+        let type_id
+        const message = await UserModel.findOne({ _id: req.user._id })
+        const user = await UserModel.findOne({ _id: request });
+
+        if (type === "team request") {
+            const reques = new AddTeamMemberModel({
+                userId: req.user._id,
+                playerId: request,
+                userName: user.userName,
+                teamId: team,
+                status: 0,
+                commit: "Player"
+            });
+            type_id = reques._id
+            reques.save();
+        }
+        if (type === "Friend Request") {
+            const Request = new FriendModel({
+                user_id: req.user._id,
+                request: request,
+                status: 0,
+                commit: "add request",
+                type: "request"
+            });
+            type_id = Request._id
+            Request.save();
+        }
+        const notification = new NotificationModel({
+            type_id,
+            user_id: request,
+            type: "request",
+            message: {
+                name: message.userName,
+                type: messageType,
+                team: team,
+                teamName: teamName
+            },
+            status: 0
+        })
+
+        notification.save();
+
+        return res.json(reply.success())
+    } catch (err) {
+        res.json({ error: err.message });
+    }
+}
+
+// const handleApproval = async (req, res) => {
+//     try {
+//         const { approve, type, teamName, userId } = req.body
+//         if (type === "match") {
+//             await ScheduledMatchModel.findOneAndUpdate({ _id: approve }, { $set: { status: 1 } });
+//         }
+//         if (type === "request") {
+//             await FriendModel.findOneAndUpdate({ _id: approve }, { $set: { status: 1, commit: "request accepted" } });
+//         }
+//         if (type === "teamRequest") {
+//             await ScheduledMatchModel.findOneAndUpdate({ _id: approve }, { $set: { status: 1, commit: "request accepted" } });
+//         }
+
+//         await NotificationModel.findOneAndUpdate({ type_id: approve, status: 0 }, { $set: { status: 1 } });
+//         return res.json(reply.success("Approved"))
+//     } catch (err) {
+//         return res.json(err)
+//     }
+// }
+
+// const addFriend = async (req, res) => {
+//     try {
+//         const _id = req.user._id;
+//         const { playerId, userName, teamId, type, teamName } = req.body;
+
+//         // const team = await TeamModel.findOne({ teamName });
+//         const addplayer = new AddTeamMemberModel({
+//             userId: _id,
+//             playerId,
+//             userName,
+//             teamId,
+//             status: 1,
+//             commit: "Player"
+//         });
+
+//         const notif = new NotificationModel({
+//             type_id: addplayer._id,
+//             user_id: playerId,
+//             type: "request",
+//             message: `${teamName} added you in team `,
+//             status: 1,
+//         })
+//         notif.save()
+//         addplayer.save()
+//         return res.json(reply.success(Lang.SUCCESS))
+//     } catch (err) {
+//         return res.json(err)
+//     }
+// }
+
 module.exports = {
-    getTeam, manageScore, getTeamProfile, handleMatchRequest, getTeams, setActiveTeam, deleteTeamMember, updateTeam, getMatches, fetchScoreCards, registerTeam
+    getTeam,
+    handleTeamRequest,
+    manageScore,
+    getTeamProfile,
+    handleMatchRequest,
+    getTeams,
+    setActiveTeam,
+    deleteTeamMember,
+    updateTeam, getMatches, fetchScoreCards, registerTeam
 }

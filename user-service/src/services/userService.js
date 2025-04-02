@@ -56,6 +56,46 @@ class UserService {
                 ...friendData
             })
             await request.save()
+            return request
+        } catch (error) {
+            return error
+        }
+    }
+    async addFriend(friendData) {
+        try {
+            const request = new FriendModel({
+                ...friendData
+            })
+            await request.save()
+            return request
+        } catch (error) {
+            return error
+        }
+    }
+
+    async friendModelUpdate(_id, status, commit) {
+        try {
+            const unFriend = new FriendModel.findOneAndUpdate({ _id }, { $set: { status: status, commit: commit } })
+            return unFriend
+        } catch (error) {
+            return error
+        }
+    }
+
+
+    async userFriends(user_id) {
+        try {
+            const friends = await FriendModel.find({
+                $or: [
+                    { user_id: user_id },
+                    { request: user_id }
+                ]
+            }).populate({
+                path: "user_id request",
+                select: ["userName", "phoneNumber", "team", "_id", "profilePicture"]
+            });
+
+            return friends
         } catch (error) {
             return error
         }

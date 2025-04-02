@@ -11,6 +11,7 @@ Route.get("/scoreCards", TeamControlller.fetchScoreCards)
 
 Route.post("/handleRequest", TeamControlller.handleMatchRequest)
 Route.post("/teamRegistration", TeamControlller.registerTeam)
+Route.post("/teamRequest", TeamControlller.handleTeamRequest)
 
 Route.put("/handleScore", TeamControlller.manageScore)
 Route.put("/setActiveTeam", TeamControlller.setActiveTeam)

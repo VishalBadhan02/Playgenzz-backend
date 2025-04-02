@@ -1,9 +1,14 @@
-const kafka = require("./kafka");
+const kafka = require("./kafkaClient");
+const { Partitioners } = require('kafkajs');
 
-const producer = kafka.producer();
+const producer = kafka.producer({
+  createPartitioner: Partitioners.LegacyPartitioner
+});
 
 async function sendMessage(topic, message) {
   await producer.connect();
+  console.log("🚀 Producer connected");
+
   await producer.send({
     topic,
     messages: [{ value: JSON.stringify(message) }],

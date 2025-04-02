@@ -1,20 +1,13 @@
 const reply = require("../helper/reply");
 const Lang = require("../language/en")
 const UserModel = require("../models/user")
-// const { TournamentModel } = require("../model/tournament")
-// const { TeamModel } = require("../model/team")
-// const { FriendModel } = require("../model/useFriends")
-// const { ProductModel } = require("../model/product")
-// const { AddTeamMemberModel } = require("../model/addTeamMember")
-// const TournamentTeamsModel = require("../model/tournamentEntry")
-// const { MessageModel } = require("../model/messages")
-// const { NotificationModel } = require("../model/notification")
-// const { ScheduledMatchModel } = require("../model/scheduledMatch")
 const { getTeamByUser } = require("./GrpcController");
 const { setFriends } = require("../helper/getUserFriends");
 const userService = require("../services/userService");
 const { getFriendStatusMap, mapUserListWithFriends } = require("../utils/friends");
 const WebSocket = require('ws');
+const sendMessage = require("../kafka/producer");
+const { MessageModel } = require("../models/messageModal");
 
 
 
@@ -138,299 +131,114 @@ const UpdateProfile = async (req, res) => {
 const handleRequest = async (req, res) => {
     try {
         const { request, type, team, teamName } = req.body;
-        const messageType = (type === "team request") ? "teamRequest" : "Friend Request"
-        let type_id
-        const message = await UserModel.findOne({ _id: req.user._id })
-        const user = await UserModel.findOne({ _id: request });
-
-        if (type === "team request") {
-            const reques = new AddTeamMemberModel({
-                userId: req.user._id,
-                playerId: request,
-                userName: user.userName,
-                teamId: team,
-                status: 0,
-                commit: "Player"
-            });
-            type_id = reques._id
-            reques.save();
+        if (!request) {
+            return res.status(400).json({ error: "Receiver ID is required" });
         }
-        if (type === "Friend Request") {
-            const Request = new FriendModel({
-                user_id: req.user._id,
-                request: request,
-                status: 0,
-                commit: "add request",
-                type: "request"
-            });
-            type_id = Request._id
-            Request.save();
+
+        // Find sender user details
+        const user = await userService.findUser(req.user._id)
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
         }
-        const notification = new NotificationModel({
-            type_id,
-            user_id: request,
-            type: "request",
-            message: {
-                name: message.userName,
-                type: messageType,
-                team: team,
-                teamName: teamName
-            },
-            status: 0
-        })
 
-        notification.save();
+        // Prepare friend request data
+        const friendRequestData = {
+            user_id: req.user._id,
+            request: request,
+            status: 0,
+            commit: "add request",
+            type: "request"
+        }
 
+        const friendRequest = await userService.addFriend(friendRequestData)
+        if (!friendRequest) {
+            return res.status(500).json({ error: "Failed to create friend request" });
+        }
+
+        const notificationData = {
+            receiverId: request,           // Who receives this notification
+            actorId: req.user._id,               // Who triggered the action
+            type: "friend_request",           // Type of notification (friend_request, match_schedule, etc.)
+            entityId: friendRequest._id,             // ID of the related entity (match, team, tournament, etc.)
+            message: `${user?.userName} sent you a friend request`,  // Readable message
+            status: 0,                 // Status: unread, read, dismissed
+        }
+
+        await sendMessage("friend-request", notificationData)
         return res.json(reply.success())
     } catch (err) {
         res.json({ error: err.message });
     }
 }
 
+const handleDelete = async (req, res) => {
+    try {
+        const { _id } = req.body;
+        // if (type === "manage") {
+        //     await AddTeamMemberModel.findOneAndDelete({ _id });
+        // }
+
+        const modal = await userService.friendModelUpdate(_id, 2, "unFriend")
+        await sendMessage("update-request", { entityId: modal._id, type: "unFriend" })
+
+        // if (type === "match") {
+        //     await ScheduledMatchModel.findOneAndDelete({ _id })
+        // }
+        // await NotificationModel.findOneAndDelete({ type_id: _id })
+        return res.json(reply.success())
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
 
 
+const handleApproval = async (req, res) => {
+    try {
+        const { approve } = req.body
 
+        const modal = await userService.friendModelUpdate(approve, 1, "request accepted")
+        await sendMessage("update-request", { entityId: modal._id, type: "request accepted", status: 0 })
 
-// const handleDelete = async (req, res) => {
-//     try {
-//         const { _id, type } = req.body;
-//         if (type === "manage") {
-//             await AddTeamMemberModel.findOneAndDelete({ _id });
-//         }
-//         if (type === "request") {
-//             await FriendModel.findOneAndDelete({ _id });
-//         }
-//         if (type === "match") {
-//             await ScheduledMatchModel.findOneAndDelete({ _id })
-//         }
-//         await NotificationModel.findOneAndDelete({ type_id: _id })
-//         return res.json(reply.success())
-//     } catch (err) {
-//         res.status(500).json({ error: err.message });
-//     }
-// }
+        return res.json(reply.success("Approved"))
+    } catch (err) {
+        return res.json(err)
+    }
+}
 
+const getUserFriends = async (req, res) => {
+    try {
+        const user_id = req.user._id;
+        const friends = await FriendModel.find({
+            $or: [
+                { user_id: user_id },
+                { request: user_id }
+            ]
+        }).populate({
+            path: "user_id request",
+            select: ["userName", "phoneNumber", "team", "_id", "profilePicture"]
+        });
 
+        const userFriends = await setFriends(user_id)
+        // const userTeams = await setTeams(user_id)
 
-// const getTournamentInfo = async (req, res) => {
-//     try {
-//         const id = req.params.id;
-//         const tournamnet = await TournamentModel.findOne({ _id: id });
-//         return res.json(tournamnet)
-//     }
-//     catch (err) {
-//         res.json({ error: err.message });
-//     }
-// }
+        userFriends.recentMessage = ""
+        userFriends.pendingMessages = 0
 
-// const handleApproval = async (req, res) => {
-//     try {
-//         const { approve, type, teamName, userId } = req.body
+        for (const friend of friends) {
+            const messages = await MessageModel.find({ to: friend.request, $or: [{ status: 1 }, { status: 0 }] })
+            friend.session_id = user_id;
+            friend.pendingMessage = messages
+        }
 
-//         if (type === "teamRequest") {
-//             // const team = await TeamModel.findOneAndUpdate({ teamName }, {
-//             //     $push: {
-//             //         teamMembers: {
-//             //             _id: new mongoose.Types.ObjectId(),
-//             //             user_id: userId,
-//             //             player_id: req.user._id,
-//             //             user_name: req.user.userName,
-//             //             status: 1,
-//             //             commit: "Player"
-//             //         }
-//             //     }
-//             // });
-//             // await UserModel.findOneAndUpdate({ _id: req.user._id }, {
-//             //     $push: {
-//             //         requestedTeams: {
-//             //             team_Id: team._id,
-//             //             team_name: teamName,
-//             //             logo: team.logo || "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&h=400&fit=crop",
-//             //             sport: team.games,
-//             //             location: team.addressOfGround,
-//             //             status: 0
-//             //         }
-//             //     }
-//             // })
-//             // return res.json(reply.success("Approved"))
-//         }
-//         if (type === "match") {
-//             await ScheduledMatchModel.findOneAndUpdate({ _id: approve }, { $set: { status: 1 } });
-//         }
-//         if (type === "request") {
-//             await FriendModel.findOneAndUpdate({ _id: approve }, { $set: { status: 1, commit: "request accepted" } });
-//         }
-//         if (type === "teamRequest") {
-//             await ScheduledMatchModel.findOneAndUpdate({ _id: approve }, { $set: { status: 1, commit: "request accepted" } });
-//         }
+        friends.session_id = user_id
 
-//         await NotificationModel.findOneAndUpdate({ type_id: approve, status: 0 }, { $set: { status: 1 } });
-//         return res.json(reply.success("Approved"))
-//     } catch (err) {
-//         return res.json(err)
-//     }
-// }
+        return res.json(reply.success(Lang.SUCCESS, { friends, userFriends, userTeams }));
 
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+};
 
-// const getPlayingFriends = async (req, res) => {
-//     try {
-//         const user_id = req.user._id;
-//         const friends = await FriendModel.find({ user_id: user_id })
-//             .populate({ path: "request", select: ["userName", "phoneNumber", "team", "_id"] })
-//         const friend = await FriendModel.find({ request: user_id })
-//             .populate({ path: "user_id", select: ["userName", "phoneNumber", "team", "_id"] })
-
-//         for (let i = 0; i < friends.length; i++) {
-//             const data = await AddTeamMemberModel.findOne({ player_id: friends[i].request._id })
-//             friend[i].friends = (data) ? data : null
-//         }
-
-//         for (let i = 0; i < friend.length; i++) {
-//             const data = await AddTeamMemberModel.findOne({ player_id: friend[i].user_id._id })
-//             friend[i].friends = (data) ? data : null
-//         }
-
-//         return res.json({ friends, friend });
-
-//     } catch (err) {
-//         return res.status(500).json({ error: err.message });
-//     }
-// };
-
-
-// const getUserFriends = async (req, res) => {
-//     try {
-//         const user_id = req.user._id;
-//         const friends = await FriendModel.find({
-//             $or: [
-//                 { user_id: user_id },
-//                 { request: user_id }
-//             ]
-//         }).populate({
-//             path: "user_id request",
-//             select: ["userName", "phoneNumber", "team", "_id", "profilePicture"]
-//         });
-
-//         const userFriends = await setFriends(user_id)
-//         const userTeams = await setTeams(user_id)
-
-//         userFriends.recentMessage = ""
-//         userFriends.pendingMessages = 0
-
-//         for (const friend of friends) {
-//             const messages = await MessageModel.find({ to: friend.request, $or: [{ status: 1 }, { status: 0 }] })
-//             friend.session_id = user_id;
-//             friend.pendingMessage = messages
-//         }
-
-//         friends.session_id = user_id
-
-//         return res.json(reply.success(Lang.SUCCESS, { friends, userFriends, userTeams }));
-
-//     } catch (err) {
-//         return res.status(500).json({ error: err.message });
-//     }
-// };
-
-
-
-
-
-
-// const addFriend = async (req, res) => {
-//     try {
-//         const _id = req.user._id;
-//         const { playerId, userName, teamId, type, teamName } = req.body;
-
-//         // const team = await TeamModel.findOne({ teamName });
-//         const addplayer = new AddTeamMemberModel({
-//             userId: _id,
-//             playerId,
-//             userName,
-//             teamId,
-//             status: 1,
-//             commit: "Player"
-//         });
-
-//         const notif = new NotificationModel({
-//             type_id: addplayer._id,
-//             user_id: playerId,
-//             type: "request",
-//             message: `${teamName} added you in team `,
-//             status: 1,
-//         })
-//         notif.save()
-//         addplayer.save()
-//         return res.json(reply.success(Lang.SUCCESS))
-//     } catch (err) {
-//         return res.json(err)
-//     }
-// }
-
-// const getPlayers = async (req, res) => {
-//     try {
-//         if (req.params.type === "joinTeam") {
-//             const addedPlayer = await AddTeamMemberModel.find({ playerId: req.user._id })
-//             if (!addedPlayer) {
-//                 return res.json(reply.failure("Fetched Scuccesfuly"))
-//             }
-//             return res.json(reply.success("Fetched Scuccesfuly", addedPlayer))
-
-//         }
-//         const addedPlayer = await AddTeamMemberModel.find({ userId: req.user._id }).populate({ path: "playerId", select: ["userName", "_id"] })
-//         return res.json(reply.success("Fetched Scuccesfuly", addedPlayer))
-//     } catch (err) {
-//         return res.json(err)
-//     }
-// }
-
-
-// const messageControl = async (ws, data, wss) => {
-//     try {
-//         const { from, to, message, messageType, teamId, type } = data.data
-//         const user = await UserModel.findOne({ _id: from })
-//         if (!user) {
-//             console.log("user not found")
-//             return false;
-//         }
-//         if (!from || !message || !messageType) {
-//             console.error("Missing required fields");
-//             return false;
-//         }
-//         let status = 0
-//         if (wss.clients) {
-//             wss.clients.forEach(element => {
-//                 if (element.userId == to) {
-//                     status = 2
-//                 }
-//             });
-//         }
-
-//         const newMessage = new MessageModel({
-//             from: ws.userId,
-//             to,
-//             teamId,
-//             message,
-//             userName: user.userName,
-//             messageType,
-//             status
-//         })
-//         await newMessage.save();
-
-//         wss.clients.forEach(client => {
-//             if (client.readyState === WebSocket.OPEN &&
-//                 ((client.userId === from || client.userId === to))) {
-//                 client.send(JSON.stringify({
-//                     type: 'message_update',
-//                     newMessage
-//                 }));
-//             }
-//         });
-
-//     } catch (err) {
-//         console.log({ msg: "error in backend" }, err)
-//     }
-// }
 
 // const getChat = async (req, res) => {
 //     try {
@@ -470,6 +278,93 @@ const handleRequest = async (req, res) => {
 //         return res.status(500).json({ message: 'Error fetching messages' });
 //     }
 // };
+
+// const getPlayingFriends = async (req, res) => {
+//     try {
+//         const user_id = req.user._id;
+//         const friends = await FriendModel.find({ user_id: user_id })
+//             .populate({ path: "request", select: ["userName", "phoneNumber", "team", "_id"] })
+//         const friend = await FriendModel.find({ request: user_id })
+//             .populate({ path: "user_id", select: ["userName", "phoneNumber", "team", "_id"] })
+
+//         for (let i = 0; i < friends.length; i++) {
+//             const data = await AddTeamMemberModel.findOne({ player_id: friends[i].request._id })
+//             friend[i].friends = (data) ? data : null
+//         }
+
+//         for (let i = 0; i < friend.length; i++) {
+//             const data = await AddTeamMemberModel.findOne({ player_id: friend[i].user_id._id })
+//             friend[i].friends = (data) ? data : null
+//         }
+
+//         return res.json({ friends, friend });
+
+//     } catch (err) {
+//         return res.status(500).json({ error: err.message });
+//     }
+// };
+
+
+
+
+
+
+// const getPlayers = async (req, res) => {
+//     try {
+//         if (req.params.type === "joinTeam") {
+//             const addedPlayer = await AddTeamMemberModel.find({ playerId: req.user._id })
+//             if (!addedPlayer) {
+//                 return res.json(reply.failure("Fetched Scuccesfuly"))
+//             }
+//             return res.json(reply.success("Fetched Scuccesfuly", addedPlayer))
+
+//         }
+//         const addedPlayer = await AddTeamMemberModel.find({ userId: req.user._id }).populate({ path: "playerId", select: ["userName", "_id"] })
+//         return res.json(reply.success("Fetched Scuccesfuly", addedPlayer))
+//     } catch (err) {
+//         return res.json(err)
+//     }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module.exports = {
+    getProfile,
+    searchUsers,
+    UpdateProfile,
+    handleRequest,
+    handleDelete,
+    handleApproval,
+    getUserFriends,
+    //     addFriend, getPlayers, getPlayingFriends, statusControl 
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // // const getChat = async (req, res) => {
 // //     try {
@@ -512,88 +407,3 @@ const handleRequest = async (req, res) => {
 // //         res.status(500).json({ message: 'Error fetching messages' });
 // //     }
 // // };
-// const getRecivedMessage = async (req, res) => {
-//     try {
-//         const user_id = req.user._id;
-//         const data = await MessageModel.find({ friend: user_id })
-//         return res.json(data)
-//     } catch (err) {
-//         return res.json({ msg: "error in Reciviing Message" }, err)
-//     }
-// }
-
-// const searching = async (req, res) => {
-//     try {
-//         const search = req.params.search
-//         const data = await UserModel.find({ firstName: search })
-//         if (data) {
-//             return res.json(data)
-//         }
-//         return res.json({ msg: "User not exist" })
-//     } catch (err) {
-//         return res.json("error in searching", err)
-//     }
-// }
-
-
-// const statusControl = async (ws, data, wss) => {
-//     try {
-//         const isOffline = data.data.statusType === "offline"
-//         if (data.data.statusType === "offline") {
-//             await UserModel.findOneAndUpdate({ _id: ws.userId }, {
-//                 $set: {
-//                     active: false
-//                 }
-//             })
-
-//         } else {
-//             await MessageModel.updateMany(
-//                 {
-//                     from: data.matchId,
-//                     to: ws.userId,
-//                     status: 0
-//                 },
-//                 {
-//                     $set: {
-//                         status: 1,
-//                     }
-//                 }
-//             );
-//             await UserModel.findOneAndUpdate({ _id: ws.userId }, {
-//                 $set: {
-//                     active: true
-//                 }
-//             })
-//         }
-
-//         if (wss.clients) {
-//             wss.clients.forEach(client => {
-//                 if (client.readyState === WebSocket.OPEN
-//                 ) {
-//                     client.send(JSON.stringify({
-//                         type: 'message_update',
-//                         status: isOffline
-//                     }));
-//                 }
-//             });
-//         }
-//         return
-//     } catch (error) {
-//         console.error('Error updating message statuses:', error);
-//     }
-
-
-// }
-
-
-
-
-
-module.exports = {
-    getProfile,
-    searchUsers,
-    UpdateProfile,
-    handleRequest,
-    //   handleDelete, getTournamentInfo, handleApproval, getUserFriends,  addFriend, getPlayers, messageControl, getChat, getRecivedMessage, searching, getPlayingFriends, statusControl 
-
-}
