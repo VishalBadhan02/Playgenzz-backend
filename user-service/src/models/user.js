@@ -20,6 +20,7 @@ const userSchema = mongoose.Schema({
     otherTeams: Array,
     status: String,
     friends: Object,
+    friend: Boolean,
     active: { type: Boolean, default: false },
     lastActiveAt: { type: Date },
 }, { timestamps: true })

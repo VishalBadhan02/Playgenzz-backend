@@ -20,7 +20,6 @@ const getProfile = async (req, res) => {
     } else {
         userId = req.user?._id;
     }
-    console.log(userId)
     try {
         // const user = await UserModel.findOne({ _id: userId });
         const user = await userService.findUser(userId);
@@ -45,6 +44,7 @@ const getProfile = async (req, res) => {
         user.userTeams = teams.teams
         user.friends = friends
 
+
         return res.status(200).json(reply.success(Lang.USER_PROFILE, user));
     } catch (err) {
         console.log("Error in getProfile", err)
@@ -67,9 +67,9 @@ const searchUsers = async (req, res) => {
         // ✅ Fetch friend requests
         const friendRequests = await userService.friendRequests(session_id);
 
-        if (!users.length) {
-            return res.status(404).json(reply.failure("No users found"));
-        }
+        // if (!users.length) {
+        //     return res.status(404).json(reply.failure("No users found"));
+        // }
 
         // ✅ Process friend status using utility function
         const friendStatusMap = getFriendStatusMap(friendRequests, session_id);
@@ -130,7 +130,8 @@ const UpdateProfile = async (req, res) => {
 
 const handleRequest = async (req, res) => {
     try {
-        const { request, type, team, teamName } = req.body;
+        const { request } = req.body;
+
         if (!request) {
             return res.status(400).json({ error: "Receiver ID is required" });
         }
