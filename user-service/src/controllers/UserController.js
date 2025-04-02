@@ -178,7 +178,10 @@ const handleDelete = async (req, res) => {
         //     await AddTeamMemberModel.findOneAndDelete({ _id });
         // }
 
+        // This service update the FriendModal means by updating this you will delete user from you friends list
         const modal = await userService.friendModelUpdate(_id, 2, "unFriend")
+
+        //notification send to the other user
         await sendMessage("update-request", { entityId: modal._id, type: "unFriend" })
 
         // if (type === "match") {
@@ -196,7 +199,10 @@ const handleApproval = async (req, res) => {
     try {
         const { approve } = req.body
 
+        // This service update the FriendModal means by updating this you will get friends of the other user
         const modal = await userService.friendModelUpdate(approve, 1, "request accepted")
+
+        //notification send to the other user
         await sendMessage("update-request", { entityId: modal._id, type: "request accepted", status: 0 })
 
         return res.json(reply.success("Approved"))
@@ -208,17 +214,22 @@ const handleApproval = async (req, res) => {
 const getUserFriends = async (req, res) => {
     try {
         const user_id = req.user._id;
-        const friends = await FriendModel.find({
-            $or: [
-                { user_id: user_id },
-                { request: user_id }
-            ]
-        }).populate({
-            path: "user_id request",
-            select: ["userName", "phoneNumber", "team", "_id", "profilePicture"]
-        });
 
+        const friends = userService.userFriends(user_id)
+
+        // fetching the user friend from modal schema 
         const userFriends = await setFriends(user_id)
+
+        const userTeams = await getTeamByUser(user_id)
+            .then((teamData) => {
+                return teamData;
+                // Process the team data as needed
+            })
+            .catch((error) => {
+                console.error('Failed to retrieve team data:', error);
+                // Handle the error appropriately
+            });
+
         // const userTeams = await setTeams(user_id)
 
         userFriends.recentMessage = ""
@@ -240,44 +251,44 @@ const getUserFriends = async (req, res) => {
 };
 
 
-// const getChat = async (req, res) => {
-//     try {
-//         const { id } = req.params;
-//         const { type } = req.query;
-//         const userId = req.user._id;
+const getChat = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { type } = req.query;
+        const userId = req.user._id;
 
-//         if (!type && !id && !userId) {
-//             return res.status(400).json({ msg: "Parameter not passsed correctly" });
-//         }
-//         let query;
-//         if (type === 'direct') {
-//             query = {
-//                 $or: [
-//                     { from: userId, to: id },
-//                     { from: id, to: userId }
-//                 ],
-//                 messageType: 'direct'  // Ensure the correct field name
-//             };
-//         } else if (type === 'team') {
-//             query = { teamId: id };
+        if (!type && !id && !userId) {
+            return res.status(400).json({ msg: "Parameter not passsed correctly" });
+        }
+        let query;
+        if (type === 'direct') {
+            query = {
+                $or: [
+                    { from: userId, to: id },
+                    { from: id, to: userId }
+                ],
+                messageType: 'direct'  // Ensure the correct field name
+            };
+        } else if (type === 'team') {
+            query = { teamId: id };
 
-//         } else {
-//             return res.status(400).json({ message: 'Invalid chat type' });
-//         }
+        } else {
+            return res.status(400).json({ message: 'Invalid chat type' });
+        }
 
 
-//         const messages = await MessageModel.find(query).sort({ createdAt: 1 });
+        const messages = await MessageModel.find(query).sort({ createdAt: 1 });
 
-//         messages.forEach(element => {
-//             element.sessionId = req.user._id
-//         });
+        messages.forEach(element => {
+            element.sessionId = req.user._id
+        });
 
-//         return res.json(reply.success("Message fetched Succesfully", messages));
-//     } catch (error) {
-//         console.error('Error fetching messages:', error);
-//         return res.status(500).json({ message: 'Error fetching messages' });
-//     }
-// };
+        return res.json(reply.success("Message fetched Succesfully", messages));
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+        return res.status(500).json({ message: 'Error fetching messages' });
+    }
+};
 
 // const getPlayingFriends = async (req, res) => {
 //     try {
