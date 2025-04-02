@@ -40,10 +40,11 @@ const getProfile = async (req, res) => {
 
         // fetch user friends from friends modal
         const friends = await setFriends(userId)
+        const checkCurrentPage = await userService.userFriendForCurrentPage(req.user._id, userId)
 
         user.userTeams = teams.teams
         user.friends = friends
-
+        user.friend = checkCurrentPage
 
         return res.status(200).json(reply.success(Lang.USER_PROFILE, user));
     } catch (err) {

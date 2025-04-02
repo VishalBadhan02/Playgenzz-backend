@@ -100,6 +100,20 @@ class UserService {
             return error
         }
     }
+
+    async userFriendForCurrentPage(user_id, request) {
+        try {
+            const friends = await FriendModel.find({
+                user_id: user_id,
+                request: request
+
+            })
+            console.log(friends)
+            return friends.length > 0 ? friends.status : null
+        } catch (error) {
+            return error
+        }
+    }
 }
 
 module.exports = new UserService();
