@@ -20,7 +20,7 @@ const getProfile = async (req, res) => {
     } else {
         userId = req.user?._id;
     }
-
+    console.log(userId)
     try {
         // const user = await UserModel.findOne({ _id: userId });
         const user = await userService.findUser(userId);
