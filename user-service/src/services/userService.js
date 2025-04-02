@@ -103,13 +103,13 @@ class UserService {
 
     async userFriendForCurrentPage(user_id, request) {
         try {
-            const friends = await FriendModel.find({
+            const friends = await FriendModel.findOne({
                 user_id: user_id,
                 request: request
 
             })
-            console.log(friends)
-            return friends.length > 0 ? friends.status : null
+
+            return friends ? friends?.status : null
         } catch (error) {
             return error
         }

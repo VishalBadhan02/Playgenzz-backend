@@ -40,7 +40,10 @@ const getProfile = async (req, res) => {
 
         // fetch user friends from friends modal
         const friends = await setFriends(userId)
+
+        //this check wheathee current user is user frient or not on profile page
         const checkCurrentPage = await userService.userFriendForCurrentPage(req.user._id, userId)
+
 
         user.userTeams = teams.teams
         user.friends = friends
