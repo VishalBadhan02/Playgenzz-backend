@@ -31,25 +31,43 @@ console.table(Config);
 const proxyWithLogging = (target) => proxy(target, {
     proxyReqPathResolver: (req) => {
         const fullIncomingPath = req.originalUrl;
-        const finalProxiedPath = req.url;
-
         console.log(`Incoming Request: ${req.method} ${fullIncomingPath}`);
-        console.log(`Proxying request to: ${target}${finalProxiedPath}`);
-
+        console.log(`Proxying request to: ${target}${fullIncomingPath}`);
         return fullIncomingPath;
     },
     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
         if (srcReq.user) {
-            // Forward user information as a JSON-encoded string in a custom header
             proxyReqOpts.headers['X-User-Data'] = encodeURIComponent(JSON.stringify(srcReq.user));
         }
         return proxyReqOpts;
     },
-    proxyErrorHandler: (err, req, res, next) => {
-        console.error(`Proxy error for ${req.method} ${req.originalUrl}:`, err);
-        res.status(500).json({ error: "Proxy failed" });
+    proxyErrorHandler: (err, req, res) => {
+        console.error(`❌ Proxy error for ${req.method} ${req.originalUrl}: ${err.message}`);
+
+        if (res && typeof res.status === 'function') {
+            // Send error response to frontend
+            return res.status(502).json({
+                error: "Service unavailable",
+                message: err.message || "Unknown error",
+            });
+        } else {
+            console.error("⚠️ Response object is missing or not initialized!");
+
+            // Handle response manually by sending a fallback response via Express
+            req.app.use((req, res) => {
+                res.status(502).json({
+                    error: "Service unavailable",
+                    message: "The requested service is down or unreachable.",
+                });
+            });
+        }
     }
 });
+
+
+
+
+
 
 
 

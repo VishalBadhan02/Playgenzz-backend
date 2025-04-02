@@ -63,13 +63,21 @@ const Register = async (req, res) => {
     const numberCheck = await ExistUser(phoneNumber)
     const UniqueUser = await UniqueUserName(userName)
 
+    if (!UniqueUser.success) {
+        return res.status(502).json(reply.failure("Error connecting with user gRPC"));
+    }
+
+
     if (!emialCheck) {
         return res.status(409).json(reply.failure({ type: "email", message: lang.EMAIL_CHECK }));
     } else if (!numberCheck) {
         return res.status(409).json(reply.failure({ type: "phone", message: lang.PHONE_CHECK }));
-    } else if (UniqueUser.response.isUnique) {
+    } else if (!UniqueUser.response.isUnique) {
         return res.status(409).json(reply.failure({ type: "userName", message: lang.USER_NAME_EXIST }));
     }
+
+    console.log(UniqueUser.response.isUnique)
+
 
     // // ✅ Hash password securely
     const hashedPassword = await Bcrypt.hash(password, saltRounds);

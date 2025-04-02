@@ -91,6 +91,7 @@ const getTeamByUser = (userId) => {
 
 async function checkUniquenes(call, callback) {
     const userName = call.request.userName;
+
     try {
         const user = await UserModel.findOne({ userName });
 
