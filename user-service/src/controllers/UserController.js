@@ -179,19 +179,12 @@ const handleRequest = async (req, res) => {
 const handleDelete = async (req, res) => {
     try {
         const { _id } = req.body;
-        // if (type === "manage") {
-        //     await AddTeamMemberModel.findOneAndDelete({ _id });
-        // }
-
         // This service update the FriendModal means by updating this you will delete user from you friends list
-        const modal = await userService.friendModelUpdate(_id, 2, "unFriend")
+        const modal = await userService.friendModelDelete(_id)
 
         //notification send to the other user
-        await sendMessage("update-request", { entityId: modal._id, type: "unFriend" })
+        // await sendMessage("update-request", { entityId: modal._id, type: "unFriend" })
 
-        // if (type === "match") {
-        //     await ScheduledMatchModel.findOneAndDelete({ _id })
-        // }
         // await NotificationModel.findOneAndDelete({ type_id: _id })
         return res.json(reply.success())
     } catch (err) {
@@ -202,13 +195,12 @@ const handleDelete = async (req, res) => {
 
 const handleApproval = async (req, res) => {
     try {
-        const { approve } = req.body
-
+        const { approvalData } = req.body
         // This service update the FriendModal means by updating this you will get friends of the other user
-        const modal = await userService.friendModelUpdate(approve, 1, "request accepted")
+        const modal = await userService.friendModelUpdate(approvalData, 1, "request accepted")
 
         //notification send to the other user
-        await sendMessage("update-request", { entityId: modal._id, type: "request accepted", status: 0 })
+        // await sendMessage("update-request", { entityId: modal._id, type: "request accepted", status: 0 })
 
         return res.json(reply.success("Approved"))
     } catch (err) {

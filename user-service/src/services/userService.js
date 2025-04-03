@@ -73,10 +73,20 @@ class UserService {
         }
     }
 
-    async friendModelUpdate(_id, status, commit) {
+    async friendModelDelete(_id) {
         try {
-            const unFriend = new FriendModel.findOneAndUpdate({ _id }, { $set: { status: status, commit: commit } })
+            const unFriend = await FriendModel.findOneAndDelete({ _id })
+
             return unFriend
+        } catch (error) {
+            return error
+        }
+    }
+    async friendModelUpdate(_id) {
+        try {
+            const accept = await FriendModel.findOneAndUpdate({ _id }, { $set: { status: 1, commit: "request accepted" } })
+
+            return accept
         } catch (error) {
             return error
         }
@@ -104,16 +114,21 @@ class UserService {
     async userFriendForCurrentPage(user_id, request) {
         try {
             const friends = await FriendModel.findOne({
-                user_id: user_id,
-                request: request
+                $or: [
+                    { user_id: user_id, request: request },
+                    { user_id: request, request: user_id }
+                ]
+            });
 
-            })
+            const checkAccepter = friends?.user_id == user_id ? true : null
 
-            return friends ? friends?.status : null
+            return friends ? { status: friends?.status, _id: friends?._id, accepter: checkAccepter } : null;
         } catch (error) {
-            return error
+            console.log("here", error)
+            return error;
         }
     }
+
 }
 
 module.exports = new UserService();
