@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express = require('express');
 const Config = require('./src');
@@ -6,7 +5,7 @@ const proxy = require('express-http-proxy');
 
 const app = express();
 app.use(express.json());
-const PORT = process.env.PORT || 5000;
+
 
 // Log incoming requests
 app.use((req, res, next) => {
@@ -26,8 +25,6 @@ Object.entries(Config).forEach(([key, value]) => {
 console.log("Resolved Services:");
 console.table(Config);
 
-
-
 const proxyWithLogging = (target) => proxy(target, {
     proxyReqPathResolver: (req) => {
         const fullIncomingPath = req.originalUrl;
@@ -45,15 +42,12 @@ const proxyWithLogging = (target) => proxy(target, {
         console.error(`❌ Proxy error for ${req.method} ${req.originalUrl}: ${err.message}`);
 
         if (res && typeof res.status === 'function') {
-            // Send error response to frontend
             return res.status(502).json({
                 error: "Service unavailable",
                 message: err.message || "Unknown error",
             });
         } else {
             console.error("⚠️ Response object is missing or not initialized!");
-
-            // Handle response manually by sending a fallback response via Express
             req.app.use((req, res) => {
                 res.status(502).json({
                     error: "Service unavailable",
@@ -63,12 +57,6 @@ const proxyWithLogging = (target) => proxy(target, {
         }
     }
 });
-
-
-
-
-
-
 
 
 // Forward requests to microservices
@@ -83,6 +71,5 @@ app.use('/notifications', proxyWithLogging(Config.notification));
 
 // Start servers
 app.listen(Config.PORT, Config.HOST, () => {
-    console.log(`API Gateway running on port ${PORT}`);
-    // console.table(Config);
+    console.log(`API Gateway running on port ${Config.PORT}`);
 });

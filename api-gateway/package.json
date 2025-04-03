@@ -17,6 +17,7 @@
     "http-proxy-middleware": "^3.0.3",
     "jsonwebtoken": "^9.0.2",
     "kafkajs": "^2.2.4",
-    "pm2": "^5.4.3"
+    "pm2": "^5.4.3",
+    "ws": "^8.18.1"
   }
 }

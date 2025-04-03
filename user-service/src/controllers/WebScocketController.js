@@ -1,44 +1,77 @@
-const messageControl = async (ws, data, wss) => {
+const { MessageModel } = require("../models/messageModal");
+const userService = require("../services/userService");
+
+const messageControl = async (ws, datat, req) => {
     try {
-        const { from, to, message, messageType, teamId, type } = data.data
-        const user = await UserModel.findOne({ _id: from })
-        if (!user) {
-            console.log("user not found")
-            return false;
-        }
-        if (!from || !message || !messageType) {
-            console.error("Missing required fields");
-            return false;
-        }
-        let status = 0
-        if (wss.clients) {
-            wss.clients.forEach(element => {
-                if (element.userId == to) {
-                    status = 2
-                }
-            });
+        // const { from, to, message, messageType, teamId, type } = 
+        const { matchId, data } = datat
+        let status = 0;
+
+        const modalData = {
+            from: req._id,
+            to: matchId,
+            message: data.message,
+            userName: req.userName,
+            sessionId: req._id,
+            status: status,
+            messageType: "dkjsn",
+            teamId: "ds"
         }
 
         const newMessage = new MessageModel({
-            from: ws.userId,
-            to,
-            teamId,
-            message,
-            userName: user.userName,
-            messageType,
-            status
+            from: req._id,
+            to: matchId,
+            message: data.message,
+            userName: req.userName,
+            sessionId: req._id,
+            status: status
         })
-        await newMessage.save();
 
-        wss.clients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN &&
-                ((client.userId === from || client.userId === to))) {
-                client.send(JSON.stringify({
-                    type: 'message_update',
-                    newMessage
-                }));
-            }
-        });
+        await newMessage.save()
+
+        // const messageData = await userService.messageModal(modalData)
+
+
+
+        console.log(messageData)
+        // const user = await UserModel.findOne({ _id: from })
+        // if (!user) {
+        //     console.log("user not found")
+        //     return false;
+        // }
+        // if (!from || !message || !messageType) {
+        //     console.error("Missing required fields");
+        //     return false;
+        // }
+        // let status = 0
+        // if (wss.clients) {
+        //     wss.clients.forEach(element => {
+        //         if (element.userId == to) {
+        //             status = 2
+        //         }
+        //     });
+        // }
+
+        // const newMessage = new MessageModel({
+        //     from: ws.userId,
+        //     to,
+        //     teamId,
+        //     message,
+        //     userName: user.userName,
+        //     messageType,
+        //     status
+        // })
+        // await newMessage.save();
+
+        // wss.clients.forEach(client => {
+        //     if (client.readyState === WebSocket.OPEN &&
+        //         ((client.userId === from || client.userId === to))) {
+        //         client.send(JSON.stringify({
+        //             type: 'message_update',
+        //             newMessage
+        //         }));
+        //     }
+        // });
 
     } catch (err) {
         console.log({ msg: "error in backend" }, err)

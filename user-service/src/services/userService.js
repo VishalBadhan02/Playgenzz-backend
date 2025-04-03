@@ -1,3 +1,4 @@
+const { MessageModel } = require("../models/messageModal");
 const { FriendModel } = require("../models/useFriends");
 const UserModel = require("../models/user");
 
@@ -127,6 +128,22 @@ class UserService {
             console.log("here", error)
             return error;
         }
+    }
+
+    async messageModal(data) {
+        console.log(data)
+        try {
+            const newMessage = new MessageModel({
+                ...data
+            })
+
+            await newMessage.save();
+            console.log(newMessage)
+            return newMessage
+        } catch (error) {
+            return error
+        }
+
     }
 
 }

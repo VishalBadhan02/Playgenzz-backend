@@ -3,6 +3,7 @@ require('dotenv').config();
 const Config = {
     PORT: process.env.PORT,
     HOST: process.env.HOST,
+    SOCKET_PORT: process.env.SOCKET_PORT,
 
     auth: `http://${process.env.AUTH_HOST}:${process.env.AUTH_PORT}`,
     user: `http://${process.env.USER_HOST}:${process.env.USER_PORT}`,
