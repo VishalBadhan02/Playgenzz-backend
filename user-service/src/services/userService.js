@@ -131,14 +131,12 @@ class UserService {
     }
 
     async messageModal(data) {
-        console.log(data)
         try {
             const newMessage = new MessageModel({
                 ...data
             })
 
             await newMessage.save();
-            console.log(newMessage)
             return newMessage
         } catch (error) {
             return error

@@ -3,9 +3,16 @@ const http = require('http');
 const jwt = require('jsonwebtoken');
 const Config = require('./config'); // Ensure this has JWTSECRETKEY and SOCKET_PORT
 const { messageControl } = require('./controllers/WebScocketController');
+const { default: mongoose } = require('mongoose');
+
+mongoose.connect(Config.DATABASE.URL || "mongodb://localhost:27017/user-db").then(() => console.log('✅ User Service connected to MongoDB'))
+    .catch(err => console.error('❌ DB Connection Error:', err));
 
 const server = http.createServer();
+
 const wss = new WebSocket.Server({ server });
+
+
 
 wss.on('connection', (ws, req) => {
     console.log('✅ New WebSocket Client Connected');
@@ -24,19 +31,14 @@ wss.on('connection', (ws, req) => {
         const decoded = jwt.verify(token, Config.JWTSECRETKEY || "vishal123");
         console.log("🔑 Authenticated user:", decoded);
 
-        ws.user = decoded; // Attach user data to WebSocket instance
+        ws.user = decoded._id; // Attach user data to WebSocket instance
 
         ws.on('message', async (message) => {
             try {
                 const data = JSON.parse(message);
-
+                console.log(data)
                 if (data.type === "USER") {
-                    await messageControl(ws, data, ws.user);
-                }
-
-                if (data.event === "NEW_USER") {
-                    console.log("🆕 Processing new user registration:", data.data);
-                    // Save user data to database if needed
+                    await messageControl(ws, data, wss);
                 }
 
                 // Broadcast to all clients (optional)
@@ -62,6 +64,6 @@ wss.on('connection', (ws, req) => {
     });
 });
 
-server.listen(Config.SOCKET_PORT, () => {
+server.listen(Config.SOCKET_PORT || 5060, () => {
     console.log(`🚀 WebSocket Server running on port ${Config.SOCKET_PORT}`);
 });

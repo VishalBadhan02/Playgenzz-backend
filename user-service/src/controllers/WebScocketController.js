@@ -1,48 +1,32 @@
 const { MessageModel } = require("../models/messageModal");
 const userService = require("../services/userService");
 
-const messageControl = async (ws, datat, req) => {
+const messageControl = async (ws, datat, wss) => {
     try {
         // const { from, to, message, messageType, teamId, type } = 
         const { matchId, data } = datat
         let status = 0;
 
-        const modalData = {
-            from: req._id,
-            to: matchId,
-            message: data.message,
-            userName: req.userName,
-            sessionId: req._id,
-            status: status,
-            messageType: "dkjsn",
-            teamId: "ds"
+        if (!ws.user || !data.message) {
+            console.error("Missing required fields");
+            return false;
         }
 
-        const newMessage = new MessageModel({
-            from: req._id,
+        const modalData = {
+            from: ws.user,
             to: matchId,
             message: data.message,
-            userName: req.userName,
-            sessionId: req._id,
-            status: status
-        })
+            sessionId: ws.user,
+            status: status,
+        }
 
-        await newMessage.save()
+        const messageData = await userService.messageModal(modalData)
 
-        // const messageData = await userService.messageModal(modalData)
-
-
-
-        console.log(messageData)
-        // const user = await UserModel.findOne({ _id: from })
         // if (!user) {
         //     console.log("user not found")
         //     return false;
         // }
-        // if (!from || !message || !messageType) {
-        //     console.error("Missing required fields");
-        //     return false;
-        // }
+
         // let status = 0
         // if (wss.clients) {
         //     wss.clients.forEach(element => {
@@ -131,3 +115,87 @@ module.exports = {
     messageControl,
     statusControl
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const messageControl = async (ws, datat, wss) => {
+//     try {
+//         const { matchId, data } = datat;
+
+//         if (!ws.user || !data.message) {
+//             console.error("Missing required fields");
+//             return false;
+//         }
+
+//         const senderId = ws.user;
+//         const recipientId = matchId;
+
+//         // Check if the conversation is already cached in the WebSocket object
+//         if (!ws.conversation) {
+//             // Define the participants array
+//             const participants = [
+//                 { entityId: senderId, entityType: 'User' },
+//                 { entityId: recipientId, entityType: 'User' }
+//             ];
+
+//             // Retrieve or create the conversation and cache it in the WebSocket object
+//             ws.conversation = await Conversation.findOneAndUpdate(
+//                 {
+//                     participants: {
+//                         $all: [
+//                             { $elemMatch: { entityId: senderId, entityType: 'User' } },
+//                             { $elemMatch: { entityId: recipientId, entityType: 'User' } }
+//                         ]
+//                     }
+//                 },
+//                 {
+//                     $setOnInsert: {
+//                         participants: participants,
+//                         type: 'one-on-one'
+//                     }
+//                 },
+//                 {
+//                     new: true,
+//                     upsert: true
+//                 }
+//             );
+//         }
+
+//         // Use the cached conversation for message storage
+//         const newMessage = new Message({
+//             conversationId: ws.conversation._id,
+//             from: senderId,
+//             to: recipientId,
+//             message: data.message,
+//             status: 0 // Assuming 0 indicates 'sent' status
+//         });
+//         await newMessage.save();
+
+//         // Broadcast the message to relevant clients
+//         wss.clients.forEach(client => {
+//             if (client.readyState === WebSocket.OPEN &&
+//                 (client.user === senderId || client.user === recipientId)) {
+//                 client.send(JSON.stringify({
+//                     type: 'message_update',
+//                     message: newMessage
+//                 }));
+//             }
+//         });
+
+//     } catch (err) {
+//         console.error("Error in backend", err);
+//     }
+// };
