@@ -206,5 +206,4 @@ const handleUpdatePassword = async () => {
 
 
 
-
 module.exports = { login, Register, handleOTpverification, handleforgot, handleUpdatePassword }
