@@ -26,7 +26,7 @@ const login = async (req, res) => {
         const isMatch = await Bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(401).json(reply.failure({ type: "password", message: lang.PASSWORD_NOTFOUND }))
+            return res.status(404).json(reply.failure({ type: "password", message: lang.PASSWORD_NOTFOUND }))
         }
 
         // const module = await generateOTP(user.id, "otp for login");
@@ -203,6 +203,7 @@ const handleUpdatePassword = async () => {
         return res.status(500).json(reply.failure(err.message));
     }
 }
+
 
 
 

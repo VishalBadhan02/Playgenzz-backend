@@ -3,6 +3,8 @@ const prisma = require("../prisma/prisma");
 const bcrypt = require("bcryptjs");
 const { generateToken } = require("../services/JWT");
 const client = require("../client");
+const { storedOtpModal, getOtp } = require("../services/redisTokenService");
+const { default: redis } = require("../services/redisClient");
 const saltRounds = 16;
 // const reply = require('./reply');
 // const lang = require('../language/en');
@@ -30,6 +32,8 @@ const generateOTP = async (email, phone, userId) => {
     const oneTimePassword = Math.floor(1000 + Math.random() * 9000).toString();
     const hashedOTP = await bcrypt.hash(oneTimePassword.toString(), saltRounds); // 🔒 Hash OTP
 
+    // Store OTP in Redis for 5 minutes
+
     // ✅ Store OTP in PostgreSQL using Prisma
     const OTPModule = await prisma.oTP.create({
         data: {
@@ -44,42 +48,55 @@ const generateOTP = async (email, phone, userId) => {
     });
     if (!OTPModule) false;
 
+
+    await storedOtpModal(userId, {
+        code: hashedOTP,
+        attempts: 0,
+        id: OTPModule.id
+    });// Store OTP in Redis for 5 minutes
+
     return { otp: oneTimePassword, OTPModule }; // Returning plain OTP for sending via email/SMS
 };
 
 // this function only verify the otp
 const verifyOTP = async (userId, enteredOTP) => {
+
+    const redisData = await getOtp(userId);
     // ✅ Find latest OTP by email or phone
-    const storedOTP = await prisma.oTP.findFirst({
-        where: {
-            userId,
-            isUsed: false // Only check unused OTPs
-        },
-        orderBy: { createdAt: "desc" }, // Get latest OTP
-    });
 
-    if (!storedOTP) return { success: false, message: "OTP not found" };
-
-    // ✅ Check expiry
-    if (new Date() > storedOTP.expiresAt) {
-        return { success: false, message: "OTP expired" };
+    if (!redisData) {
+        return ({ success: false, message: "OTP expired or invalid" });
     }
 
+    const otpData = JSON.parse(redisData);
+
+    const isMatch = await bcrypt.compare(enteredOTP, otpData.code);
+
     // ✅ Compare hashed OTP
-    const isMatch = await bcrypt.compare(enteredOTP, storedOTP.code);
     if (!isMatch) {
+
+        if (otpData.attempts >= 5) {
+            await redis.del(`otp:${userId}`);
+            return { success: false, message: "Too many incorrect attempts. OTP expired." };
+        }
+
         // Increment attempt count
         await prisma.oTP.update({
-            where: { id: storedOTP.id },
-            data: { attempts: storedOTP.attempts + 1 }
+            where: { id: otpData.id },
+            data: { attempts: otpData.attempts + 1 }
         });
+
+        otpData.attempts += 1;
+
+        await redis.set(`otp:${userId}`, JSON.stringify(otpData), 'EX', 60 * 5);
+
 
         return { success: false, message: "Invalid OTP" };
     }
-
+    await redis.del(`otp:${userId}`);
     // ✅ Mark OTP as used
     await prisma.oTP.update({
-        where: { id: storedOTP.id },
+        where: { id: otpData.id },
         data: { isUsed: true }
     });
 
