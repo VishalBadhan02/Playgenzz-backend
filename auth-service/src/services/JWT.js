@@ -15,13 +15,9 @@ const generateToken = (user) => {
     return token;
 };
 
-// const generateToken = (user) => {
-//     const token = jwt.sign(user.toObject(), Config.JWTSECRETKEY)
-//     return token;
-// }
-
 const verifyJWT = (req, res, next) => {
     const token = req?.headers?.authorization;
+
     if (!token) {
         return res.json({ status: false, msg: "Token not verified" })
     }

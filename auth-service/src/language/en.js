@@ -11,7 +11,9 @@ const Lang = {
     "MISSING_FIELDS": "Some important fields are missing",
     "OTP_SEND": "Otp send succesfully",
     "OTP_FAILED": "Failed sending otp",
-    "USER_NAME_EXIST": "User name already in use"
+    "USER_NAME_EXIST": "User name already in use",
+    "OTP_VERIFY": "Otp verified successfully",
+    "OTP_FAILED": "OTP verification failed. Please try again.",
 };
 
 module.exports = Lang;

@@ -1,5 +1,5 @@
-import Redis from "ioredis";
-import Config from "../config";
+const Redis = require("ioredis");
+const Config = require("../config");
 
 const redis = new Redis({
     host: Config.REDIS_HOST,
@@ -15,4 +15,4 @@ redis.on("error", (err) => {
     console.error("❌ Redis connection error:", err);
 });
 
-export default redis;
+module.exports = redis;

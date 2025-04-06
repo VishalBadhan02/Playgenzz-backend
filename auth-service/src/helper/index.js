@@ -3,7 +3,7 @@ const prisma = require("../prisma/prisma");
 const bcrypt = require("bcryptjs");
 const { generateToken } = require("../services/JWT");
 const client = require("../client");
-const { storedOtpModal, getOtp } = require("../services/redisTokenService");
+const { storedOtpModal, getOtp, deleteOtp } = require("../services/redisTokenService");
 const { default: redis } = require("../services/redisClient");
 const saltRounds = 16;
 // const reply = require('./reply');
@@ -64,14 +64,18 @@ const verifyOTP = async (userId, enteredOTP) => {
     const redisData = await getOtp(userId);
     // ✅ Find latest OTP by email or phone
 
+    console.log("redisData", redisData)
+
     if (!redisData) {
         return ({ success: false, message: "OTP expired or invalid" });
     }
 
-    const otpData = JSON.parse(redisData);
+    const otpData = redisData;
+    console.log("otpData", otpData)
 
     const isMatch = await bcrypt.compare(enteredOTP, otpData.code);
 
+    console.log("isMatch", isMatch)
     // ✅ Compare hashed OTP
     if (!isMatch) {
 
@@ -93,7 +97,8 @@ const verifyOTP = async (userId, enteredOTP) => {
 
         return { success: false, message: "Invalid OTP" };
     }
-    await redis.del(`otp:${userId}`);
+
+    await deleteOtp(userId); // Delete OTP from Redis
     // ✅ Mark OTP as used
     await prisma.oTP.update({
         where: { id: otpData.id },
