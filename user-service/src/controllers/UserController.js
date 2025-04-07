@@ -20,6 +20,9 @@ const getProfile = async (req, res) => {
     } else {
         userId = req.user?._id;
     }
+    if (!userId) {
+        return res.status(400).json(reply.failure(Lang.USER_NOT_FOUND));
+    }
     try {
         // const user = await UserModel.findOne({ _id: userId });
         const user = await userService.findUser(userId);
