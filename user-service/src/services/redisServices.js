@@ -5,9 +5,17 @@ async function storeConversation(userId, recieverId, conversationId) {
 }
 
 const getConversation = async (userId, recieverId) => {
-    const conversation = await redisClient.get(`conversation:${userId}:${recieverId}`);
+    const key = `conversation:${userId}:${recieverId}`;
+    const conversation = await redisClient.get(key);
+
+    if (conversation) {
+        // Reheat: Extend expiry to 1 more day if it's being used
+        await redisClient.expire(key, 60 * 60 * 24);
+    }
+
     return conversation;
-}
+};
+
 const deleteConversation = async (userId) => {
     await redisClient.del(`conversation:${userId}`);
 }
