@@ -20,9 +20,8 @@ const getProfile = async (req, res) => {
     } else {
         userId = req.user?._id;
     }
-    if (!userId) {
-        return res.status(400).json(reply.failure(Lang.USER_NOT_FOUND));
-    }
+
+
     try {
         // const user = await UserModel.findOne({ _id: userId });
         const user = await userService.findUser(userId);
@@ -215,8 +214,6 @@ const getUserFriends = async (req, res) => {
     try {
         const user_id = req.user._id;
 
-        const friends = userService.userFriends(user_id)
-
         // fetching the user friend from modal schema 
         const userFriends = await setFriends(user_id)
 
@@ -230,25 +227,53 @@ const getUserFriends = async (req, res) => {
                 // Handle the error appropriately
             });
 
-        // const userTeams = await setTeams(user_id)
 
-        userFriends.recentMessage = ""
-        userFriends.pendingMessages = 0
-
-        for (const friend of friends) {
-            const messages = await MessageModel.find({ to: friend.request, $or: [{ status: 1 }, { status: 0 }] })
-            friend.session_id = user_id;
-            friend.pendingMessage = messages
-        }
-
-        friends.session_id = user_id
-
-        return res.json(reply.success(Lang.SUCCESS, { friends, userFriends, userTeams }));
+        return res.status(202).json(reply.success(Lang.SUCCESS, { userFriends, userTeams }));
 
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }
 };
+
+
+// const getUserFriends = async (req, res) => {
+//     try {
+//         const user_id = req.user._id;
+
+//         const friends = userService.userFriends(user_id)
+
+//         // fetching the user friend from modal schema 
+//         const userFriends = await setFriends(user_id)
+
+//         const userTeams = await getTeamByUser(user_id)
+//             .then((teamData) => {
+//                 return teamData;
+//                 // Process the team data as needed
+//             })
+//             .catch((error) => {
+//                 console.error('Failed to retrieve team data:', error);
+//                 // Handle the error appropriately
+//             });
+
+//         // const userTeams = await setTeams(user_id)
+
+//         userFriends.recentMessage = ""
+//         userFriends.pendingMessages = 0
+
+//         for (const friend of friends) {
+//             const messages = await MessageModel.find({ to: friend.request, $or: [{ status: 1 }, { status: 0 }] })
+//             friend.session_id = user_id;
+//             friend.pendingMessage = messages
+//         }
+
+//         friends.session_id = user_id
+
+//         return res.json(reply.success(Lang.SUCCESS, { friends, userFriends, userTeams }));
+
+//     } catch (err) {
+//         return res.status(500).json({ error: err.message });
+//     }
+// };
 
 
 const getChat = async (req, res) => {

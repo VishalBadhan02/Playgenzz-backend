@@ -1,3 +1,4 @@
+const Conversation = require("../models/conversationSchema");
 const { MessageModel } = require("../models/messageModal");
 const { FriendModel } = require("../models/useFriends");
 const UserModel = require("../models/user");
@@ -143,6 +144,55 @@ class UserService {
         }
 
     }
+
+    // conversation.service.js
+    async conversationModal(senderId, recipientId, participants) {
+        try {
+            const conversation = await Conversation.findOneAndUpdate(
+                {
+                    participants: {
+                        $all: [
+                            { $elemMatch: { entityId: senderId, entityType: 'User' } },
+                            { $elemMatch: { entityId: recipientId, entityType: 'User' } }
+                        ]
+                    }
+                },
+                {
+                    $setOnInsert: {
+                        participants: participants,
+                        type: 'one-on-one'
+                    }
+                },
+                {
+                    new: true,
+                    upsert: true
+                }
+            );
+
+            return conversation;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+
+    async getUserContacts(userID) {
+        try {
+            const conversations = await Conversation.find({
+                participants: {
+                    $elemMatch: {
+                        entityId: userID,
+                        entityType: 'User'
+                    }
+                }
+            }).sort({ updatedAt: -1 }); // optional: sort by latest
+
+            return conversations;
+        } catch (error) {
+            throw error;
+        }
+    }
+
 
 }
 

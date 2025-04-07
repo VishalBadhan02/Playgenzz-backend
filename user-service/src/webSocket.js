@@ -29,14 +29,14 @@ wss.on('connection', (ws, req) => {
     try {
         // Verify token
         const decoded = jwt.verify(token, Config.JWTSECRETKEY || "vishal123");
-        console.log("🔑 Authenticated user:", decoded);
+        // console.log("🔑 Authenticated user:", decoded);
 
         ws.user = decoded._id; // Attach user data to WebSocket instance
 
         ws.on('message', async (message) => {
             try {
                 const data = JSON.parse(message);
-                console.log(data)
+                // console.log(data)
                 if (data.type === "USER") {
                     await messageControl(ws, data, wss);
                 }
@@ -64,6 +64,6 @@ wss.on('connection', (ws, req) => {
     });
 });
 
-server.listen(Config.SOCKET_PORT || 5060, () => {
-    console.log(`🚀 WebSocket Server running on port ${Config.SOCKET_PORT}`);
+server.listen(5060, "0.0.0.0", () => {
+    console.log(`🚀 WebSocket Server running on port ${Config.SOCKET_PORT || 5060}`);
 });

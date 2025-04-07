@@ -19,7 +19,7 @@ const ExistUser = async (userInput) => {
         }
     });
 
-    return (user) ? { status: false, user } : true;
+    return (user) ? { status: false, user } : { status: true };
 }
 
 

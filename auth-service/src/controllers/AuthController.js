@@ -8,47 +8,97 @@ const Bcrypt = require("bcryptjs")
 const saltRounds = 16;
 const prisma = require('../prisma/prisma');
 const { getUser } = require('../client');
-const { UniqueUserName } = require("../client")
+const { UniqueUserName } = require("../client");
+
+const { getRefreshToken, storeRefreshToken } = require("../services/redisTokenService");
 
 const login = async (req, res) => {
     const { password, emailOrPhone } = req.body;
+
     try {
-        let data = emailOrPhone.includes("@") ? { type: "email", message: lang.LOGIN_NOTFOUND } : { type: "phone", message: lang.INCORRECT_NUMBER }
+        let data = emailOrPhone.includes("@")
+            ? { type: "email", message: lang.LOGIN_NOTFOUND }
+            : { type: "phone", message: lang.INCORRECT_NUMBER };
 
-        const Validation = await ExistUser(emailOrPhone)
+        const Validation = await ExistUser(emailOrPhone);
 
-        if (!Validation) {
-            return res.status(404).json(reply.failure(data))
+        if (Validation.status) {
+            console.log("Validation failed");
+            return res.status(404).json(reply.failure(data));
         }
 
-        const user = Validation.user
+        const user = Validation?.user;
 
         const isMatch = await Bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(404).json(reply.failure({ type: "password", message: lang.PASSWORD_NOTFOUND }))
+            return res
+                .status(404)
+                .json(reply.failure({ type: "password", message: lang.PASSWORD_NOTFOUND }));
         }
 
-        // const module = await generateOTP(user.id, "otp for login");
+        // ✅ Check if refresh token already exists
+        const existingRefreshToken = await getRefreshToken(user.id);
 
-        const userService = await getUser(user.id)
+        let refreshToken;
 
-        if (!userService.success) {
-            return res.status(500).json(reply.failure(lang.USER_STATUS_FAIL))
+        if (existingRefreshToken) {
+            // Optionally, you can verify if the token is still valid (if using JWT)
+            console.log("Existing refresh token found.");
+            refreshToken = existingRefreshToken;
+
+            // 🔁 Optional: Replace old token with new one
+            // refreshToken = generateToken(user); // Uncomment this if you want to always issue a new token
+            // await storeRefreshToken(user.id, refreshToken);
+        } else {
+            refreshToken = generateToken(user); // JWT or any method
+            storeRefreshToken(user.id, refreshToken);
         }
 
-        // // await SendMail(user.email, "opt", "Otp for login " + module.otp);
+        return res
+            .status(200)
+            .json(reply.success(lang.LOGIN_SUCCESS, { token: refreshToken, type: req.body.type }));
 
-        const token = generateToken(userService.response.user);
-        if (!token) {
-            return res.status(500).json(reply.failure(lang.PASSWORD_NOTFOUND))
-        }
-        return res.status(200).json(reply.success(Lang.LOGIN_SUCCESS, { token: token, type: req.body.type }))
-    }
-    catch (err) {
+    } catch (err) {
+        console.error("Login error:", err);
         return res.status(500).json(reply.failure(err.message));
     }
-}
+};
+
+
+// const login = async (req, res) => {
+//     const { password, emailOrPhone } = req.body;
+//     try {
+//         let data = emailOrPhone.includes("@") ? { type: "email", message: lang.LOGIN_NOTFOUND } : { type: "phone", message: lang.INCORRECT_NUMBER }
+
+//         const Validation = await ExistUser(emailOrPhone)
+
+
+//         if (Validation.status) {
+//             console.log("Validation failed")
+//             return res.status(404).json(reply.failure(data))
+//         }
+
+//         const user = Validation?.user
+
+//         const isMatch = await Bcrypt.compare(password, user.password);
+
+//         if (!isMatch) {
+//             return res.status(404).json(reply.failure({ type: "password", message: lang.PASSWORD_NOTFOUND }))
+//         }
+
+//         const token = generateToken(user);
+
+//         storeRefreshToken(user.id, token);
+//         if (!token) {
+//             return res.status(500).json(reply.failure(lang.PASSWORD_NOTFOUND))
+//         }
+//         return res.status(200).json(reply.success(Lang.LOGIN_SUCCESS, { token: token, type: req.body.type }))
+//     }
+//     catch (err) {
+//         return res.status(500).json(reply.failure(err.message));
+//     }
+// }
 
 const Register = async (req, res) => {
     //Extract user data safely

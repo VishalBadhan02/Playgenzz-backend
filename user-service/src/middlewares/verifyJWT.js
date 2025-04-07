@@ -3,7 +3,7 @@ const Config = require("../config");
 
 
 const verifyJWT = (req, res, next) => {
-    const token = req.headers.authorization?.split(" ")[2]; // Extract token
+    const token = req.headers.authorization?.split(" ")[1]; // Extract token
 
 
     if (!token) {

@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const conversationSchema = new mongoose.Schema({
   participants: [
     {
-      entityId: { type: mongoose.Schema.Types.ObjectId, required: true },
+      entityId: { type: String, required: true },
       entityType: { type: String, enum: ['User', 'Team', 'Organizer', 'VenueAdmin'], required: true }
     }
   ],

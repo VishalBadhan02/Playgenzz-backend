@@ -1,10 +1,11 @@
 const { MessageModel } = require("../models/messageModal");
+const { getConversation, storeConversation } = require("../services/redisServices");
 const userService = require("../services/userService");
+
 
 const messageControl = async (ws, datat, wss) => {
     try {
-        // const { from, to, message, messageType, teamId, type } = 
-        const { matchId, data } = datat
+        const { matchId, data } = datat;
         let status = 0;
 
         if (!ws.user || !data.message) {
@@ -12,55 +13,40 @@ const messageControl = async (ws, datat, wss) => {
             return false;
         }
 
+        // Try getting conversationId from Redis
+        let conversationId = await getConversation(ws.user, matchId);
+
+        if (!conversationId) {
+            const participants = [
+                { entityId: ws.user, entityType: 'User' },
+                { entityId: matchId, entityType: 'User' }
+            ];
+
+            const conversation = await userService.conversationModal(ws.user, matchId, participants);
+            conversationId = conversation._id.toString();
+
+            // Store it in Redis for 1 day
+            await storeConversation(ws.user, matchId, conversationId);
+        }
+
         const modalData = {
             from: ws.user,
             to: matchId,
             message: data.message,
             sessionId: ws.user,
-            status: status,
-        }
+            status,
+            conversationId
+        };
 
-        const messageData = await userService.messageModal(modalData)
-
-        // if (!user) {
-        //     console.log("user not found")
-        //     return false;
-        // }
-
-        // let status = 0
-        // if (wss.clients) {
-        //     wss.clients.forEach(element => {
-        //         if (element.userId == to) {
-        //             status = 2
-        //         }
-        //     });
-        // }
-
-        // const newMessage = new MessageModel({
-        //     from: ws.userId,
-        //     to,
-        //     teamId,
-        //     message,
-        //     userName: user.userName,
-        //     messageType,
-        //     status
-        // })
-        // await newMessage.save();
-
-        // wss.clients.forEach(client => {
-        //     if (client.readyState === WebSocket.OPEN &&
-        //         ((client.userId === from || client.userId === to))) {
-        //         client.send(JSON.stringify({
-        //             type: 'message_update',
-        //             newMessage
-        //         }));
-        //     }
-        // });
+        const messageData = await userService.messageModal(modalData);
+        console.log("message data", messageData);
 
     } catch (err) {
-        console.log({ msg: "error in backend" }, err)
+        console.log({ msg: "error in backend" }, err);
     }
-}
+};
+
+
 
 const statusControl = async (ws, data, wss) => {
     try {
@@ -144,35 +130,7 @@ module.exports = {
 //         const recipientId = matchId;
 
 //         // Check if the conversation is already cached in the WebSocket object
-//         if (!ws.conversation) {
-//             // Define the participants array
-//             const participants = [
-//                 { entityId: senderId, entityType: 'User' },
-//                 { entityId: recipientId, entityType: 'User' }
-//             ];
 
-//             // Retrieve or create the conversation and cache it in the WebSocket object
-//             ws.conversation = await Conversation.findOneAndUpdate(
-//                 {
-//                     participants: {
-//                         $all: [
-//                             { $elemMatch: { entityId: senderId, entityType: 'User' } },
-//                             { $elemMatch: { entityId: recipientId, entityType: 'User' } }
-//                         ]
-//                     }
-//                 },
-//                 {
-//                     $setOnInsert: {
-//                         participants: participants,
-//                         type: 'one-on-one'
-//                     }
-//                 },
-//                 {
-//                     new: true,
-//                     upsert: true
-//                 }
-//             );
-//         }
 
 //         // Use the cached conversation for message storage
 //         const newMessage = new Message({

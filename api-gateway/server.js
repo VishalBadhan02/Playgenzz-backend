@@ -40,7 +40,6 @@ const proxyWithLogging = (target) => proxy(target, {
     },
     proxyErrorHandler: (err, req, res) => {
         console.error(`❌ Proxy error for ${req.method} ${req.originalUrl}: ${err.message}`);
-
         if (res && typeof res.status === 'function') {
             return res.status(502).json({
                 error: "Service unavailable",
@@ -48,7 +47,9 @@ const proxyWithLogging = (target) => proxy(target, {
             });
         } else {
             console.error("⚠️ Response object is missing or not initialized!");
+            console.log(req.app.use)
             req.app.use((req, res) => {
+                console.log(res);
                 res.status(502).json({
                     error: "Service unavailable",
                     message: "The requested service is down or unreachable.",
