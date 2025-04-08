@@ -15,10 +15,12 @@ class UserService {
     // Find Friends by Username Search
     async findFriends(_id, searchTerm) {
         const users = await UserModel.find({
-            _id: { $ne: _id }, // Exclude the current user
+            _id: { $ne: _id },
             userName: { $regex: `^${searchTerm}`, $options: "i" }
-        }).select("_id userName team profilePicture");
-
+        })
+            .select("_id userName team profilePicture")
+            .sort({ createdAt: -1 }) // most recent users first
+            .limit(7);
         return users; // Always returns an array (empty if no users found)
     }
 
@@ -106,7 +108,6 @@ class UserService {
                 path: "user_id request",
                 select: ["userName", "phoneNumber", "team", "_id", "profilePicture"]
             });
-
             return friends
         } catch (error) {
             return error
@@ -146,14 +147,14 @@ class UserService {
     }
 
     // conversation.service.js
-    async conversationModal(senderId, recipientId, participants) {
+    async conversationModal(senderId, recipientId, participants, subType) {
         try {
             const conversation = await Conversation.findOneAndUpdate(
                 {
                     participants: {
                         $all: [
                             { $elemMatch: { entityId: senderId, entityType: 'User' } },
-                            { $elemMatch: { entityId: recipientId, entityType: 'User' } }
+                            { $elemMatch: { entityId: recipientId, entityType: subType } }
                         ]
                     }
                 },
@@ -182,7 +183,7 @@ class UserService {
                 participants: {
                     $elemMatch: {
                         entityId: userID,
-                        entityType: 'User'
+                        entityType: 'user'
                     }
                 }
             }).sort({ updatedAt: -1 }); // optional: sort by latest
@@ -192,6 +193,18 @@ class UserService {
             throw error;
         }
     }
+
+    async getUsersByIds(userIds) {
+        try {
+            const users = await UserModel.find({
+                _id: { $in: userIds } // ✅ Correct way to use $in
+            }).select(["userName", "phoneNumber", "_id", "profilePicture"]);
+            return users;
+        } catch (error) {
+            throw error;
+        }
+    }
+
 
 
 }

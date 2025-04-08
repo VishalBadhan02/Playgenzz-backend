@@ -8,6 +8,7 @@ const MessageSchema = mongoose.Schema({
     teamId: { type: String, ref: 'teams' },
     message: { type: String, required: true },
     userName: String,
+    conversationId: String,
     messageType: { type: String, enum: ['direct', 'team'] }, // Message content
     sessionId: String,
     status: Number

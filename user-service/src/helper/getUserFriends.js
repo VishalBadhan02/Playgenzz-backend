@@ -3,7 +3,7 @@ const userService = require("../services/userService");
 
 const setFriends = async (session) => {
     try {
-        const modal = userService.userFriends(session);
+        const modal = await userService.userFriends(session);
 
         let friend = [];
 

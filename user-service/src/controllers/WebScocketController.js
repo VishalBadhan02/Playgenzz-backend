@@ -5,8 +5,10 @@ const userService = require("../services/userService");
 
 const messageControl = async (ws, datat, wss) => {
     try {
-        const { matchId, data } = datat;
+        const { matchId, data, subType } = datat;
         let status = 0;
+
+        console.log("message data", datat);
 
         if (!ws.user || !data.message) {
             console.error("Missing required fields");
@@ -18,11 +20,11 @@ const messageControl = async (ws, datat, wss) => {
 
         if (!conversationId) {
             const participants = [
-                { entityId: ws.user, entityType: 'User' },
-                { entityId: matchId, entityType: 'User' }
+                { entityId: ws.user, entityType: "user" },
+                { entityId: matchId, entityType: subType }
             ];
 
-            const conversation = await userService.conversationModal(ws.user, matchId, participants);
+            const conversation = await userService.conversationModal(ws.user, matchId, participants, subType);
             conversationId = conversation._id.toString();
 
             // Store it in Redis for 1 day
@@ -38,8 +40,10 @@ const messageControl = async (ws, datat, wss) => {
             conversationId
         };
 
+        
+
         const messageData = await userService.messageModal(modalData);
-        console.log("message data", messageData);
+        // console.log("message data", messageData);
 
     } catch (err) {
         console.log({ msg: "error in backend" }, err);

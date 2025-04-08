@@ -1,4 +1,4 @@
-const { redisClient } = require('../clients/redisClient');
+const { redis } = require('../clients/redisClient');
 
 async function storeConversation(userId, recieverId, conversationId) {
     await redis.set(`conversation:${userId}:${recieverId}`, conversationId, 'EX', 60 * 60 * 24); // 1 day
@@ -6,21 +6,21 @@ async function storeConversation(userId, recieverId, conversationId) {
 
 const getConversation = async (userId, recieverId) => {
     const key = `conversation:${userId}:${recieverId}`;
-    const conversation = await redisClient.get(key);
+    const conversation = await redis.get(key);
 
     if (conversation) {
         // Reheat: Extend expiry to 1 more day if it's being used
-        await redisClient.expire(key, 60 * 60 * 24);
+        await redis.expire(key, 60 * 60 * 24);
     }
 
     return conversation;
 };
 
 const deleteConversation = async (userId) => {
-    await redisClient.del(`conversation:${userId}`);
+    await redis.del(`conversation:${userId}`);
 }
 const storeAccessToken = async (userId, token) => {
-    await redisClient.set(`access:${userId}`, token, 'EX', 60 * 15); // 15 minutes
+    await redis.set(`access:${userId}`, token, 'EX', 60 * 15); // 15 minutes
 }
 
 module.exports = {

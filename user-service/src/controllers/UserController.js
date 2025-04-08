@@ -8,6 +8,8 @@ const { getFriendStatusMap, mapUserListWithFriends } = require("../utils/friends
 const WebSocket = require('ws');
 const sendMessage = require("../kafka/producer");
 const { MessageModel } = require("../models/messageModal");
+const { getParticipantsWithDetails } = require("../utils/groupParticipents");
+const messageService = require("../services/messageService");
 
 
 
@@ -213,102 +215,67 @@ const handleApproval = async (req, res) => {
 const getUserFriends = async (req, res) => {
     try {
         const user_id = req.user._id;
+        const { t, id } = req.params;
 
-        // fetching the user friend from modal schema 
-        const userFriends = await setFriends(user_id)
+        // If this is a new conversation request
+        if (t === "n") {
+            const existingConvo = await messageService.checkConvo(user_id, id);
+            let userData = await userService.findUser(id);
 
-        const userTeams = await getTeamByUser(user_id)
-            .then((teamData) => {
-                return teamData;
-                // Process the team data as needed
-            })
-            .catch((error) => {
-                console.error('Failed to retrieve team data:', error);
-                // Handle the error appropriately
-            });
+            if (!userData && !existingConvo) {
+                const lastMsg = await messageService.getLastMessageForConversation(id);
+                const receiverId = lastMsg?.from === user_id ? lastMsg?.to : user_id;
+                userData = await userService.findUser(receiverId);
+            }
 
+            const data = {
+                _id: existingConvo?._id || userData?._id,
+                name: userData?.userName || "",
+                avatar: userData?.profilePicture || "",
+                status: "",
+                lastMessage: "",
+                lastMessageTime: "",
+                unreadCount: 0,
+                isTyping: false,
+                type: "user"
+            };
 
-        return res.status(202).json(reply.success(Lang.SUCCESS, { userFriends, userTeams }));
+            return res.status(202).json(reply.success(Lang.SUCCESS, { userData: data, t }));
+        }
+
+        // Else, fetch contacts and friends
+        const [userFriends, userTeams, userContacts] = await Promise.all([
+            setFriends(user_id),
+            getTeamByUser(user_id).catch(err => {
+                console.error("Failed to retrieve team data:", err);
+                return [];
+            }),
+            userService.getUserContacts(user_id)
+        ]);
+
+        const userChats = await getParticipantsWithDetails(userContacts, user_id);
+
+        return res.status(202).json(reply.success(Lang.SUCCESS, {
+            userFriends,
+            userTeams,
+            userChats
+        }));
 
     } catch (err) {
-        return res.status(500).json({ error: err.message });
+        console.error("getUserFriends error:", err);
+        return res.status(500).json({ error: err.message || "Server Error" });
     }
 };
 
 
-// const getUserFriends = async (req, res) => {
-//     try {
-//         const user_id = req.user._id;
-
-//         const friends = userService.userFriends(user_id)
-
-//         // fetching the user friend from modal schema 
-//         const userFriends = await setFriends(user_id)
-
-//         const userTeams = await getTeamByUser(user_id)
-//             .then((teamData) => {
-//                 return teamData;
-//                 // Process the team data as needed
-//             })
-//             .catch((error) => {
-//                 console.error('Failed to retrieve team data:', error);
-//                 // Handle the error appropriately
-//             });
-
-//         // const userTeams = await setTeams(user_id)
-
-//         userFriends.recentMessage = ""
-//         userFriends.pendingMessages = 0
-
-//         for (const friend of friends) {
-//             const messages = await MessageModel.find({ to: friend.request, $or: [{ status: 1 }, { status: 0 }] })
-//             friend.session_id = user_id;
-//             friend.pendingMessage = messages
-//         }
-
-//         friends.session_id = user_id
-
-//         return res.json(reply.success(Lang.SUCCESS, { friends, userFriends, userTeams }));
-
-//     } catch (err) {
-//         return res.status(500).json({ error: err.message });
-//     }
-// };
-
 
 const getChat = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { type } = req.query;
-        const userId = req.user._id;
+        const { conversationId } = req.params
 
-        if (!type && !id && !userId) {
-            return res.status(400).json({ msg: "Parameter not passsed correctly" });
-        }
-        let query;
-        if (type === 'direct') {
-            query = {
-                $or: [
-                    { from: userId, to: id },
-                    { from: id, to: userId }
-                ],
-                messageType: 'direct'  // Ensure the correct field name
-            };
-        } else if (type === 'team') {
-            query = { teamId: id };
+        const chat = await messageService.getMessage(conversationId)
 
-        } else {
-            return res.status(400).json({ message: 'Invalid chat type' });
-        }
-
-
-        const messages = await MessageModel.find(query).sort({ createdAt: 1 });
-
-        messages.forEach(element => {
-            element.sessionId = req.user._id
-        });
-
-        return res.json(reply.success("Message fetched Succesfully", messages));
+        return res.status(202).json(reply.success("Message fetched Succesfully", chat));
     } catch (error) {
         console.error('Error fetching messages:', error);
         return res.status(500).json({ message: 'Error fetching messages' });
@@ -370,13 +337,6 @@ const getChat = async (req, res) => {
 
 
 
-
-
-
-
-
-
-
 module.exports = {
     getProfile,
     searchUsers,
@@ -385,6 +345,7 @@ module.exports = {
     handleDelete,
     handleApproval,
     getUserFriends,
+    getChat
     //     addFriend, getPlayers, getPlayingFriends, statusControl 
 
 }
@@ -401,45 +362,3 @@ module.exports = {
 
 
 
-
-// // const getChat = async (req, res) => {
-// //     try {
-// //         const friendId = req.params.friendId
-// //         const userId = req.user._id
-// //         const data = await MessageModel.find({
-// //             $or: [
-// //                 { from: userId, to: friendId },
-// //                 { from: friendId, to: userId }
-// //             ]
-// //         }).sort({ createdAt: 1 })
-
-// //         if (!type && !id && !userId) {
-// //             return res.status(400).json({ msg: "Parameter not passsed correctly" });
-// //         }
-// //         let query;
-// //         if (type === 'direct') {
-// //             query = {
-// //                 $or: [
-// //                     { from: userId, to: id },
-// //                     { from: id, to: userId }
-// //                 ],
-// //                 messageType: 'direct'  // Ensure the correct field name
-// //             };
-// //         } else if (type === 'team') {
-// //             query = { teamId: id };
-
-// //         } else {
-// //             return res.status(400).json({ message: 'Invalid chat type' });
-// //         }
-
-
-// //         const messages = await MessageModel.find(query).sort({ createdAt: 1 });
-
-
-
-// //         res.json({ status: true, data: messages.length ? messages : [] });
-// //     } catch (error) {
-// //         console.error('Error fetching messages:', error);
-// //         res.status(500).json({ message: 'Error fetching messages' });
-// //     }
-// // };

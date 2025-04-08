@@ -11,10 +11,10 @@ const upload = require('../middlewares/multer');
     router.get("/getstate/:country", LocationController.getstate);
     router.get("/getcity/:state", LocationController.getcity);
     router.get("/searching", UserController.searchUsers)
-    router.get("/userFriends", UserController.getUserFriends)
+    router.get("/userFriends/:t?/:id?", UserController.getUserFriends)
     // router.get("/playingOnes", UserController.getPlayingFriends)
     // router.get("/getPlayer/:type?", UserController.getPlayers)
-    // router.get("/getChat/:id", UserController.getChat)
+    router.get("/getChat/:conversationId?", UserController.getChat)
     // router.get("/getRecievedMessages", UserController.getRecivedMessage)
 }
 
