@@ -5,6 +5,7 @@ const cors = require('cors');
 
 const NotificationRouter = require('./routes/notification');
 const verifyJWT = require('./middlewares/verifyJWT');
+const startConsumer = require('./kafka/consumer');
 
 const app = express();
 const PORT = process.env.PORT || 4008;
@@ -20,7 +21,10 @@ mongoose.connect(process.env.DATABASE_URL || "mongodb://localhost:27017/notifica
 // Routes
 app.use('/notifications', verifyJWT, NotificationRouter);
 
+
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`🚀 Notification Service is running on port ${PORT}`);
+  startConsumer()
 });

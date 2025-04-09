@@ -8,11 +8,6 @@ const NotificationSchema = mongoose.Schema({
     message: String,
     status: Number,
     data: Object,
-    // type_id: String,
-    // user_id: String,
-    // type: String,
-    // message: Object,
-    // status: Number,
 }, { timestamps: true })
 
 const NotificationModel = mongoose.model("notifications", NotificationSchema)

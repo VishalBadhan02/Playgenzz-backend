@@ -167,7 +167,7 @@ const handleRequest = async (req, res) => {
         const notificationData = {
             receiverId: request,           // Who receives this notification
             actorId: req.user._id,               // Who triggered the action
-            type: "friend_request",           // Type of notification (friend_request, match_schedule, etc.)
+            type: "request",           // Type of notification (friend_request, match_schedule, etc.)
             entityId: friendRequest._id,             // ID of the related entity (match, team, tournament, etc.)
             message: `${user?.userName} sent you a friend request`,  // Readable message
             status: 0,                 // Status: unread, read, dismissed
@@ -184,8 +184,16 @@ const handleDelete = async (req, res) => {
     try {
         const { _id } = req.body;
         // This service update the FriendModal means by updating this you will delete user from you friends list
-        const modal = await userService.friendModelDelete(_id)
+        const friendRequest = await userService.friendModelDelete(_id)
+        console.log(friendRequest)
+        if (friendRequest.operation === "delete") {
+            console.log("here")
+            await sendMessage("delete-request", { entityId: friendRequest?.friendRequest?._id, operation: "delete" })
+            return res.json(reply.success())
 
+        }
+
+        await sendMessage("delete-request", friendRequest?._id)
         //notification send to the other user
         // await sendMessage("update-request", { entityId: modal._id, type: "unFriend" })
 

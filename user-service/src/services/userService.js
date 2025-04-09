@@ -79,9 +79,30 @@ class UserService {
 
     async friendModelDelete(_id) {
         try {
-            const unFriend = await FriendModel.findOneAndDelete({ _id })
+            const friendRequest = await FriendModel.findById(_id);
 
-            return unFriend
+            if (!friendRequest) {
+                throw new Error("Friend request not found");
+            }
+
+            // Calculate the time difference in milliseconds
+            const timeDifference = new Date() - friendRequest.createdAt;
+
+            // Check if the request was created within the last 1 minute (60000 ms)
+            if (timeDifference <= 60000) {
+                // Delete the friend request
+                friendRequest.status = 2;
+                friendRequest.commit = "undo";
+                await friendRequest.save();
+                return { friendRequest, operation: "delete" };
+            } else {
+                // Update the friend request status to 'canceled' (assuming status 2 represents 'canceled')
+                friendRequest.status = 2;
+                friendRequest.commit = "undo";
+                await friendRequest.save();
+                return friendRequest;
+            }
+
         } catch (error) {
             return error
         }
@@ -121,7 +142,7 @@ class UserService {
                     { user_id: user_id, request: request },
                     { user_id: request, request: user_id }
                 ]
-            });
+            }).sort({ createdAt: -1 });
 
             const checkAccepter = friends?.user_id == user_id ? true : null
 
