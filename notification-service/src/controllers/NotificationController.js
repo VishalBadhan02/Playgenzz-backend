@@ -1,13 +1,21 @@
 const reply = require('../helper/reply');
 const Lang = require("../language/en");
-const { NotificationModel } = require("../models/notification");
+const notificationService = require('../services/notificationService');
+const { groupNotificationsByType } = require('../utils /groupNotificationsBytype');
 
 
 const getFriendRequest = async (req, res) => {
     try {
+
         const user_id = req.user._id
-        const friends = await NotificationModel.find({ user_id }).sort({ createdAt: -1 });
-        return res.json(reply.success(Lang.FRIEND_REQUEST_FETCHED, friends))
+
+        const notifications = await notificationService.fetchNotifications(user_id);
+
+        const groups = await groupNotificationsByType(notifications)
+
+        console.log(groups)
+
+        return res.status(202).json(reply.success(Lang.FRIEND_REQUEST_FETCHED, groups))
     } catch (error) {
         return res.json("error fetching friendrequest")
     }

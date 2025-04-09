@@ -10,6 +10,7 @@ const sendMessage = require("../kafka/producer");
 const { MessageModel } = require("../models/messageModal");
 const { getParticipantsWithDetails } = require("../utils/groupParticipents");
 const messageService = require("../services/messageService");
+const Config = require("../config");
 
 
 
@@ -167,10 +168,14 @@ const handleRequest = async (req, res) => {
         const notificationData = {
             receiverId: request,           // Who receives this notification
             actorId: req.user._id,               // Who triggered the action
-            type: "request",           // Type of notification (friend_request, match_schedule, etc.)
-            entityId: friendRequest._id,             // ID of the related entity (match, team, tournament, etc.)
-            message: `${user?.userName} sent you a friend request`,  // Readable message
+            type: Config.NOTIF_TYPE_REQUEST,// Type of notification (friend_request)
+            entityId: friendRequest._id,// ID of the related entity (match, team, tournament, etc.)
+            message: Config.NOTIF_MESSAGE,  // Readable message
             status: 0,                 // Status: unread, read, dismissed
+            data: {
+                type: "friend_request",
+                name: user?.userName
+            }
         }
 
         await sendMessage("friend-request", notificationData)
@@ -185,7 +190,7 @@ const handleDelete = async (req, res) => {
         const { _id } = req.body;
         // This service update the FriendModal means by updating this you will delete user from you friends list
         const friendRequest = await userService.friendModelDelete(_id)
-        console.log(friendRequest)
+
         if (friendRequest.operation === "delete") {
             console.log("here")
             await sendMessage("delete-request", { entityId: friendRequest?.friendRequest?._id, operation: "delete" })
@@ -193,7 +198,7 @@ const handleDelete = async (req, res) => {
 
         }
 
-        await sendMessage("delete-request", friendRequest?._id)
+        await sendMessage("delete-request", { entityId: friendRequest?._id })
         //notification send to the other user
         // await sendMessage("update-request", { entityId: modal._id, type: "unFriend" })
 
@@ -211,8 +216,8 @@ const handleApproval = async (req, res) => {
         // This service update the FriendModal means by updating this you will get friends of the other user
         const modal = await userService.friendModelUpdate(approvalData, 1, "request accepted")
 
-        //notification send to the other user
-        // await sendMessage("update-request", { entityId: modal._id, type: "request accepted", status: 0 })
+        // notification send to the other user
+        await sendMessage("update-request", { entityId: modal._id, type: "request accepted", status: 0 })
 
         return res.json(reply.success("Approved"))
     } catch (err) {

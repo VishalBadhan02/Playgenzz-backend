@@ -34,17 +34,24 @@ class NotificationService {
 
 
     // Get count of unread messages in a conversation
-    async getUnReadCount(conversationId) {
+    async updateNotification(entityId, status, message) {
         try {
-
+            const modal = await NotificationModel.findOneAndUpdate({ entityId }, {
+                $set: {
+                    status: status,
+                    message: message
+                }
+            })
+            return modal
         } catch (error) {
             throw error;
         }
     }
 
-    async checkConvo(userId, receiverId) {
+    async fetchNotifications(receiverId) {
         try {
-
+            const notifications = NotificationModel.find({ receiverId }).sort({ createdAt: -1 });
+            return notifications
         } catch (error) {
             throw error;
         }

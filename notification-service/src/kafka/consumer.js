@@ -20,6 +20,9 @@ async function startConsumer() {
           case 'delete-request':
             await handleDeleteRequest(data);
             break;
+          case 'approve-request':
+            await handleApproveRequest(data);
+            break;
           default:
             console.warn(`No handler for topic ${topic}`);
         }

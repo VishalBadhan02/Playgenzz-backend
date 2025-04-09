@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
+const Config = require("../config");
 require('dotenv').config();
 
-const JWT_SECRET = process.env.JWT_SECRET || "vishal123";
+const JWT_SECRET = Config.JWTSECRETKEY;
 
 const verifyJWT = (req, res, next) => {
     const token = req.headers.authorization?.split(" ")[1]; // Extract token
