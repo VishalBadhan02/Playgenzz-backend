@@ -48,6 +48,20 @@ class NotificationService {
         }
     }
 
+    async updateNotificationForStatus(_id, status, message) {
+        try {
+            const modal = await NotificationModel.findOneAndUpdate({ _id }, {
+                $set: {
+                    status: status,
+                    message: message
+                }
+            })
+            return modal
+        } catch (error) {
+            throw error;
+        }
+    }
+
     async fetchNotifications(receiverId) {
         try {
             const notifications = NotificationModel.find({ receiverId }).sort({ createdAt: -1 });

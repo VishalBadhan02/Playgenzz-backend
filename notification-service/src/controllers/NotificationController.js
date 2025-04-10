@@ -39,7 +39,26 @@ const getFriendRequest = async (req, res) => {
 
 const handleRequest = async (req, res) => {
     try {
-        console.log("nsd", req.body)
+        const id = req.body._id
+        const dat = await notificationService.updateNotificationForStatus(id, 1, Lang.APPROVER_SIDE_USER_REQUEST)
+        if (!dat) {
+            return
+        }
+        const acknoledgement = {
+            receiverId: dat.actorId,
+            actorId: dat.receiverId,
+            type: "user",
+            entityId: dat.entityId,
+            message: Lang.SENDER_SIDE_USER_REQUEST,
+            status: 1,
+            data: {
+                name: req.user.userName,
+                type: "friend_request"
+            },
+        }
+
+        const sjdn = await notificationService.setNotification(acknoledgement)
+        console.log("nsd", dat)
     } catch (error) {
 
     }

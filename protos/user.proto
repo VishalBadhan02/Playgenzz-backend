@@ -6,12 +6,18 @@ package user;
 service UserService {
   // Retrieves a user by ID.
   rpc GetUser (GetUserRequest) returns (GetUserResponse);
+
   // Creates a new user.
   rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
+
   // Check unique userName.
   rpc GetUserName (userName) returns (UniqueUserNameResponse);
+
   // Get usre id's for notification
   rpc GetUserIds (UserIds) returns (BulkUsers);
+  
+  // handel friends modal for updates
+  rpc GetModalId (GetUserRequest) returns (UniqueUserNameResponse);
 }
 
 // The request message containing the user ID.
