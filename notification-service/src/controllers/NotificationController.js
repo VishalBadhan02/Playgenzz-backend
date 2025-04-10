@@ -46,6 +46,7 @@ const handleRequest = async (req, res) => {
 }
 
 
+
 module.exports = {
     getFriendRequest, handleRequest
 }
