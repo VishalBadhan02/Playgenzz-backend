@@ -37,6 +37,14 @@ const getFriendRequest = async (req, res) => {
     }
 }
 
+const handleRequest = async (req, res) => {
+    try {
+        console.log("nsd", req.body)
+    } catch (error) {
+
+    }
+}
+
 module.exports = {
-    getFriendRequest
+    getFriendRequest, handleRequest
 }
