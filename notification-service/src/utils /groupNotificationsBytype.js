@@ -11,10 +11,10 @@ const groupNotificationsByType = (notifications) => {
         const type = notif.type;
 
         if (grouped[type]) {
-            grouped[type].push(notif);
+            grouped[type].push(notif.actorId);
         } else {
             // Optional: add unexpected types for debugging
-            grouped[type] = [notif];
+            grouped[type] = [notif.actorId];
         }
     }
 

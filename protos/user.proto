@@ -10,6 +10,8 @@ service UserService {
   rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
   // Check unique userName.
   rpc GetUserName (userName) returns (UniqueUserNameResponse);
+  // Get usre id's for notification
+  rpc GetUserIds (UserIds) returns (BulkUsers);
 }
 
 // The request message containing the user ID.
@@ -70,4 +72,14 @@ message userName {
 //Reaponse in boolean for unique userName
 message UniqueUserNameResponse {
   bool isUnique = 1;
+}
+
+// The id's to get user data
+
+message UserIds {
+ repeated string users = 1;
+}
+
+message BulkUsers {
+  repeated User bulk =1;
 }

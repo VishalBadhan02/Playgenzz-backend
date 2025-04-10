@@ -1,6 +1,8 @@
 const reply = require('../helper/reply');
 const Lang = require("../language/en");
 const notificationService = require('../services/notificationService');
+const { dataGathering } = require('../utils /dataGatheringFromServices');
+const { enrichNotifications } = require('../utils /enrichNotifications');
 const { groupNotificationsByType } = require('../utils /groupNotificationsBytype');
 
 
@@ -13,9 +15,11 @@ const getFriendRequest = async (req, res) => {
 
         const groups = await groupNotificationsByType(notifications)
 
-        console.log(groups)
+        const finalResponse = await dataGathering(groups)
 
-        return res.status(202).json(reply.success(Lang.FRIEND_REQUEST_FETCHED, groups))
+        const enrichedNotification = await enrichNotifications(notifications, finalResponse)
+
+        return res.status(202).json(reply.success(Lang.NOTIFICATIONS_FETCHED, enrichedNotification))
     } catch (error) {
         return res.json("error fetching friendrequest")
     }

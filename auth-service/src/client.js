@@ -20,7 +20,6 @@ const client = new userProto.UserService(
 );
 
 const userClient = async (data) => {
-
     // Wrap the gRPC call in a promise
     const createUser = () => {
         return new Promise((resolve, reject) => {

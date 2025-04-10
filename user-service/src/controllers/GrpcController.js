@@ -119,6 +119,25 @@ async function checkUniquenes(call, callback) {
     }
 }
 
+const getUsersByIds = async (call, callback) => {
+    const ids = call.request.users;
+    console.log(call.request)
+    try {
+        const users = await UserModel.find({ _id: { $in: ids } }).select(["userName", "profilePicture", "_id", "status", "firstName"]);
+        console.log(users)
+        return callback(null, { bulk: users });
+    } catch (error) {
+        console.error("Error checking username uniqueness:", error);
+
+        // ✅ Only return INTERNAL if there's an actual server error
+        return callback({
+            code: grpc.status.INTERNAL,
+            message: 'Internal server error',
+            details: error.message,
+        });
+    }
+}
+
 
 
 
@@ -126,5 +145,6 @@ module.exports = {
     createUser,
     getUser,
     getTeamByUser,
-    checkUniquenes
+    checkUniquenes,
+    getUsersByIds
 };
