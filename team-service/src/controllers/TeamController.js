@@ -47,7 +47,6 @@ const registerTeam = async (req, res) => {
     } catch (err) {
         return res.status(402).json({ error: err.message });
     }
-
 }
 
 const getTeam = async (req, res) => {
