@@ -42,9 +42,8 @@ const registerTeam = async (req, res) => {
             return res.status(402).json(reply.failure(team?.message));
         }
 
-
         return (
-            res.json(reply.success(Lang.REGISTER_SUCCESS, team.
+            res.status(200).json(reply.success(Lang.REGISTER_SUCCESS, team.
                 _id))
         )
     } catch (err) {
