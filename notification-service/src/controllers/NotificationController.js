@@ -42,26 +42,36 @@ const handleRequest = async (req, res) => {
     try {
         const id = req.body._id
         const actionType = req.body.action
-        const dat = await notificationService.updateNotificationForStatus(id, 1, Lang.APPROVER_SIDE_USER_REQUEST, actionType)
+
+        const status = actionType === "accept" ? 1 : 2
+        const message = actionType === "accept" ? Lang.APPROVER_SIDE_USER_REQUEST : "denid by the reciever"
+
+        //hnddling the recieving and dening process in cluding grpc call 
+        const dat = await notificationService.updateNotificationForStatus(id, status, message, actionType)
+
+
         if (!dat) {
             return res.status(400).json(reply.failure())
         }
 
 
-        const acknoledgement = {
-            receiverId: dat.actorId,
-            actorId: dat.receiverId,
-            type: "user",
-            entityId: dat.entityId,
-            message: Lang.SENDER_SIDE_USER_REQUEST,
-            status: 1,
-            data: {
-                name: req.user.userName,
-                type: "friend_request"
-            },
+        if (actionType === "accept") {
+            const acknoledgement = {
+                receiverId: dat.actorId,
+                actorId: dat.receiverId,
+                type: "user",
+                entityId: dat.entityId,
+                message: Lang.SENDER_SIDE_USER_REQUEST,
+                status: 1,
+                data: {
+                    name: req.user.userName,
+                    type: "friend_request"
+                },
+            }
+            await notificationService.setNotification(acknoledgement)
         }
-        const sjdn = await notificationService.setNotification(acknoledgement)
 
+        //deleting the cache from redis 
         await deleteNotifications(`user:${req.user._id}:notifications`)
         return res.status(202).json(reply.success())
     } catch (error) {

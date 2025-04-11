@@ -58,11 +58,13 @@ class NotificationService {
                 // Handle the case where no document is found
                 return null; // or throw a specific error
             }
-            const getFriendModalResponseAsync = util.promisify(grpcClientService.getFriendModalResponse);
-            const grpcResponse = await getFriendModalResponseAsync(modal.entityId, actionType);
+            const grpcResponse = await grpcClientService.getFreindModalResponse(modal.entityId, actionType);
+
+
             if (!grpcResponse.isUnique) {
                 return false
             }
+
             modal.status = status
             modal.message = message
             await modal.save()
@@ -72,14 +74,22 @@ class NotificationService {
         }
     }
 
-    async fetchNotifications(receiverId) {
+    async fetchNotifications(receiverId, page = 1, limit = 20) {
         try {
-            const notifications = NotificationModel.find({ receiverId }).sort({ createdAt: -1 });
-            return notifications
+            const skip = (page - 1) * limit;
+            const notifications = await NotificationModel.find({
+                receiverId,
+                status: { $lte: 1 }
+            })
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit);
+            return notifications;
         } catch (error) {
             throw error;
         }
     }
+
 
 
 }
