@@ -48,8 +48,6 @@ const registerTeam = async (req, res) => {
         return res.status(402).json({ error: err.message });
     }
 
-
-    
 }
 
 const getTeam = async (req, res) => {
