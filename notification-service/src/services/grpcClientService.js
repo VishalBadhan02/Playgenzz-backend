@@ -20,6 +20,23 @@ class grpcClientService {
             return error
         }
     }
+
+    async getFreindModalResponse(id, action) {
+        try {
+            const response = await new Promise((resolve, reject) => {
+                userClient.GetModalId({ _id: id, action: action }, (error, response) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(response);
+                    }
+                });
+            });
+            return response;
+        } catch (error) {
+            return error
+        }
+    }
 }
 
 module.exports = new grpcClientService();

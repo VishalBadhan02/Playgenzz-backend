@@ -1,4 +1,4 @@
-const { handleFriendRequest, handleDeleteRequest } = require("../controllers/KafkaController");
+const { handleFriendRequest, handleDeleteRequest, handleApproveRequest } = require("../controllers/KafkaController");
 const { kafka } = require("./kafka");
 
 const consumer = kafka.consumer({ groupId: "notification-group" });

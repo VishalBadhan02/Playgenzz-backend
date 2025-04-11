@@ -1,6 +1,7 @@
 const grpc = require('@grpc/grpc-js');
 const UserModel = require('../models/user');
 const { teamClient } = require('../gRPCClient');
+const { FriendModel } = require('../models/useFriends');
 
 async function createUser(call, callback) {
     const user = call.request;
@@ -121,11 +122,44 @@ async function checkUniquenes(call, callback) {
 
 const getUsersByIds = async (call, callback) => {
     const ids = call.request.users;
-    console.log(call.request)
     try {
         const users = await UserModel.find({ _id: { $in: ids } }).select(["userName", "profilePicture", "_id", "status", "firstName"]);
-        console.log(users)
         return callback(null, { bulk: users });
+    } catch (error) {
+        console.error("Error checking username uniqueness:", error);
+
+        // ✅ Only return INTERNAL if there's an actual server error
+        return callback({
+            code: grpc.status.INTERNAL,
+            message: 'Internal server error',
+            details: error.message,
+        });
+    }
+}
+
+
+const handleFriendModalUpdate = async (call, callback) => {
+    const _id = call.request._id;
+    const action = call.request.action;
+    const status = action === "accept" ? 1 : 3
+    const commit = action === "accept" ? "request accepted" : "denied"
+    console.log(call.request)
+    try {
+        const friendModal = await FriendModel.findOneAndUpdate(
+            { _id },
+            { $set: { status, commit } },
+            { new: true }
+        );
+
+        if (!friendModal) {
+            return callback({
+                code: grpc.status.NOT_FOUND,
+                message: 'Friend modal not found',
+            });
+        }
+
+
+        return callback(null, { isUnique: true });
     } catch (error) {
         console.error("Error checking username uniqueness:", error);
 
@@ -146,5 +180,6 @@ module.exports = {
     getUser,
     getTeamByUser,
     checkUniquenes,
-    getUsersByIds
+    getUsersByIds,
+    handleFriendModalUpdate
 };

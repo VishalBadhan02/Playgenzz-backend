@@ -18,6 +18,15 @@ async function getNotifications(cacheKey) {
     }
 }
 
+async function deleteNotifications(cacheKey) {
+    try {
+        return await redis.del(cacheKey);
+    } catch (error) {
+        console.error(`Redis get error for key ${cacheKey}:`, error);
+        return null;
+    }
+}
+
 
 
 
@@ -64,6 +73,7 @@ module.exports = {
     storeAccessToken,
     storedOtpModal,
     getOtp,
-    deleteOtp
+    deleteOtp,
+    deleteNotifications
 };
 

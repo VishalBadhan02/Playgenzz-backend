@@ -15,14 +15,19 @@ service UserService {
 
   // Get usre id's for notification
   rpc GetUserIds (UserIds) returns (BulkUsers);
-  
+
   // handel friends modal for updates
-  rpc GetModalId (GetUserRequest) returns (UniqueUserNameResponse);
+  rpc GetModalId (GetNotificationRequest) returns (UniqueUserNameResponse);
 }
 
 // The request message containing the user ID.
 message GetUserRequest {
   string user_id = 1;
+}
+
+message GetNotificationRequest {
+  string _id = 1;
+  string action = 2;
 }
 
 // The response message containing the user details.

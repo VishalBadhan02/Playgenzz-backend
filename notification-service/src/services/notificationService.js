@@ -1,4 +1,7 @@
 const { NotificationModel } = require("../models/notification");
+const grpcClientService = require("./grpcClientService");
+const util = require('util');
+
 
 class NotificationService {
     constructor() { }
@@ -48,14 +51,21 @@ class NotificationService {
         }
     }
 
-    async updateNotificationForStatus(_id, status, message) {
+    async updateNotificationForStatus(_id, status, message, actionType) {
         try {
-            const modal = await NotificationModel.findOneAndUpdate({ _id }, {
-                $set: {
-                    status: status,
-                    message: message
-                }
-            })
+            const modal = await NotificationModel.findOne({ _id })
+            if (!modal) {
+                // Handle the case where no document is found
+                return null; // or throw a specific error
+            }
+            const getFriendModalResponseAsync = util.promisify(grpcClientService.getFriendModalResponse);
+            const grpcResponse = await getFriendModalResponseAsync(modal.entityId, actionType);
+            if (!grpcResponse.isUnique) {
+                return false
+            }
+            modal.status = status
+            modal.message = message
+            await modal.save()
             return modal
         } catch (error) {
             throw error;

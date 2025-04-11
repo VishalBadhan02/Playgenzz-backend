@@ -1,7 +1,8 @@
 const reply = require('../helper/reply');
 const Lang = require("../language/en");
+const grpcClientService = require('../services/grpcClientService');
 const notificationService = require('../services/notificationService');
-const { storeNotifications, getNotifications } = require('../services/redisServices');
+const { storeNotifications, getNotifications, deleteNotifications } = require('../services/redisServices');
 const { dataGathering } = require('../utils /dataGatheringFromServices');
 const { enrichNotifications } = require('../utils /enrichNotifications');
 const { groupNotificationsByType } = require('../utils /groupNotificationsBytype');
@@ -40,10 +41,13 @@ const getFriendRequest = async (req, res) => {
 const handleRequest = async (req, res) => {
     try {
         const id = req.body._id
-        const dat = await notificationService.updateNotificationForStatus(id, 1, Lang.APPROVER_SIDE_USER_REQUEST)
+        const actionType = req.body.action
+        const dat = await notificationService.updateNotificationForStatus(id, 1, Lang.APPROVER_SIDE_USER_REQUEST, actionType)
         if (!dat) {
-            return
+            return res.status(400).json(reply.failure())
         }
+
+
         const acknoledgement = {
             receiverId: dat.actorId,
             actorId: dat.receiverId,
@@ -56,9 +60,10 @@ const handleRequest = async (req, res) => {
                 type: "friend_request"
             },
         }
-
         const sjdn = await notificationService.setNotification(acknoledgement)
-        console.log("nsd", dat)
+
+        await deleteNotifications(`user:${req.user._id}:notifications`)
+        return res.status(202).json(reply.success())
     } catch (error) {
 
     }

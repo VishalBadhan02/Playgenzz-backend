@@ -3,7 +3,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const mongoose = require('mongoose');
-const { createUser, getUser, checkUniquenes,getUsersByIds } = require('./controllers/GrpcController');
+const { createUser, getUser, checkUniquenes, getUsersByIds, handleFriendModalUpdate } = require('./controllers/GrpcController');
 const PROTO_PATH = path.resolve(__dirname, '../../protos/user.proto');
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
@@ -26,7 +26,8 @@ function main() {
         CreateUser: createUser,
         GetUser: getUser,
         GetUserName: checkUniquenes,
-        GetUserIds: getUsersByIds
+        GetUserIds: getUsersByIds,
+        GetModalId: handleFriendModalUpdate
     });
 
     const GRPC_PORT = process.env.GRPC_PORT || '5002';
