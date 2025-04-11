@@ -7,38 +7,45 @@ const { ScheduledMatchModel } = require('../models/scheduledMatch');
 // const UserModel = require('../model/user');
 // const { NotificationModel } = require('../model/notification');
 const { AddTeamMemberModel } = require('../models/addTeamMember');
+const teamServices = require('../services/teamServices');
+const { formatePlayerData } = require('../utils/formateData');
 // const { MessageModel } = require('../model/messages');
 
 const registerTeam = async (req, res) => {
     try {
-        console.log(req.body)
         const formData = req.body
-        console.log("formData", formData)
-        const team = new TeamModel({
-            user_id: req.user._id,
-            ...formData,
-        })
-        const player = new AddTeamMemberModel({
-            userId: req.user._id,
-            playerId: req.user._id,
-            userName: req.user?.userName,
-            teamId: team._id,
-            status: 1,
-            commit: "Captain"
-        });
+        const userId = req.user._id
 
-        // await UserModel.findOneAndUpdate({ _id: req.user._id }, {
-        //     $set: {
-        //         team: {
-        //             team_Id: team._id,
-        //             team_name: teamName,
-        //             logo: logo || "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&h=400&fit=crop"
-        //         }
-        //     }
-        // })
+        const existingteamcheck = await teamServices.checkGameExisting(userId, formData.games)
 
-        team.save();
-        player.save();
+        if (!existingteamcheck) {
+            return res.status(402).json(reply.failure(Lang.TEAM_EXIST));
+        }
+
+        //check unique name of the team if not unique then return 
+        const unique = await teamServices.checkUniqueName(formData?.teamName)
+
+        if (!unique) {
+            return res.status(402).json(reply.failure(Lang.UNIQUE_TEAM_NAME));
+        }
+
+        //service to register team in database
+        const team = await teamServices.handleTeamRegisteation(formData, req.user._id)
+
+        if (!team) {
+            return res.status(402).json(reply.failure(team?.message));
+        }
+
+        // formating the data to pass in addPlayerInPlayerModal
+        const playerdata = await formatePlayerData(userId, userId, req.user?.userName, team._id, 1, "Captain")
+
+        // here user is assinged as a captain for the registered room 
+        const player = await teamServices.addPlayerInPlayerModal(playerdata)
+
+        if (!player) {
+            return res.status(402).json(reply.failure(team?.message));
+        }
+
 
         return (
             res.json(reply.success(Lang.REGISTER_SUCCESS, team.
