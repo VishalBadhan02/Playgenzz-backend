@@ -13,7 +13,7 @@ const registerTeam = async (req, res) => {
     try {
         console.log(req.body)
         const formData = req.body
-
+        console.log("formData", formData)
         const team = new TeamModel({
             user_id: req.user._id,
             ...formData,

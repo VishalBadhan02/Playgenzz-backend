@@ -1,7 +1,7 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
-const Config = require('../config');
+const Config = require('../../../team-service/src/config');
 
 // Define the path to the user.proto file
 const USER_PROTO_PATH = path.resolve(__dirname, '../../../protos/user.proto');;
