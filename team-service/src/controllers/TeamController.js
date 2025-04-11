@@ -1,21 +1,17 @@
 const reply = require('../helper/reply');
 const Lang = require('../language/en');
-// const { ScoreCardModel } = require('../model/socreCard');
 const { TeamModel } = require('../models/team');
-// const ScoreHandler = require("../helper/setScors");
 const { ScheduledMatchModel } = require('../models/scheduledMatch');
-// const UserModel = require('../model/user');
-// const { NotificationModel } = require('../model/notification');
 const { AddTeamMemberModel } = require('../models/addTeamMember');
 const teamServices = require('../services/teamServices');
 const { formatePlayerData } = require('../utils/formateData');
-// const { MessageModel } = require('../model/messages');
 
 const registerTeam = async (req, res) => {
     try {
-        const formData = req.body
-        const userId = req.user._id
+        const formData = req.body;
+        const userId = req.user._id;
 
+        //  checking whether the user already registered in the team with existing game
         const existingteamcheck = await teamServices.checkGameExisting(userId, formData.games)
 
         if (!existingteamcheck) {
