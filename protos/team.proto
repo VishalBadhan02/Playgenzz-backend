@@ -19,23 +19,28 @@ message GetTeamResponse {
 }
 
 message teamRes {
-  string teamName = 1;
-  string user_id = 2;
-  string email = 3;
-  string phoneNumber = 4;
-  int32 noOfPlayers = 5;
-  int32 substitute = 6;
-  string homeGround = 7;
-  string addressOfGround = 8;
-  string pinCode = 9;
-  string logo = 10;
-  string games = 11;
-  string description = 12;
-  int32 members = 14;
-  repeated string joinTeam = 15;
+  string id = 1;
+  string name = 2;
+  string user_id = 3;
+  string email = 4;
+  string phoneNumber = 5;
+  int32 noOfPlayers = 6;
+  int32 substitute = 7;
+  string homeGround = 8;
+  string addressOfGround = 9;
+  string pinCode = 10;
+  string imageUrl = 11;
+  string role = 12;
+  string sport = 13;
+  string description = 14;
+  int32 members = 15;
+  repeated string joinTeam = 16;
 }
 
 message otherTeam {
   int32 status = 1;
   int32 members = 2;
 }
+
+
+

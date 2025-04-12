@@ -13,20 +13,26 @@ const getFriendRequest = async (req, res) => {
 
         const user_id = req.user._id
 
+        // assiging the key for unique caching 
         const cacheKey = `user:${user_id}:notifications`;
 
+        //getting the data from cache if present and return that without fetching from database
         const cachedData = await getNotifications(cacheKey)
 
         if (cachedData) {
             return res.status(200).json(reply.success("Fetched from cache", JSON.parse(cachedData)));
         }
 
+        // fetching the notifications of the user but without name 
         const notifications = await notificationService.fetchNotifications(user_id);
 
+        // because notifications are of different catagories we are grouping them here
         const groups = await groupNotificationsByType(notifications)
 
+        // gethering the data using grpc call the user-service 
         const finalResponse = await dataGathering(groups)
 
+        // now assigning the names to the notifications according to the ides 
         const enrichedNotification = await enrichNotifications(notifications, finalResponse)
 
         // 3. Set in cache (expire in 60 seconds or whatever suits you)

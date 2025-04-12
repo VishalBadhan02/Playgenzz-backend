@@ -4,7 +4,10 @@ const { TeamModel } = require('../models/team');
 const { ScheduledMatchModel } = require('../models/scheduledMatch');
 const { AddTeamMemberModel } = require('../models/addTeamMember');
 const teamServices = require('../services/teamServices');
-const { formatePlayerData } = require('../utils/formateData');
+const { formatePlayerData, formateTeamData } = require('../utils/formateData');
+const { fetchPlayersId } = require('../utils/fetchIds');
+const { dataGathering } = require('../utils/dataGatheringFromServices');
+const { enrichedTeams } = require('../utils/enrichTeams');
 
 const registerTeam = async (req, res) => {
     try {
@@ -19,7 +22,7 @@ const registerTeam = async (req, res) => {
         }
 
         //check unique name of the team if not unique then return 
-        const unique = await teamServices.checkUniqueName(formData?.teamName, 2)
+        const unique = await teamServices.checkUniqueName(formData?.teamName)
 
         if (!unique) {
             return res.status(409).json(reply.failure(Lang.UNIQUE_TEAM_NAME));
@@ -46,6 +49,36 @@ const registerTeam = async (req, res) => {
 
     } catch (err) {
         return res.status(402).json({ error: err.message });
+    }
+}
+
+const addFriend = async (req, res) => {
+    try {
+        const _id = req.user._id;
+        const { playerId, userName, teamId, type, teamName } = req.body;
+
+        // const team = await TeamModel.findOne({ teamName });
+        const addplayer = new AddTeamMemberModel({
+            userId: _id,
+            playerId,
+            userName,
+            teamId,
+            status: 1,
+            commit: "Player"
+        });
+
+        const notif = new NotificationModel({
+            type_id: addplayer._id,
+            user_id: playerId,
+            type: "request",
+            message: `${teamName} added you in team `,
+            status: 1,
+        })
+        notif.save()
+        addplayer.save()
+        return res.json(reply.success(Lang.SUCCESS))
+    } catch (err) {
+        return res.json(err)
     }
 }
 
@@ -85,18 +118,26 @@ const manageScore = async (req, res) => {
 
 const getTeamProfile = async (req, res) => {
     const _id = req.params._id;
-
     try {
         const team = await TeamModel.findOne({ _id })
 
+        const foundedDate = new Date(team?.createdAt).toDateString()
+
         const players = await AddTeamMemberModel.find({ teamId: _id });
-        team.teamMembers = players;
+
+        const fetchPlayers = await fetchPlayersId(players)
+
+        const finalResponse = await dataGathering(fetchPlayers)
+
+        const enrichedTeamsData = await enrichedTeams(players, finalResponse)
 
         if (!team) {
             return res.status(404).json(reply.failure(Lang.TEAM_NOT_FETCHED));
         }
 
-        return res.status(200).json(reply.success(Lang.TEAM_FOUND, team));
+        const teamData = await formateTeamData(team?._id, team?.teamName, team?.game, team?.description, team?.addressOfGround, foundedDate, team?.logo, "", enrichedTeamsData)
+
+        return res.status(200).json(reply.success(Lang.TEAM_FOUND, teamData));
     } catch (error) {
         return res.status(500).json({ message: "Error fetching team profile", error });
     }
@@ -404,6 +445,8 @@ const setActiveTeam = async (req, res) => {
 // }
 
 // in this function message need to be send in team group 
+
+
 const deleteTeamMember = async (req, res) => {
     // try {
     //     const { _id, teamId, type, teamName, player_id } = req.body;

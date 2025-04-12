@@ -64,6 +64,7 @@ message User {
   string address = 7;
   string status = 8;
   string userType = 9;
+  string profilePicture = 10;
 }
 
 // The Address message definition.

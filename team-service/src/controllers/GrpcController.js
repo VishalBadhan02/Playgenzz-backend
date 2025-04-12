@@ -31,7 +31,20 @@ const getTeamByUser = async (call, callback) => {
             return { ...team.toObject(), members: membersCount };
         }));
 
-        callback(null, { teams: teamsWithMembers, otherTeamsWithDetails });
+        const formatTeam = teamsWithMembers?.map((value) => ({
+            id: value?._id,
+            name: value?.teamName,
+            sport: value?.games,
+            members: value?.members,
+            upcomingMatches: 1,
+            wins: 5,
+            losses: 3,
+            role: 'Captain',
+            imageUrl: value?.logo,
+            user_id: userId
+        }))
+
+        callback(null, { teams: formatTeam, otherTeamsWithDetails });
     } catch (error) {
         console.log("error fetching teams in grpcController of team service", error)
     }
