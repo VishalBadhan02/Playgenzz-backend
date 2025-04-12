@@ -19,10 +19,10 @@ const registerTeam = async (req, res) => {
         }
 
         //check unique name of the team if not unique then return 
-        const unique = await teamServices.checkUniqueName(formData?.teamName)
+        const unique = await teamServices.checkUniqueName(formData?.teamName, 2)
 
         if (!unique) {
-            return res.status(402).json(reply.failure(Lang.UNIQUE_TEAM_NAME));
+            return res.status(409).json(reply.failure(Lang.UNIQUE_TEAM_NAME));
         }
 
         //service to register team in database
@@ -42,14 +42,11 @@ const registerTeam = async (req, res) => {
             return res.status(402).json(reply.failure(team?.message));
         }
 
-        return res.status(200).json(reply.success(Lang.REGISTER_SUCCESS, team._id))
+        return res.status(201).json(reply.success(Lang.REGISTER_SUCCESS, team._id))
 
     } catch (err) {
         return res.status(402).json({ error: err.message });
     }
-
-
-    
 }
 
 const getTeam = async (req, res) => {

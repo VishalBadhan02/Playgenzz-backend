@@ -40,9 +40,11 @@ class TeamService {
 
 
     // Get count of unread messages in a conversation
-    async checkUniqueName(teamName) {
+    async checkUniqueName(teamName, _id) {
+        const query = _id ? { teamName, _id: { $ne: _id } } : { teamName };
+
         try {
-            const unique = await TeamModel.findOne({ teamName })
+            const unique = await TeamModel.findOne(query)
             if (unique) {
                 return false
             }
