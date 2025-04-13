@@ -8,6 +8,7 @@ const { formatePlayerData, formateTeamData } = require('../utils/formateData');
 const { fetchPlayersId } = require('../utils/fetchIds');
 const { dataGathering } = require('../utils/dataGatheringFromServices');
 const { enrichedTeams } = require('../utils/enrichTeams');
+const { getTeamManagement, storeTeamManagement } = require('../services/redisService');
 
 const registerTeam = async (req, res) => {
     try {
@@ -118,7 +119,16 @@ const manageScore = async (req, res) => {
 
 const getTeamProfile = async (req, res) => {
     const _id = req.params._id;
+    const cacheKey = `teamProfile:${_id}`;
+
     try {
+        // Step 1: Check cache
+        const cachedData = await getTeamManagement(cacheKey);
+        if (cachedData) {
+            const parsedData = JSON.parse(cachedData);
+            return res.status(200).json(reply.success(Lang.TEAM_FOUND, parsedData));
+        }
+
         const team = await TeamModel.findOne({ _id })
 
         const foundedDate = new Date(team?.createdAt).toDateString()
@@ -136,6 +146,9 @@ const getTeamProfile = async (req, res) => {
         }
 
         const teamData = await formateTeamData(team?._id, team?.teamName, team?.game, team?.description, team?.addressOfGround, foundedDate, team?.logo, "", enrichedTeamsData)
+
+        // Step 3: Store in Redis
+        await storeTeamManagement(cacheKey, teamData);
 
         return res.status(200).json(reply.success(Lang.TEAM_FOUND, teamData));
     } catch (error) {
