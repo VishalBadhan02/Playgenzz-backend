@@ -57,34 +57,23 @@ class TeamService {
     // user can make only one team for one sport here 
     async checkGameExisting(user_id, games) {
         try {
-            const unique = await TeamModel.findOne({ user_id, games })
+            const unique = await TeamModel.findOne({ user_id, games });
             if (unique) {
-                return false
+                return false;
             }
-            return true
+            return true;
         } catch (error) {
             throw error;
         }
     }
 
-    async updateNotificationForStatus(_id, status, message, actionType) {
+    async findTeam(_id) {
         try {
-            const modal = await NotificationModel.findOne({ _id })
-            if (!modal) {
-                // Handle the case where no document is found
-                return null; // or throw a specific error
+            const team = await TeamModel.findOne({ _id });
+            if (!team) {
+                return false;
             }
-            const grpcResponse = await grpcClientService.getFreindModalResponse(modal.entityId, actionType);
-
-
-            if (!grpcResponse.isUnique) {
-                return false
-            }
-
-            modal.status = status
-            modal.message = message
-            await modal.save()
-            return modal
+            return team;
         } catch (error) {
             throw error;
         }

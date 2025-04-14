@@ -51,6 +51,16 @@ const getTeamByUser = async (call, callback) => {
 
 };
 
+const GetTeamIds = async () => {
+    try {
+        const ids = call.request.teamIds;
+        const teams = await TeamModel.find({ _id: { $in: ids } }).select(["teamName", "profilePicture", "_id", "createdAt"]);
+    } catch (error) {
+        console.log("error fetching teams in grpcController of team service", error)
+    }
+}
+
 module.exports = {
-    getTeamByUser
+    getTeamByUser,
+    GetTeamIds
 }

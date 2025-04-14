@@ -9,6 +9,8 @@ const { fetchPlayersId } = require('../utils/fetchIds');
 const { dataGathering } = require('../utils/dataGatheringFromServices');
 const { enrichedTeams } = require('../utils/enrichTeams');
 const { getTeamManagement, storeTeamManagement } = require('../services/redisService');
+const Config = require('../config');
+const sendMessage = require('../kafka/producer');
 
 const registerTeam = async (req, res) => {
     try {
@@ -53,33 +55,44 @@ const registerTeam = async (req, res) => {
     }
 }
 
-const addFriend = async (req, res) => {
+const handleAddPlayer = async (req, res) => {
     try {
         const _id = req.user._id;
-        const { playerId, userName, teamId, type, teamName } = req.body;
+        const { playerId, teamId } = req.body;
+        const playerData = req.body
 
-        // const team = await TeamModel.findOne({ teamName });
-        const addplayer = new AddTeamMemberModel({
+        const team = teamServices.findTeam(teamId);
+
+        if (!team) {
+            return res.status(404).json(reply.failure(Lang.TEAM_NOT_FOUND));
+        }
+
+        const addplayer = {
             userId: _id,
-            playerId,
-            userName,
-            teamId,
-            status: 1,
-            commit: "Player"
-        });
+            ...playerData
+        };
 
-        const notif = new NotificationModel({
-            type_id: addplayer._id,
-            user_id: playerId,
-            type: "request",
-            message: `${teamName} added you in team `,
-            status: 1,
-        })
-        notif.save()
-        addplayer.save()
-        return res.json(reply.success(Lang.SUCCESS))
+        const player = await teamServices.addPlayerInPlayerModal(addplayer)
+
+
+        const notificationData = {
+            receiverId: playerId,           // Who receives this notification
+            actorId: _id,               // Who triggered the action
+            type: Config.NOTIF_TYPE_REQUEST,// Type of notification (friend_request)
+            entityId: player._id,// ID of the related entity (match, team, tournament, etc.)
+            message: Config.NOTIF_MESSAGE,  // Readable message
+            status: 1,                 // Status: unread, read, dismissed
+            data: {
+                type: "friend_request",
+                teamName: team?.teamName
+            }
+        }
+
+        await sendMessage("friend-request", notificationData)
+
+        return res.status(200).json(reply.success(Lang.SUCCESS))
     } catch (err) {
-        return res.json(err)
+        return res.status(200).json(reply.failure(err.message))
     }
 }
 
@@ -701,5 +714,6 @@ module.exports = {
     getTeams,
     setActiveTeam,
     deleteTeamMember,
+    handleAddPlayer,
     updateTeam, getMatches, fetchScoreCards, registerTeam
 }

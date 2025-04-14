@@ -5,6 +5,9 @@ package team;
 // Define the TeamService
 service TeamService {
   rpc GetTeamByUser (GetTeamRequest) returns (GetTeamResponse);
+
+   // Get team id's 
+  rpc GetTeamIds (teamIds) returns (BulkTeams);
 }
 
 // Request message to fetch a user's team
@@ -19,7 +22,7 @@ message GetTeamResponse {
 }
 
 message teamRes {
-  string id = 1;
+  string _id = 1;
   string name = 2;
   string user_id = 3;
   string email = 4;
@@ -40,6 +43,14 @@ message teamRes {
 message otherTeam {
   int32 status = 1;
   int32 members = 2;
+}
+
+message teamIds {
+ repeated string teams = 1;
+}
+
+message BulkTeams {
+  repeated teamRes bulk =1;
 }
 
 

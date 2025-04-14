@@ -5,6 +5,7 @@ const Lang = {
     "HANDLE_SCORE_FAILS": "Error handling score",
     "HANDLE_SCORE": "Score updated successfully",
     "SCORE_FETCHED": "Score fetched successfully",
+    "TEAM_NOT_FOUND": "Team not found"
 
 };
 

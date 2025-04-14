@@ -1,11 +1,11 @@
 const WebSocket = require('ws');
 const http = require('http');
 const jwt = require('jsonwebtoken');
-const Config = require('./config'); // Ensure this has JWTSECRETKEY and SOCKET_PORT
-const { messageControl } = require('./controllers/WebScocketController');
+const Config = require('../config'); // Ensure this has JWTSECRETKEY and SOCKET_PORT
+const { messageControl } = require('../controllers/WebScocketController');
 const { default: mongoose } = require('mongoose');
 
-mongoose.connect(Config.DATABASE.URL || "mongodb://localhost:27017/user-db").then(() => console.log('✅ User Service connected to MongoDB'))
+mongoose.connect(Config.DATABASE.URL || "mongodb://localhost:27017/user-db").then(() => console.log('✅ WebSocket Service connected to MongoDB'))
     .catch(err => console.error('❌ DB Connection Error:', err));
 
 const server = http.createServer();

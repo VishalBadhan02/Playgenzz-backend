@@ -3,8 +3,9 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const mongoose = require('mongoose');
-const { createUser, getUser, checkUniquenes, getUsersByIds, handleFriendModalUpdate } = require('./controllers/GrpcController');
-const PROTO_PATH = path.resolve(__dirname, '../../protos/user.proto');
+const { createUser, getUser, checkUniquenes, getUsersByIds, handleFriendModalUpdate } = require('../controllers/GrpcController');
+const Config = require('../config');
+const PROTO_PATH = path.resolve(__dirname, '../../../protos/user.proto');
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true,
@@ -16,7 +17,7 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 
 const userProto = grpc.loadPackageDefinition(packageDefinition).user;
 
-mongoose.connect(process.env.DATABASE_URL).then(() => console.log('✅ User Service connected to MongoDB'))
+mongoose.connect(Config.DATABASE.URL).then(() => console.log('✅ Grpc Service connected to MongoDB'))
     .catch(err => console.error('❌ DB Connection Error:', err));
 
 function main() {
@@ -30,7 +31,7 @@ function main() {
         GetModalId: handleFriendModalUpdate
     });
 
-    const GRPC_PORT = process.env.GRPC_PORT || '5002';
+    const GRPC_PORT = Config.GRPC_PORT;
     server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
         if (err) {
             console.error(`❌ Server binding failed: ${err.message}`);
