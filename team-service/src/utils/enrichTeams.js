@@ -6,6 +6,7 @@ const enrichedTeams = async (playersWithoutId, finalResponse) => {
 
             if (user) {
                 return {
+                    modalId: player._id,
                     id: user._id,
                     name: user.firstName,
                     avatar: user.profilePicture || null, // or some default

@@ -25,6 +25,8 @@ const AddTeamMemberSchema = mongoose.Schema({
         type: Boolean,
         default: true
     },
+    playingStatus: Boolean,
+    extra: Boolean,
     careerStats: {
         matchesPlayed: {
             type: Number,

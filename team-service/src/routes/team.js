@@ -18,7 +18,7 @@ Route.put("/setActiveTeam", TeamControlller.setActiveTeam)
 Route.put("/updateTeam", TeamControlller.updateTeam)
 Route.put("/handleAddPlayer", TeamControlller.handleAddPlayer)
 
-Route.delete("/removePlayer", TeamControlller.deleteTeamMember)
+Route.delete("/removePlayer", TeamControlller.handleTeamMember)
 
 
 module.exports = Route;

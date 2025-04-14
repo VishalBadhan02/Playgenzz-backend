@@ -11,6 +11,8 @@ const { enrichedTeams } = require('../utils/enrichTeams');
 const { getTeamManagement, storeTeamManagement } = require('../services/redisService');
 const Config = require('../config');
 const sendMessage = require('../kafka/producer');
+const { getUpdateDataByType } = require('../utils/teamMember');
+const { createNotificationPayload } = require('../utils/notifications');
 
 const registerTeam = async (req, res) => {
     try {
@@ -146,18 +148,23 @@ const getTeamProfile = async (req, res) => {
 
         const foundedDate = new Date(team?.createdAt).toDateString()
 
+        // fetching the members of the team
         const players = await AddTeamMemberModel.find({ teamId: _id });
 
+        // filtering the userIDs from the playser to get details of user from user service 
         const fetchPlayers = await fetchPlayersId(players)
 
+        // fetching the data from othe services through gpc
         const finalResponse = await dataGathering(fetchPlayers)
 
+        //formating the data in right formate
         const enrichedTeamsData = await enrichedTeams(players, finalResponse)
 
         if (!team) {
             return res.status(404).json(reply.failure(Lang.TEAM_NOT_FETCHED));
         }
 
+        // simply formating the data for frontend
         const teamData = await formateTeamData(team?._id, team?.teamName, team?.game, team?.description, team?.addressOfGround, foundedDate, team?.logo, "", enrichedTeamsData)
 
         // Step 3: Store in Redis
@@ -473,69 +480,54 @@ const setActiveTeam = async (req, res) => {
 // in this function message need to be send in team group 
 
 
-const deleteTeamMember = async (req, res) => {
-    // try {
-    //     const { _id, teamId, type, teamName, player_id } = req.body;
+const handleTeamMember = async (req, res) => {
+    try {
+        const { teamId, type, _id } = req.body;
 
-    //     // Fetch user details
-    //     const user = await UserModel.findById(req.user._id);
+        if (!teamId || !type || !_id) {
+            return res.status(400).json(reply.failure("Missing required fields"));
+        }
 
-    //     if (!user) {
-    //         return res.status(404).json(reply.failure("User not found"));
+        const query = { _id };
 
-    //     }
+        // Map all possible type updates in one object
+        const updateData = getUpdateDataByType(type);
 
-    //     // Determine user_id based on the type
-    //     const user_id =
-    //         type === "manage"
-    //             ? player_id
-    //             : (await TeamModel.findById(teamId))?.user_id;
 
-    //     if (!user_id) {
-    //         return res.status(404).json(reply.failure("Team or user not found"));
-    //     }
+        if (!updateData) {
+            return res.status(400).json(reply.failure("Invalid type specified"));
+        }
 
-    //     // Handle deletion based on type
-    //     if (["manage", "member", "leave"].includes(type)) {
-    //         await AddTeamMemberModel.findByIdAndDelete(_id);
-    //     }
-    //     // if (type === "member") {
-    //     //     const nofti = await NotificationModel.findOneAndDelete({ type_id: _id })
-    //     //     if (!nofti) {
-    //     //         return res.status(404).json(reply.failure("notification id not found"))
-    //     //     }
-    //     // }
+        const update = await teamServices.updateMembersModal(query, updateData);
 
-    //     // Create a message if the type is "leave"
-    //     if (type === "leave") {
-    //         // const message = new MessageModel({
-    //         //     from: req.user._id,
-    //         //     to: teamId,
-    //         //     message: `${user.userName} left this team`,
-    //         //     isDelivered: true,
-    //         // });
-    //         // await message.save();
-    //     }
+        if (!update) {
+            return res.status(404).json(reply.failure("Member not found or not updated"));
+        }
 
-    //     // Create a notification
-    //     const notifMessage =
-    //         type === "manage"
-    //             ? `${teamName} removed you from their team`
-    //             : `${user.userName} left your team ${teamName}`;
 
-    //     // const notification = new NotificationModel({
-    //     //     type_id: _id,
-    //     //     user_id,
-    //     //     type: "request",
-    //     //     message: notifMessage,
-    //     //     status: 1,
-    //     // });
-    //     await notification.save();
-    //     return res.status(200).json(reply.success(Lang.SUCCESS, ""));
-    // } catch (error) {
-    //     return res.status(500).json(reply.failure("Error deleting team member"));
-    // }
+        const receiverId = type === "removed" ? update?.playerId : update?.userId
+        // Assume you have playerId, player object, team object from earlier context or DB
+        const notificationData = createNotificationPayload({
+            receiverId: receiverId,
+            actorId: teamId,
+            entityId: _id,
+            actionType: type
+        });
+
+        await sendMessage("friend-request", notificationData)
+
+        return res
+            .status(200)
+            .json(reply.success(Lang.SUCCESS, "Member updated successfully"));
+    } catch (error) {
+        console.error("Error in deleteTeamMember:", error);
+        return res
+            .status(500)
+            .json(reply.failure("Error deleting/updating team member"));
+    }
 };
+
+
 
 
 const updateTeam = async (req, res) => {
@@ -713,7 +705,7 @@ module.exports = {
     handleMatchRequest,
     getTeams,
     setActiveTeam,
-    deleteTeamMember,
+    handleTeamMember,
     handleAddPlayer,
     updateTeam, getMatches, fetchScoreCards, registerTeam
 }

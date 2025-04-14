@@ -43,7 +43,6 @@ const getProfile = async (req, res) => {
                 // Handle the error appropriately
             });
 
-
         // fetch user friends from friends modal
         const friends = await setFriends(userId)
 

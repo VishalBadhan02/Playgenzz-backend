@@ -35,6 +35,7 @@ const getTeamByUser = async (call, callback) => {
             id: value?._id,
             name: value?.teamName,
             sport: value?.games,
+            user_id: userId,
             members: value?.members,
             upcomingMatches: 1,
             wins: 5,

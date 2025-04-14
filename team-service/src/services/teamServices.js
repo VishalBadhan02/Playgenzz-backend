@@ -79,17 +79,13 @@ class TeamService {
         }
     }
 
-    async fetchNotifications(receiverId, page = 1, limit = 20) {
+    async updateMembersModal(query, updateData) {
         try {
-            const skip = (page - 1) * limit;
-            const notifications = await NotificationModel.find({
-                receiverId,
-                status: { $lte: 1 }
-            })
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit);
-            return notifications;
+            const member = await AddTeamMemberModel.findOneAndUpdate(query, { $set: updateData });
+            if (!member) {
+                return false;
+            }
+            return member;
         } catch (error) {
             throw error;
         }
