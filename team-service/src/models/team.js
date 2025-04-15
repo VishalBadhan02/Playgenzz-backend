@@ -27,6 +27,8 @@ const TeamSchema = mongoose.Schema({
     members: String,
     openPosition: String,
     joinTeam: Boolean,
+    teamVisibility: Boolean,
+    memberVisibility: Boolean,
     sessionId: String,
     schedule: Object
 

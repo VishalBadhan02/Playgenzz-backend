@@ -20,6 +20,9 @@ const formateTeamData = (
     logo,
     coverImage,
     members,
+    joinTeam,
+    teamVisibility,
+    memberVisibility,
     openPositions,
     contactEmail,
     wins,
@@ -40,6 +43,9 @@ const formateTeamData = (
         wins,
         losses,
         upcomingMatches,
+        joinTeam,
+        teamVisibility,
+        memberVisibility,
     }
     return data
 }

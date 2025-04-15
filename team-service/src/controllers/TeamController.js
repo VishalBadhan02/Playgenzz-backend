@@ -168,7 +168,12 @@ const getTeamProfile = async (req, res) => {
         }
 
         // simply formating the data for frontend
-        const teamData = await formateTeamData(team?._id, team?.teamName, team?.games, team?.description, team?.addressOfGround, foundedDate, team?.logo, "", enrichedTeamsData)
+        const teamData = await formateTeamData(team?._id,
+            team?.teamName, team?.games,
+            team?.description, team?.addressOfGround,
+            foundedDate, team?.logo, "", enrichedTeamsData,
+            team?.joinTeam, team?.teamVisibility, team?.memberVisibility,
+        )
 
         // Step 3: Store in Redis
         await storeTeamManagement(cacheKey, teamData);
