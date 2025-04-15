@@ -8,7 +8,7 @@ const { formatePlayerData, formateTeamData } = require('../utils/formateData');
 const { fetchPlayersId } = require('../utils/fetchIds');
 const { dataGathering } = require('../utils/dataGatheringFromServices');
 const { enrichedTeams } = require('../utils/enrichTeams');
-const { getTeamManagement, storeTeamManagement } = require('../services/redisService');
+const { getTeamManagement, storeTeamManagement, deleteTeamManagement } = require('../services/redisService');
 const Config = require('../config');
 const sendMessage = require('../kafka/producer');
 const { getUpdateDataByType } = require('../utils/teamMember');
@@ -62,6 +62,9 @@ const handleAddPlayer = async (req, res) => {
         const _id = req.user._id;
         const { playerId, teamId } = req.body;
         const playerData = req.body
+        const cacheKey = `teamProfile:${teamId}`;
+
+        await deleteTeamManagement(cacheKey)
 
         const team = teamServices.findTeam(teamId);
 
@@ -149,7 +152,7 @@ const getTeamProfile = async (req, res) => {
         const foundedDate = new Date(team?.createdAt).toDateString()
 
         // fetching the members of the team
-        const players = await AddTeamMemberModel.find({ teamId: _id });
+        const players = await AddTeamMemberModel.find({ teamId: _id, status: { $lte: 2 } });
 
         // filtering the userIDs from the playser to get details of user from user service 
         const fetchPlayers = await fetchPlayersId(players)
@@ -165,7 +168,7 @@ const getTeamProfile = async (req, res) => {
         }
 
         // simply formating the data for frontend
-        const teamData = await formateTeamData(team?._id, team?.teamName, team?.game, team?.description, team?.addressOfGround, foundedDate, team?.logo, "", enrichedTeamsData)
+        const teamData = await formateTeamData(team?._id, team?.teamName, team?.games, team?.description, team?.addressOfGround, foundedDate, team?.logo, "", enrichedTeamsData)
 
         // Step 3: Store in Redis
         await storeTeamManagement(cacheKey, teamData);
@@ -503,8 +506,7 @@ const handleTeamMember = async (req, res) => {
         if (!update) {
             return res.status(404).json(reply.failure("Member not found or not updated"));
         }
-
-
+        await deleteTeamManagement(`teamProfile:${teamId}`)
         const receiverId = type === "removed" ? update?.playerId : update?.userId
         // Assume you have playerId, player object, team object from earlier context or DB
         const notificationData = createNotificationPayload({
@@ -532,12 +534,30 @@ const handleTeamMember = async (req, res) => {
 
 const updateTeam = async (req, res) => {
     try {
-        const { _id, teamName, email, phoneNumber, noOfPlayers, homeGround, addressOfGround, games, joinTeam, description } = req.body;
-        const team = await TeamModel.findOneAndUpdate({ _id }, { $set: { teamName, email, phoneNumber, noOfPlayers, homeGround, addressOfGround, games, joinTeam, description } });
-        if (!team) { return res.json(reply.failure("Team not found")) }
-        return res.json(reply.success(Lang.SUCCESS, ""));
-    } catch (error) { return res.status(500).json(reply.error("error updating team", error.message)); }
-}
+        const { _id, ...formData } = req.body;
+
+        const team = await TeamModel.findOneAndUpdate(
+            { _id },
+            { $set: formData },
+            { new: true } // 🔥 Returns the updated document
+        );
+
+        if (!team) {
+            return res.json(reply.failure("Team not found"));
+        }
+
+        const cacheKey = `teamProfile:${_id}`;
+
+        await deleteTeamManagement(cacheKey);
+
+        return res.json(reply.success(Lang.SUCCESS, team)); // 👈 optional: send updated team
+    } catch (error) {
+        return res
+            .status(500)
+            .json(reply.error("Error updating team", error.message));
+    }
+};
+
 
 const getMatches = async (req, res) => {
     try {

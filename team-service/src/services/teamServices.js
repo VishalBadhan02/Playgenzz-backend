@@ -86,6 +86,7 @@ class TeamService {
                 return false;
             }
             return member;
+            
         } catch (error) {
             throw error;
         }

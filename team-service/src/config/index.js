@@ -16,6 +16,7 @@ const Config = {
     "NOTIF_MESSAGE": process.env.NOTIF_MESSAGE,
     "REDIS_PORT": process.env.REDIS_PORT,
     "REDIS_HOST": process.env.REDIS_HOST,
+    "REDIS_PROFILE_KEY": process.env.REDIS_PROFILE_KEY
 }
 
 module.exports = Config

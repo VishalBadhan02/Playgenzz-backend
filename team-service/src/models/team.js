@@ -25,6 +25,7 @@ const TeamSchema = mongoose.Schema({
         ref: "users"
     },
     members: String,
+    openPosition: String,
     joinTeam: Boolean,
     sessionId: String,
     schedule: Object
