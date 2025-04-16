@@ -1,4 +1,5 @@
 const { AddTeamMemberModel } = require("../models/addTeamMember");
+const { ScheduledMatchModel } = require("../models/scheduledMatch");
 const { TeamModel } = require("../models/team");
 
 
@@ -86,14 +87,54 @@ class TeamService {
                 return false;
             }
             return member;
-            
+
         } catch (error) {
             throw error;
         }
     }
 
+    async fetchTeamMembers(teamId) {
+        return await AddTeamMemberModel.find({ teamId, status: 1 });
+    }
 
+    async fetchScheduledMatches(query) {
+        return await ScheduledMatchModel.find(query);
+    }
 
+    async findTeamMembers(query) {
+        try {
+            const member = await AddTeamMemberModel.findOneAndUpdate(query);
+            if (!member) {
+                return false;
+            }
+            return member;
+
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async fetchRegisteredTeam(query) {
+        try {
+            const member = await TeamModel.find(query);
+            return member;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async fetchUserTeams(userId) {
+        return await TeamModel.find({ user_id: userId }, '_id');
+    }
+
+    async fetchScheduledMatches(query) {
+        try {
+            const member = await ScheduledMatchModel.find(query);
+            return member;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 module.exports = new TeamService();

@@ -147,8 +147,9 @@ const getTeamProfile = async (req, res) => {
             return res.status(200).json(reply.success(Lang.TEAM_FOUND, parsedData));
         }
 
-        const team = await TeamModel.findOne({ _id })
+        const team = await teamServices.findTeam(_id)
 
+        // simply formating the createddate into string
         const foundedDate = new Date(team?.createdAt).toDateString()
 
         // fetching the members of the team
@@ -173,6 +174,7 @@ const getTeamProfile = async (req, res) => {
             team?.description, team?.addressOfGround,
             foundedDate, team?.logo, "", enrichedTeamsData,
             team?.joinTeam, team?.teamVisibility, team?.memberVisibility,
+            team?.openPositions
         )
 
         // Step 3: Store in Redis
@@ -180,6 +182,7 @@ const getTeamProfile = async (req, res) => {
 
         return res.status(200).json(reply.success(Lang.TEAM_FOUND, teamData));
     } catch (error) {
+        console.log(error)
         return res.status(500).json({ message: "Error fetching team profile", error });
     }
 };
@@ -303,31 +306,43 @@ const handleMatchRequest = async (req, res) => {
 };
 
 
-const getTeams = async (req, res) => {
+const getTeamsForRequest = async (req, res) => {
     try {
         const { game } = req.params; // Get the game parameter from URL
         const searchTerm = req.query.q || ''; // Get the search query, default to an empty string
         const session_id = req.user._id; // Current user ID
 
         // Fetch the user's teams
-        const userTeams = await TeamModel.find({ user_id: session_id }, '_id');
+        const userTeams = await teamServices.fetchUserTeams(session_id);
+
         const excludedTeamIds = userTeams.map((team) => team._id);
+
+        // 2. Build query for teams
+        const teamQuery = {
+            _id: { $nin: excludedTeamIds },
+            ...(game && { games: game }),
+            ...(searchTerm && { teamName: { $regex: `^${searchTerm}`, $options: 'i' } })
+        };
+
+        // 3. Fetch teams using service
+        const teams = await teamServices.fetchRegisteredTeam(teamQuery);
+
 
         // Build the dynamic query for teams
         const query = {
             _id: { $nin: excludedTeamIds }, // Exclude user's teams
         };
 
-        if (game) {
-            query.games = game;
-        }
+        // if (game) {
+        //     query.games = game;
+        // }
 
-        if (searchTerm) {
-            query.teamName = { $regex: `^${searchTerm}`, $options: 'i' }; // Case-insensitive search
-        }
+        // if (searchTerm) {
+        //     query.teamName = { $regex: `^${searchTerm}`, $options: 'i' }; // Case-insensitive search
+        // }
 
-        // Fetch the teams based on the query
-        const teams = await TeamModel.find(query)
+        // // Fetch the teams based on the query
+        // const teams = await TeamModel.find(query)
 
         // Fetch scheduled matches involving user's teams
         const scheduledMatches = await ScheduledMatchModel.find({
@@ -352,20 +367,46 @@ const getTeams = async (req, res) => {
         }));
 
         // Fetch team members and count for each team
-        const teamsWithMembers = await Promise.all(
-            teamsWithSchedules.map(async (team) => {
-                const members = await AddTeamMemberModel.find({ teamId: team._id, status: 1 });
+        // const teamsWithMembers = await Promise.all(
+        //     teamsWithSchedules.map(async (team) => {
+        //         const members = await AddTeamMemberModel.find({ teamId: team._id, status: 1 });
+        //         return {
+        //             ...team,
+        //             teamMembers: members,
+        //             members: members.length,
+        //         };
+        //     })
+        // );
+
+        // 6. Add scheduled match info and members count to each team
+        const teamsWithDetails = await Promise.all(
+            teams.map(async (team) => {
+                const members = await teamServices.fetchTeamMembers(team._id);
                 return {
-                    ...team,
+                    id: team?._id,
+                    name: team?.teamName,
+                    sport: team?.games,
+                    location: team?.addressOfGround,
+                    wins: 12,
+                    losses: 3,
+                    draws: 2,
+                    logo: team?.logo,
+                    captainName: "John Smith",
+                    captainEmail: "john@example.com",
+                    level: "Advanced",
+                    schedule: matchMap[team._id] || null,
                     teamMembers: members,
-                    members: members.length,
+                    members: members.length
                 };
             })
         );
 
+        console.log(teamsWithDetails)
+
         // Send the response
-        return res.json(reply.success(Lang.TEAM_FETCH, teamsWithMembers));
+        return res.status(200).json(reply.success(Lang.TEAM_FETCH, teamsWithDetails));
     } catch (err) {
+        console.log("in getTeamsForRequest", err)
         return res.status(500).json({ error: err.message });
     }
 };
@@ -540,6 +581,7 @@ const handleTeamMember = async (req, res) => {
 const updateTeam = async (req, res) => {
     try {
         const { _id, ...formData } = req.body;
+
 
         const team = await TeamModel.findOneAndUpdate(
             { _id },
@@ -728,7 +770,7 @@ module.exports = {
     manageScore,
     getTeamProfile,
     handleMatchRequest,
-    getTeams,
+    getTeamsForRequest,
     setActiveTeam,
     handleTeamMember,
     handleAddPlayer,

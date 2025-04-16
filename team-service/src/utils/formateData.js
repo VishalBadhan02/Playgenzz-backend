@@ -24,7 +24,6 @@ const formateTeamData = (
     teamVisibility,
     memberVisibility,
     openPositions,
-    contactEmail,
     wins,
     losses,
     upcomingMatches,) => {
@@ -39,7 +38,6 @@ const formateTeamData = (
         coverImage,
         members,
         openPositions,
-        contactEmail,
         wins,
         losses,
         upcomingMatches,
