@@ -6,6 +6,7 @@ const TeamControlller = require("../controllers/TeamController")
 Route.get("/getTeam/:team_A?/:team_B?", TeamControlller.getTeam)
 Route.get("/getTeamProfile/:_id?", TeamControlller.getTeamProfile)
 Route.get("/fetchTeams/:game?", TeamControlller.getTeamsForRequest)
+Route.get("/fetchGamesAndFixtures", TeamControlller.gamesAndFixtures)
 Route.get("/matches", TeamControlller.getMatches)
 Route.get("/scoreCards", TeamControlller.fetchScoreCards)
 

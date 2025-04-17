@@ -114,9 +114,9 @@ class TeamService {
         }
     }
 
-    async fetchRegisteredTeam(query) {
+    async fetchRegisteredTeam(query, game) {
         try {
-            const member = await TeamModel.find(query);
+            const member = await TeamModel.find(query).limit(15);
             return member;
         } catch (error) {
             throw error;

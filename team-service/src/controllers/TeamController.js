@@ -190,9 +190,55 @@ const getTeamProfile = async (req, res) => {
 
 
 const handleMatchRequest = async (req, res) => {
-    const { challengeDateTime, type, players, overs, ground, game, _id } = req.body;
-    let teamId = req.body.teamId;
-    // console.log(req.body)
+    const { teamId, sport, userId, date, time, venue, notes, playersPerTeam } = req.body;
+    let user = req.user._id;
+    console.log(req.body)
+    try {
+        
+        const matchData = {
+            matchType: "friendly",
+
+            /** ID of the user's team */
+            homeTeam: "",
+
+            /** User who created or scheduled the match */
+            scheduledByUserId: user,
+
+            /** ID of the opponent team */
+            awayTeam: teamId,
+
+            /** ID of the opponent user (if friendly match with individual) */
+            opponentUserId: userId,
+
+            /** Date of the match in YYYY-MM-DD format */
+            matchDate: date,
+
+            /** General location (city, area, etc.) */
+            matchLocation: venue,
+
+            /** Specific ground name */
+            groundName: venue,
+
+            /** Number of overs (only relevant to cricket) */
+            numberOfOvers: time,
+
+            /** Number of players in each team */
+            numberOfPlayers: playersPerTeam,
+
+            /** Internal status code (e.g. 0 = inactive, 1 = active) */
+            internalStatus: 0,
+
+            /** Public match status */
+            matchStatus: "upcoming",
+
+            /** Type of sport */
+            sportType: sport,
+
+           
+        }
+    } catch (error) {
+
+    }
     // try {
     //     // Fetch the user's team
     //     const userTeam = await UserModel.findOne({ _id: req.user._id });
@@ -320,31 +366,14 @@ const getTeamsForRequest = async (req, res) => {
         // 2. Build query for teams
         const teamQuery = {
             _id: { $nin: excludedTeamIds },
-            ...(game && { games: game }),
+            ...(game && game !== "All Sports" && { games: game }),
             ...(searchTerm && { teamName: { $regex: `^${searchTerm}`, $options: 'i' } })
         };
 
         // 3. Fetch teams using service
-        const teams = await teamServices.fetchRegisteredTeam(teamQuery);
+        const teams = await teamServices.fetchRegisteredTeam(teamQuery, game);
 
 
-        // Build the dynamic query for teams
-        const query = {
-            _id: { $nin: excludedTeamIds }, // Exclude user's teams
-        };
-
-        // if (game) {
-        //     query.games = game;
-        // }
-
-        // if (searchTerm) {
-        //     query.teamName = { $regex: `^${searchTerm}`, $options: 'i' }; // Case-insensitive search
-        // }
-
-        // // Fetch the teams based on the query
-        // const teams = await TeamModel.find(query)
-
-        // Fetch scheduled matches involving user's teams
         const scheduledMatches = await ScheduledMatchModel.find({
             $or: [
                 { userTeamId: { $in: excludedTeamIds } },
@@ -366,18 +395,6 @@ const getTeamsForRequest = async (req, res) => {
             schedule: matchMap[team._id] || null // Add scheduled match data if available
         }));
 
-        // Fetch team members and count for each team
-        // const teamsWithMembers = await Promise.all(
-        //     teamsWithSchedules.map(async (team) => {
-        //         const members = await AddTeamMemberModel.find({ teamId: team._id, status: 1 });
-        //         return {
-        //             ...team,
-        //             teamMembers: members,
-        //             members: members.length,
-        //         };
-        //     })
-        // );
-
         // 6. Add scheduled match info and members count to each team
         const teamsWithDetails = await Promise.all(
             teams.map(async (team) => {
@@ -396,13 +413,11 @@ const getTeamsForRequest = async (req, res) => {
                     level: "Advanced",
                     schedule: matchMap[team._id] || null,
                     teamMembers: members,
-                    members: members.length
+                    members: members.length,
+                    userId: team?.user_id
                 };
             })
         );
-
-        console.log(teamsWithDetails)
-
         // Send the response
         return res.status(200).json(reply.success(Lang.TEAM_FETCH, teamsWithDetails));
     } catch (err) {
@@ -410,6 +425,18 @@ const getTeamsForRequest = async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 };
+
+const gamesAndFixtures = async (req, res) => {
+    try {
+        const data = require("../jsonfiles/GamesAndFixturesType.json")
+        if (!data) return res.status(409).json(reply.failure("Games and fixtures not found"))
+        // console.log(data)
+        return res.status(200).json(reply.success("Games and fixtures fetched", data))
+    } catch (error) {
+        console.log("error fetching side bars", error)
+        return res.status(500).json({ error: err.message });
+    }
+}
 
 
 
@@ -665,50 +692,26 @@ const fetchScoreCards = async (req, res) => {
 const handleTeamRequest = async (req, res) => {
     try {
         const { request, type, team, teamName } = req.body;
-        const messageType = (type === "team request") ? "teamRequest" : "Friend Request"
-        let type_id
-        const message = await UserModel.findOne({ _id: req.user._id })
-        const user = await UserModel.findOne({ _id: request });
+        console.log(req.body)
+        // const messageType = (type === "team request") ? "teamRequest" : "Friend Request"
+        // let type_id
+        // const message = await UserModel.findOne({ _id: req.user._id })
+        // const user = await UserModel.findOne({ _id: request });
 
-        if (type === "team request") {
-            const reques = new AddTeamMemberModel({
-                userId: req.user._id,
-                playerId: request,
-                userName: user.userName,
-                teamId: team,
-                status: 0,
-                commit: "Player"
-            });
-            type_id = reques._id
-            reques.save();
-        }
-        if (type === "Friend Request") {
-            const Request = new FriendModel({
-                user_id: req.user._id,
-                request: request,
-                status: 0,
-                commit: "add request",
-                type: "request"
-            });
-            type_id = Request._id
-            Request.save();
-        }
-        const notification = new NotificationModel({
-            type_id,
-            user_id: request,
-            type: "request",
-            message: {
-                name: message.userName,
-                type: messageType,
-                team: team,
-                teamName: teamName
-            },
-            status: 0
-        })
+        // if (type === "team request") {
+        //     const reques = new AddTeamMemberModel({
+        //         userId: req.user._id,
+        //         playerId: request,
+        //         userName: user.userName,
+        //         teamId: team,
+        //         status: 0,
+        //         commit: "Player"
+        //     });
+        //     type_id = reques._id
+        //     reques.save();
+        // }
 
-        notification.save();
-
-        return res.json(reply.success())
+        // return res.status(202).json(reply.success())
     } catch (err) {
         res.json({ error: err.message });
     }
@@ -772,6 +775,7 @@ module.exports = {
     handleMatchRequest,
     getTeamsForRequest,
     setActiveTeam,
+    gamesAndFixtures,
     handleTeamMember,
     handleAddPlayer,
     updateTeam, getMatches, fetchScoreCards, registerTeam
