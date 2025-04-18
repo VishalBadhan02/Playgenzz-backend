@@ -1,20 +1,32 @@
 # 1️⃣ Use official Node.js image
-FROM node:18
+FROM node:23-slim
 
 # 2️⃣ Set working directory
 WORKDIR /app
 
-# 3️⃣ Copy package.json and pnpm-lock.yaml (ensures better caching)
+# 3️⃣ Install OpenSSL for Prisma
+RUN apt-get update && apt-get install -y openssl
+
+# 4️⃣ Enable corepack first (needed for pnpm)
+RUN corepack enable
+
+# 5️⃣ Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# 4️⃣ Enable corepack and install dependencies with pnpm
-RUN corepack enable && pnpm install --frozen-lockfile
+# 6️⃣ Install dependencies
+RUN pnpm install --frozen-lockfile
 
-# 5️⃣ Copy all source code
+# 7️⃣ Copy prisma schema
+COPY prisma ./prisma/
+
+# 8️⃣ Generate Prisma Client
+RUN pnpm prisma generate
+
+# 9️⃣ Copy remaining source code
 COPY . .
 
-# 6️⃣ Expose service port (change if needed)
-EXPOSE 4001
+# 🔟 Expose port
+EXPOSE 5002
 
-# 7️⃣ Start the service
-CMD ["pnpm", "start"]
+# Start with migrations
+CMD ["sh", "-c", "pnpm prisma migrate deploy && pnpm start"]

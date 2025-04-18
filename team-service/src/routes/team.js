@@ -15,7 +15,6 @@ Route.post("/teamRegistration", TeamControlller.registerTeam)
 Route.post("/teamRequest", TeamControlller.handleTeamRequest)
 
 Route.put("/handleScore", TeamControlller.manageScore)
-Route.put("/setActiveTeam", TeamControlller.setActiveTeam)
 Route.put("/updateTeam", TeamControlller.updateTeam)
 Route.put("/handleAddPlayer", TeamControlller.handleAddPlayer)
 

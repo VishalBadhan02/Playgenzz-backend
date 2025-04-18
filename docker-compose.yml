@@ -2,48 +2,205 @@ version: "3.8"
 
 services:
 
-  postgres:
-    image: postgres
-    container_name: my_postgres
-    restart: always
-    environment:
-      POSTGRES_USER: vishal
-      POSTGRES_PASSWORD: playgenz
-      POSTGRES_DB: auth_db
+  # Persistent storage
+
+  api-gateway-service:
+    image: api-gateway-service
+    build: ./api-gateway
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data # <-- Persistent storage
+      - "5000:5000"
+    depends_on:
+      - mongodb # MongoDB dependency
+      - kafka # Kafka dependency for message broker
+
+    environment:
+      - "MONGODB_URL=mongodb://mongodb:27017/api-gateway-db"
+      - "KAFKA_BROKERS=kafka:9092"
+
+    networks:
+      - api-gateway-network
+      - auth-network
+      - notification-network
+      - team-network
+      - tournament-network
+      - user-network
+      - venue-network
 
   auth-service:
     image: auth-service
     build: ./auth-service
     ports:
-      - "4001:4001"
+      - "5001:5001"
     depends_on:
-      - postgres
-    volumes:
-      - ./auth-service:/app # Mounts local directory into the container
-    environment:
-      - "postgresql://vishal:playgenz@my_postgres:5432/auth_db"
-    # user-service:
-    #   build: ./user-service
-    #   ports:
-    #     - "4002:4002"
-    #   depends_on:
-    #     - db
-    #   environment:
-    #     - DATABASE_URL=postgres://user:password@db:5432/userdb
+      - auth-db
+      - redis
+      - kafka
 
-    # db:
-    #   image: postgres:15
-    #   restart: always
-    #   environment:
-    #     POSTGRES_USER: user
-    #     POSTGRES_PASSWORD: password
-    #     POSTGRES_DB: main_db
-    #   ports:
-    #     - "5432:5432"
+    environment:
+      - "DATABASE_URL=postgresql://user:user@auth-db:5432/auth-db"
+    networks:
+      - auth-network
+      - api-gateway-network
+
+  auth-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-auth-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-auth-password}
+      POSTGRES_DB: auth-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth-data:/var/lib/postgresql/data
+    networks:
+      - auth-network
+
+  notification-service:
+    build: ./notification-service
+    ports:
+      - "5002:5002"
+    depends_on:
+      - mongodb
+      - kafka
+    environment:
+      - "MONGODB_URL=mongodb://mongodb:27017/notification-db"
+      - "KAFKA_BROKERS=kafka:9092"
+    networks:
+      - api-gateway-network
+      - notification-network
+
+  team-service:
+    build: ./team-service
+    ports:
+      - "5003:5003"
+    depends_on:
+      - mongodb
+      - kafka
+
+    environment:
+      - "MONGODB_URL=mongodb://mongodb:27017/team-db"
+      - "KAFKA_BROKERS=kafka:9092"
+    networks:
+      - api-gateway-network
+      - team-network
+
+  tournament-service:
+    build: ./tournament-service
+    ports:
+      - "5004:5004"
+    depends_on:
+      - mongodb
+      - kafka
+    environment:
+      - "MONGODB_URL=mongodb://mongodb:27017/tournament-db"
+      - "KAFKA_BROKERS=kafka:9092"
+
+    networks:
+      - api-gateway-network
+      - tournament-network
+
+  user-service:
+    build: ./user-service
+    ports:
+      - "5005:5005"
+    depends_on:
+      - mongodb
+      - kafka
+    environment:
+      - "MONGODB_URL=mongodb://mongodb:27017/user-db"
+      - "KAFKA_BROKERS=kafka:9092"
+
+    networks:
+      - user-network
+      - api-gateway-network
+
+  venue-service:
+    build: ./venue-service
+    ports:
+      - "5006:5006"
+    depends_on:
+      - mongodb
+      - kafka
+    environment:
+      - "MONGODB_URL=mongodb://mongodb:27017/venue-db"
+      - "KAFKA_BROKERS=kafka:9092"
+
+    networks:
+      - venue-network
+      - api-gateway-network
+
+  # MongoDB
+  mongodb:
+    # MongoDB for API Gateway
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - api-gateway-network
+      - notification-network
+      - team-network
+      - tournament-network
+      - user-network
+      - venue-network
+
+  redis:
+    # Redis for Auth Service
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - auth-network
+
+  # Kafka and Zookeeper for message broker
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - kafka-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - kafka-network
+      - auth-network
+      - notification-network
+      - team-network
+      - tournament-network
+      - user-network
+      - venue-network
 
 volumes:
-  postgres_data: # <-- This defines a persistent volume
+
+  auth-data:
+  mongodb-data:
+
+
+networks:
+  api-gateway-network:
+    driver: bridge
+  auth-network:
+    driver: bridge
+  notification-network:
+    driver: bridge
+  team-network:
+    driver: bridge
+  tournament-network:
+    driver: bridge
+  user-network:
+    driver: bridge
+  venue-network:
+    driver: bridge
+  kafka-network:
+    driver: bridge

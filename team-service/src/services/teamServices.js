@@ -59,10 +59,10 @@ class TeamService {
     async checkGameExisting(user_id, games) {
         try {
             const unique = await TeamModel.findOne({ user_id, games });
-            if (unique) {
+            if (!unique) {
                 return false;
             }
-            return true;
+            return unique;
         } catch (error) {
             throw error;
         }
@@ -127,10 +127,28 @@ class TeamService {
         return await TeamModel.find({ user_id: userId }, '_id');
     }
 
-    async fetchScheduledMatches(query) {
+    async ScheduledMatch(matchData) {
         try {
-            const member = await ScheduledMatchModel.find(query);
-            return member;
+            const match = new ScheduledMatchModel({
+                ...matchData
+            });
+            if (!match) {
+                return false;
+            }
+            await match.save();
+            return match;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async findScheduledMatch(query) {
+        try {
+            const match = await ScheduledMatchModel.findOneAndUpdate(query);
+            if (!match) {
+                return false;
+            }
+            return match;
         } catch (error) {
             throw error;
         }

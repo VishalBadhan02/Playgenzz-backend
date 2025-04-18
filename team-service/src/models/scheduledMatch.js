@@ -10,7 +10,7 @@ const ScheduleSchema = mongoose.Schema({
 
     /** Only required for tournament matches */
     tournamentId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         ref: "tournaments",
         required: function () {
             return this.matchType === "tournament";
@@ -27,25 +27,25 @@ const ScheduleSchema = mongoose.Schema({
 
     /** ID of the user's team */
     homeTeam: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         ref: "teams"
     },
 
     /** User who created or scheduled the match */
     scheduledByUserId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         ref: "users"
     },
 
     /** ID of the opponent team */
     awayTeam: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         ref: "teams"
     },
 
     /** ID of the opponent user (if friendly match with individual) */
     opponentUserId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         ref: "users"
     },
 
@@ -72,7 +72,7 @@ const ScheduleSchema = mongoose.Schema({
 
     /** Number of overs (only relevant to cricket) */
     numberOfOvers: {
-        type: Number,
+        type: String,
         required: true
     },
 

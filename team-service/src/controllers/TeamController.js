@@ -22,7 +22,8 @@ const registerTeam = async (req, res) => {
         //  checking whether the user already registered in the team with existing game
         const existingteamcheck = await teamServices.checkGameExisting(userId, formData.games)
 
-        if (!existingteamcheck) {
+
+        if (existingteamcheck) {
             return res.status(402).json(reply.failure(Lang.TEAM_EXIST));
         }
 
@@ -192,163 +193,61 @@ const getTeamProfile = async (req, res) => {
 const handleMatchRequest = async (req, res) => {
     const { teamId, sport, userId, date, time, venue, notes, playersPerTeam } = req.body;
     let user = req.user._id;
-    console.log(req.body)
     try {
-        
+        const home = await teamServices.checkGameExisting(user, sport)
+
+        if (!home) {
+            console.log("here")
+            return res.status(200).json(reply.failure(Lang.TEAM_NOT_FOUND));
+        }
+
         const matchData = {
             matchType: "friendly",
-
-            /** ID of the user's team */
-            homeTeam: "",
-
-            /** User who created or scheduled the match */
+            homeTeam: home._id,
             scheduledByUserId: user,
-
-            /** ID of the opponent team */
             awayTeam: teamId,
-
-            /** ID of the opponent user (if friendly match with individual) */
             opponentUserId: userId,
-
-            /** Date of the match in YYYY-MM-DD format */
             matchDate: date,
-
-            /** General location (city, area, etc.) */
             matchLocation: venue,
-
-            /** Specific ground name */
             groundName: venue,
-
-            /** Number of overs (only relevant to cricket) */
             numberOfOvers: time,
-
-            /** Number of players in each team */
             numberOfPlayers: playersPerTeam,
-
-            /** Internal status code (e.g. 0 = inactive, 1 = active) */
             internalStatus: 0,
-
-            /** Public match status */
             matchStatus: "upcoming",
-
-            /** Type of sport */
             sportType: sport,
-
-           
         }
+
+        const match = await teamServices.ScheduledMatch(matchData)
+
+        console.log()
+        if (!match) {
+            console.log("dhjiu")
+            return res.status(404).json(reply.failure(Lang.MATCH_NOT_SCHEDULED));
+        }
+
+        const notificationData = {
+            receiverId: userId,
+            actorId: user,
+            entityId: match?._id,
+            type: "match",
+            message: Config.CHALLENGE_MESSAGE,  // Readable message
+            status: 0,                 // Status: unread, read, dismissed
+            data: {
+                type: "challenge",
+                teamName: home?.teamName,
+                sport: home?.games
+            }
+        };
+
+        await sendMessage("friend-request", notificationData)
+
+        return res.status(200).json(reply.success(Lang.SCHEDULED))
+
     } catch (error) {
+        console.log("Error scheduling match", error);
+        return res.status(500).json({ message: "Error scheduling match try again", error });
 
     }
-    // try {
-    //     // Fetch the user's team
-    //     const userTeam = await UserModel.findOne({ _id: req.user._id });
-    //     if (!userTeam) {
-    //         return res.status(404).json({ error: "User team not found" });
-    //     }
-
-    //     // Fetch the opponent team
-    //     const opponentTeam = await TeamModel.findOne({ _id: teamId });
-    //     let match;
-    //     let typeOf = type === "joinRequest" ? "request" : "match";
-    //     let message;
-
-    //     if (!opponentTeam) {
-    //         if (type === "reMatch") {
-
-    //             match = await ScheduledMatchModel.findOne({ _id });
-    //             const team = match.userId == req.user._id ? match.opponentId : match.userTeamId
-    //             const teamName = await TeamModel.findOne({ _id: team, games: game });
-    //             teamId = teamName._id;
-    //             if (!match) {
-    //                 return res.status(404).json({ error: "Match not found" });
-    //             }
-
-    //             // Update match properties
-    //             match.status = 0;
-    //             match.dateOfMatch = challengeDateTime;
-    //             match.players = players;
-    //             match.overs = overs;
-    //             match.ground = ground;
-    //             match.reMatch = 1;
-    //             match.totalMatches += 1;
-
-    //             message = {
-    //                 timing: challengeDateTime,
-    //                 teamName: teamName.teamName,
-    //                 ground,
-    //                 players,
-    //                 type: "reMatch"
-    //             };
-    //             typeOf = "match";
-    //         } else {
-    //             return res.status(404).json({ error: "Opponent team not found" });
-    //         }
-    //     }
-
-    //     if (type === "joinRequest") {
-    //         match = new AddTeamMemberModel({
-    //             userId: opponentTeam.user_id, // Corrected userId assignment
-    //             playerId: req.user._id,
-    //             userName: userTeam.userName,
-    //             status: 0,
-    //             commit: "Player",
-    //             teamId,
-    //         });
-
-    //         message = {
-    //             name: userTeam.userName,
-    //             type: "joinTeamRequest",
-    //             teamName: opponentTeam.teamName,
-    //         };
-    //     } else if (type === "match") {
-    //         match = new ScheduledMatchModel({
-    //             matchType: "friendly",
-    //             userTeamId: userTeam.team.team_Id,
-    //             userId: req.user._id,
-    //             opponentId: teamId,
-    //             dateOfMatch: challengeDateTime,
-    //             opponentUserId: opponentTeam.user_id,
-    //             players,
-    //             overs,
-    //             ground,
-    //             status: 0,
-    //             matchStatus: "upcoming",
-    //             totalMatches: 1,
-    //             sportType: game,
-    //         });
-
-    //         message = {
-    //             timing: challengeDateTime,
-    //             teamName: userTeam.team.team_name,
-    //             ground,
-    //             players,
-    //         };
-    //     }
-
-    //     // Find the captain of the opponent team
-    //     const captain = await AddTeamMemberModel.findOne({ teamId, commit: "Captain" });
-    //     if (!captain) {
-    //         return res.json(reply.failure("Captain not found in opponent team"));
-    //     }
-
-    //     // Create a notification
-    //     // const notification = new NotificationModel({
-    //     //     type_id: match._id,
-    //     //     user_id: captain.playerId,
-    //     //     type: typeOf,
-    //     //     message,
-    //     //     status: 0,
-    //     // });
-
-    //     // Save match and notification
-    //     await match.save();
-
-    //     await notification.save();
-
-    //     return res.status(200).json(reply.success("Match request processed successfully"));
-    // } catch (error) {
-    //     return res.status(500).json({ error: "Error processing match request", details: error.message });
-    // }
 };
 
 
@@ -505,55 +404,7 @@ const gamesAndFixtures = async (req, res) => {
 
 
 
-const setActiveTeam = async (req, res) => {
-    try {
-        const { teamId, teamName, logo } = req.body;
-        // await UserModel.findOneAndUpdate({ _id: req.user._id }, { $set: { team: { team_Id: teamId, team_name: teamName, logo } } });
-        return res.json(reply.success(Lang.SUCCESS, ""));
-    } catch (error) {
-        return res.status(500).json(reply.error("error setting active team", error.message));
-    }
-}
 
-
-//     try {
-//         const { _id, teamId, type, teamName, player_id } = req.body;
-//         const user = await UserModel.findOne({ _id: req.user._id })
-
-//         let user_id = type === "manage" ? player_id : await TeamModel.findOne({ _id: teamId }).user_id
-
-//         console.log(user_id)
-
-//         if (type === ("manage" || "member" || "leave")) {
-//             await AddTeamMemberModel.findOneAndDelete({ _id });
-//         }
-
-//         if (type === "leave") {
-//             const mst = new MessageModel({
-//                 from: req.user._id,
-//                 to: teamId,
-//                 message: ${user.userName} leave this team,
-//                 isDelivered: true
-//             })
-//             mst.save();
-//         }
-
-//         let message = type === "manage" ? ${teamName} removed you from their team  : ${user.userName} leave you team ${teamName}
-//         const notif = new NotificationModel({
-//             type_id: _id,
-//             user_id,
-//             type: "request",
-//             message,
-//             status: 1,
-//         })
-//         notif.save()
-//         return res.status(200).json(reply.success(Lang.SUCCESS, ""));
-//     } catch (error) {
-//         return res.status(500).json(reply.error("Error deleting team member", error.message));
-//     }
-// }
-
-// in this function message need to be send in team group 
 
 
 const handleTeamMember = async (req, res) => {
@@ -774,7 +625,6 @@ module.exports = {
     getTeamProfile,
     handleMatchRequest,
     getTeamsForRequest,
-    setActiveTeam,
     gamesAndFixtures,
     handleTeamMember,
     handleAddPlayer,

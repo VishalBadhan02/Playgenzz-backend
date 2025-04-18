@@ -1,5 +1,5 @@
 # 1️⃣ Use official Node.js image
-FROM node:18
+FROM node:23-slim
 
 # 2️⃣ Set working directory
 WORKDIR /app
@@ -14,7 +14,7 @@ RUN npm install -g pnpm && pnpm install
 COPY . .
 
 # 6️⃣ Expose service port (change if needed)
-EXPOSE 5000
+EXPOSE 5004
 
 # 7️⃣ Start the service
 CMD ["pnpm", "start"]
