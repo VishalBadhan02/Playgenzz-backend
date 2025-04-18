@@ -11,6 +11,7 @@ const { RoundModel } = require("../models/tournamentRounds");
 // const { ScoreCardModel } = require("../models/socreCard");
 // const { AddTeamMemberModel } = require("../models/addTeamMember");
 const bcrypt = require('bcryptjs');
+const tournamentServices = require("../services/tournamentServices");
 
 const handleRegister = async (req, res) => {
     try {
@@ -125,7 +126,7 @@ const getTournaments = async (req, res) => {
         //     games: tournament.sport
         // });
 
-        // // If user has a team, check if they're registered for tournament
+        // If user has a team, check if they're registered for tournament
         // if (userTeam) {
         //     const tournamentRegistration = await TournamentTeamsModel.findOne({
         //         teamID: userTeam._id,
@@ -134,16 +135,16 @@ const getTournaments = async (req, res) => {
         //     hasRegistered = !!tournamentRegistration;
         // }
 
-        // // Add registration status to tournament object
-        // const tournamentResponse = {
-        //     ...tournament.toObject(),
-        //     teamId: hasRegistered
-        // };
-
-        // return res.status(200).json(reply.success(
-        //     lang.TOURNAMENT_FETCHED,
-        //     tournamentResponse
-        // ));
+        // Add registration status to tournament object
+        const tournamentResponse = {
+            ...tournament.toObject(),
+            teamId: hasRegistered
+        };
+        // console.log(tournamentResponse)
+        return res.status(200).json(reply.success(
+            lang.TOURNAMENT_FETCHED,
+            tournamentResponse
+        ));
 
     } catch (err) {
         console.error('Error in getTournaments:', err);
@@ -303,26 +304,34 @@ const setFixtures = async (req, res) => {
 
 const login = async (req, res) => {
     try {
-        const { tournamentCode, password } = req.body;
+        const { _id, password } = req.body;
 
-        const tournament = await TournamentModel.findOne({ tournament_key: tournamentCode });
+        if (!_id || !password) {
+            return res.status(400).json(reply.failure("Missing _id or password"));
+        }
+
+        const tournament = await tournamentServices.findTournament(_id);
+
         if (!tournament) {
-            return res.json(reply.failure(lang.TOURNAMENT_KEY_NOT_FOUND));
+            return res.status(404).json(reply.failure(lang.TOURNAMENT_NOT_FOUND));
         }
 
         const isMatch = await bcrypt.compare(password, tournament.password);
 
         if (!isMatch) {
-            return res.json(reply.failure(lang.PASSWORD_NOTFOUND));
+            return res.status(401).json(reply.failure(lang.PASSWORD_NOTFOUND));
         }
 
-        return res.json(reply.success(lang.TOURNAMENT_KEY_FOUND, { id: tournament._id }));
-
+        return res.status(200).json(
+            reply.success(lang.TOURNAMENT_FETCHED, {
+                id: tournament._id,
+            })
+        );
     } catch (error) {
         console.error("Login failed:", error);
-        return res.json(reply.failure("Login failed"));
+        return res.status(500).json(reply.failure("Server error during tournament login"));
     }
-}
+};
 
 const deleteTeam = async (req, res) => {
     try {
@@ -382,6 +391,18 @@ const updatePayment = async (req, res) => {
     }
 }
 
+const getUserRegisteredTournament = async (req, res) => {
+    try {
+        const usrerId = req.user._id
+        const bookings = await tournamentServices.fetchUserRegisteredTournaments(usrerId)
+        return res.status(200).json(reply.success("", bookings))
+    } catch (error) {
+        console.log("error fetching usertournament", error);
+        return res.status(500).json(reply.failure("Error fetching usertournament"));
+    }
+}
+
 module.exports = {
-    setEntry, setTeam, setFixtures, UpdateWinner, getSelectedRound, login, deleteTeam, getTournaments, updatePayment, handleRegister, fetchtournament
+    setEntry, setTeam, setFixtures, UpdateWinner, getSelectedRound, login, deleteTeam, getTournaments, updatePayment, handleRegister, fetchtournament,
+    getUserRegisteredTournament
 }
