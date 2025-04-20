@@ -11,7 +11,7 @@ const TournamentTeamsSchema = mongoose.Schema({
         ref: "teams",
         required: true
     },
-    teamName: {
+    userId: {
         type: String,
     },
     status: {

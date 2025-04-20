@@ -79,7 +79,7 @@ const setEntry = async (req, res) => {
     try {
         const { id, teamId } = req.body;  // Extract tournament ID from request body
         const user = req.user._id;
-        console.log(req.body)
+
         const tournament = await TournamentModel.findOne({ _id: id });
 
         if (!tournament) {
@@ -90,11 +90,14 @@ const setEntry = async (req, res) => {
         const entry = new TournamentTeamsModel({
             tournametId: id,
             teamID: teamId,
+            userId: user,
             status: 0,
             paymentStatus: "pending"
         });
 
+        console.log(entry)
         await entry.save();
+        console.log(" saved")
 
         return res.status(200).json(reply.success(lang.TOURNAMENT_TEAM_REGISTERATION));
     } catch (error) {
@@ -115,26 +118,23 @@ const getTournaments = async (req, res) => {
 
         // Find user's team for this game type
         let hasRegistered = false;
-        // const userTeam = await TeamModel.findOne({
-        //     user_id: userId,
-        //     games: tournament.sport
-        // });
+
 
         // If user has a team, check if they're registered for tournament
-        // if (userTeam) {
-        //     const tournamentRegistration = await TournamentTeamsModel.findOne({
-        //         teamID: userTeam._id,
-        //         tournametId: tournamentId
-        //     });
-        //     hasRegistered = !!tournamentRegistration;
-        // }
+
+        const tournamentRegistration = await TournamentTeamsModel.findOne({
+            userId: userId,
+            tournametId: tournamentId
+        });
+        hasRegistered = !!tournamentRegistration;
+
 
         // Add registration status to tournament object
         const tournamentResponse = {
             ...tournament.toObject(),
             teamId: hasRegistered
         };
-        // console.log(tournamentResponse)
+
         return res.status(200).json(reply.success(
             lang.TOURNAMENT_FETCHED,
             tournamentResponse
