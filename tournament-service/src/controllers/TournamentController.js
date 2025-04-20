@@ -343,7 +343,6 @@ const deleteTeam = async (req, res) => {
     }
 }
 
-
 const updatePayment = async (req, res) => {
     try {
         const { teamID, type } = req.body;
