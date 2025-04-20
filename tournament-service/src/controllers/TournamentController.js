@@ -77,31 +77,24 @@ const fetchtournament = async (req, res) => {
 
 const setEntry = async (req, res) => {
     try {
-        const { id } = req.body;  // Extract tournament ID from request body
+        const { id, teamId } = req.body;  // Extract tournament ID from request body
         const user = req.user._id;
         console.log(req.body)
         const tournament = await TournamentModel.findOne({ _id: id });
+
         if (!tournament) {
             console.log("not found")
             return res.status(404).json(reply.failure(lang.TOURNAMENT_NOT_FOUND));
         }
-        
 
-        // const team = await TeamModel.findOne({ user_id: user, games: tournament.sport });
-        // if (!team) {
-        //     console.log(" team not found")
-        //     return res.status(404).json(reply.failure(lang.TEAM_NOT_FOUND));
-        // }
+        const entry = new TournamentTeamsModel({
+            tournametId: id,
+            teamID: teamId,
+            status: 0,
+            paymentStatus: "pending"
+        });
 
-        // const entry = new TournamentTeamsModel({
-        //     tournametId: id,
-        //     teamID: team._id,
-        //     teamName: team.teamName,
-        //     status: 0,
-        //     paymentStatus: "pending"
-        // });
-
-        // await entry.save();
+        await entry.save();
 
         return res.status(200).json(reply.success(lang.TOURNAMENT_TEAM_REGISTERATION));
     } catch (error) {
