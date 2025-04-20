@@ -85,6 +85,7 @@ const setEntry = async (req, res) => {
             console.log("not found")
             return res.status(404).json(reply.failure(lang.TOURNAMENT_NOT_FOUND));
         }
+        
 
         // const team = await TeamModel.findOne({ user_id: user, games: tournament.sport });
         // if (!team) {
