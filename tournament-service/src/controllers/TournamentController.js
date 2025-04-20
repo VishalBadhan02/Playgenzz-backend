@@ -79,7 +79,7 @@ const setEntry = async (req, res) => {
     try {
         const { id } = req.body;  // Extract tournament ID from request body
         const user = req.user._id;
-
+        console.log(req.body)
         const tournament = await TournamentModel.findOne({ _id: id });
         if (!tournament) {
             console.log("not found")
@@ -349,8 +349,8 @@ const updatePayment = async (req, res) => {
 
         let query = { teamID };
         let update = {};
-        let message
-        console.log(req.body)
+        let message;
+
         if (type === "payment") {
             update = {
                 $set: {
