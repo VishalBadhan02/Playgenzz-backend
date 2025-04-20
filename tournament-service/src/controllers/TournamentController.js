@@ -404,7 +404,6 @@ const getUserRegisteredTournament = async (req, res) => {
 
 
 
-
 module.exports = {
     setEntry, setTeam, setFixtures, UpdateWinner, getSelectedRound, login, deleteTeam, getTournaments, updatePayment, handleRegister, fetchtournament,
     getUserRegisteredTournament
