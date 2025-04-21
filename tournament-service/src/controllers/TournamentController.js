@@ -16,7 +16,7 @@ const tournamentServices = require("../services/tournamentServices");
 const handleRegister = async (req, res) => {
     try {
         const { name, admin, password, ...otherTournamentData } = req.body; // Destructure request body
-        console.log(req.body)
+        // console.log(req.body)
         if (name) {
             const existingTournament = await TournamentModel.findOne({ name });
             if (existingTournament) {
@@ -95,9 +95,7 @@ const setEntry = async (req, res) => {
             paymentStatus: "pending"
         });
 
-        console.log(entry)
         await entry.save();
-        console.log(" saved")
 
         return res.status(200).json(reply.success(lang.TOURNAMENT_TEAM_REGISTERATION));
     } catch (error) {
