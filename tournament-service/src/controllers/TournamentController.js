@@ -399,5 +399,4 @@ module.exports = {
     getUserRegisteredTournament
 
 
-
 }
