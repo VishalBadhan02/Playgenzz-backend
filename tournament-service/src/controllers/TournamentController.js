@@ -398,5 +398,6 @@ module.exports = {
     setEntry, setTeam, setFixtures, UpdateWinner, getSelectedRound, login, deleteTeam, getTournaments, updatePayment, handleRegister, fetchtournament,
     getUserRegisteredTournament
 
+
     
 }
