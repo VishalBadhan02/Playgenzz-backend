@@ -20,6 +20,4 @@ const formatedTeams = (teams, tournamentTeams) => {
     }).filter(Boolean); // remove null entries if not in tournament
 };
 
-
-
 module.exports = { formatedTeams };
