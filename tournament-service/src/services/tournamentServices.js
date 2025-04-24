@@ -1,5 +1,6 @@
 // const { NotificationModel } = require("../models/notification");
 const { TournamentModel } = require("../models/tournament");
+const TournamentTeamsModel = require("../models/tournamentEntry");
 // const grpcClientService = require("./grpcClientService");
 
 
@@ -68,28 +69,19 @@ class TournamentService {
         }
     }
 
-    // async updateNotificationForStatus(_id, status, message, actionType) {
-    //     try {
-    //         const modal = await NotificationModel.findOne({ _id })
-    //         if (!modal) {
-    //             // Handle the case where no document is found
-    //             return null; // or throw a specific error
-    //         }
-    //         const grpcResponse = await grpcClientService.getFreindModalResponse(modal.entityId, actionType);
-
-
-    //         if (!grpcResponse.isUnique) {
-    //             return false
-    //         }
-
-    //         modal.status = status
-    //         modal.message = message
-    //         await modal.save()
-    //         return modal
-    //     } catch (error) {
-    //         throw error;
-    //     }
-    // }
+    async getTournamentTeams(query) {
+        try {
+            const modal = await TournamentTeamsModel.find(query)
+            if (!modal) {
+                // Handle the case where no document is found
+                return null; // or throw a specific error
+            }
+            // const grpcResponse = await grpcClientService.getFreindModalResponse(modal.entityId, actionType);
+            return modal
+        } catch (error) {
+            throw error;
+        }
+    }
 
     // async fetchNotifications(receiverId, page = 1, limit = 20) {
     //     try {

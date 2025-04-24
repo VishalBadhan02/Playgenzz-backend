@@ -150,10 +150,19 @@ const getTournaments = async (req, res) => {
 const setTeam = async (req, res) => {
     try {
         const id = req.params.id;
-        const data = await TournamentTeamsModel.find({ tournametId: id }).populate("teamID")
-        const tournament = await TournamentModel.findOne({ _id: id }).populate("winner")
-        const rounds = await RoundModel.findOne({ tournamentId: id }).populate("winners looser").sort({ createdAt: -1 });
+        const query = { tournametId: id }
+        const data = await tournamentServices.getTournamentTeams(query)
 
+        const extractedTeamIds = data.map((team) => team.teamID);
+
+        console.log("extractedTeamIds", extractedTeamIds)
+
+        const tournament = await tournamentServices.findTournament(id);
+        if (!tournament) {
+            return res.json(reply.failure("Tournament not found!"))
+        }
+        const rounds = await RoundModel.findOne({ tournamentId: id }).sort({ createdAt: -1 });
+        // console.log("rounds", data)
         if (!tournament) {
             return res.json(reply.failure("Tournament not found!"))
         }
@@ -162,8 +171,9 @@ const setTeam = async (req, res) => {
         //     const teamMembers = await AddTeamMemberModel.find({ teamId: element.teamID._id, status: 1 });
         //     element.teamID.teamMembers = teamMembers;
         // }
-        return res.json(reply.success("Players Fetched", { data, rounds, tournament, sessionId: req.user._id }))
+        // return res.json(reply.success("Players Fetched", { data, rounds, tournament, sessionId: req.user._id }))
     } catch (error) {
+        console.error("Error in setTeam:", error);
         return res.json("error in getting tournament teams", error)
     }
 }

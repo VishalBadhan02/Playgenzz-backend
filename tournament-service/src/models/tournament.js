@@ -67,7 +67,6 @@ const TournamnetSchema = mongoose.Schema({
     },
     headAdmin: {
         type: String,
-        ref: "users",
         required: true
     },
     admin: {
@@ -167,7 +166,6 @@ const TournamnetSchema = mongoose.Schema({
     status: String,
     winner: {
         type: String,
-        ref: "teams",
         default: null
     },
     isVerified: {

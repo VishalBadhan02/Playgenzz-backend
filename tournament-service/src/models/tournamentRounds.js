@@ -20,19 +20,15 @@ const RoundSchema = mongoose.Schema({
     matches: Array,
     byes: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "teams"
     }],
     winners: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "teams"
     }],
     looser: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "teams"
     }],
     reMatch: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "teams"
     }],
     status: {
         type: String,
