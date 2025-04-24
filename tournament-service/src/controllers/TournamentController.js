@@ -12,6 +12,7 @@ const { RoundModel } = require("../models/tournamentRounds");
 // const { AddTeamMemberModel } = require("../models/addTeamMember");
 const bcrypt = require('bcryptjs');
 const tournamentServices = require("../services/tournamentServices");
+const grpcClientService = require("../services/grpcServices");
 
 const handleRegister = async (req, res) => {
     try {
@@ -156,6 +157,8 @@ const setTeam = async (req, res) => {
         const extractedTeamIds = data.map((team) => team.teamID);
 
         console.log("extractedTeamIds", extractedTeamIds)
+        const teams = await grpcClientService.getTeamFromTeamService(extractedTeamIds);
+        console.log("teams", teams)
 
         const tournament = await tournamentServices.findTournament(id);
         if (!tournament) {

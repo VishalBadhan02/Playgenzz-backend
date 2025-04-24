@@ -56,8 +56,15 @@ const GetTeamIds = async () => {
     try {
         const ids = call.request.teamIds;
         const teams = await TeamModel.find({ _id: { $in: ids } }).select(["teamName", "profilePicture", "_id", "createdAt"]);
+        return callback(null, { bulk: teams });
     } catch (error) {
         console.log("error fetching teams in grpcController of team service", error)
+        // ✅ Only return INTERNAL if there's an actual server error
+        return callback({
+            code: grpc.status.INTERNAL,
+            message: 'Internal server error',
+            details: error.message,
+        });
     }
 }
 

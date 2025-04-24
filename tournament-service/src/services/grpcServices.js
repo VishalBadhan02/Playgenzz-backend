@@ -1,0 +1,43 @@
+const userClient = require("../grpc-clients/userClient");
+
+class grpcClientService {
+    constructor() { }
+
+    // Get the last message in a conversation
+    async getTeamFromTeamService(data) {
+        try {
+            const response = await new Promise((resolve, reject) => {
+                userClient.GetTeamIds({ teams: data }, (error, response) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(response);
+                    }
+                });
+            });
+            return response;
+        } catch (error) {
+            return error
+        }
+    }
+
+    async getFreindModalResponse(id, action) {
+        try {
+            const response = await new Promise((resolve, reject) => {
+                userClient.GetModalId({ _id: id, action: action }, (error, response) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(response);
+                    }
+                });
+            });
+            return response;
+        } catch (error) {
+            return error
+        }
+    }
+}
+
+module.exports = new grpcClientService();
+
