@@ -24,4 +24,6 @@ const formatedTeams = (teams, tournamentTeams) => {
 
 
 
+
+
 module.exports = { formatedTeams };
