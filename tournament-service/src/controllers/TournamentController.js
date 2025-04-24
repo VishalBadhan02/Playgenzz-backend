@@ -13,6 +13,7 @@ const { RoundModel } = require("../models/tournamentRounds");
 const bcrypt = require('bcryptjs');
 const tournamentServices = require("../services/tournamentServices");
 const grpcClientService = require("../services/grpcServices");
+const { formatedTeams } = require("../utils/formatedTeams");
 
 const handleRegister = async (req, res) => {
     try {
@@ -156,9 +157,9 @@ const setTeam = async (req, res) => {
 
         const extractedTeamIds = data.map((team) => team.teamID);
 
-        console.log("extractedTeamIds", extractedTeamIds)
         const teams = await grpcClientService.getTeamFromTeamService(extractedTeamIds);
-        console.log("teams", teams)
+
+        const formattedTournamentTeams = await formatedTeams(teams?.bulk, data);
 
         const tournament = await tournamentServices.findTournament(id);
         if (!tournament) {
@@ -174,7 +175,7 @@ const setTeam = async (req, res) => {
         //     const teamMembers = await AddTeamMemberModel.find({ teamId: element.teamID._id, status: 1 });
         //     element.teamID.teamMembers = teamMembers;
         // }
-        // return res.json(reply.success("Players Fetched", { data, rounds, tournament, sessionId: req.user._id }))
+        return res.status(200).json(reply.success("Players Fetched", { teams: formattedTournamentTeams }))
     } catch (error) {
         console.error("Error in setTeam:", error);
         return res.json("error in getting tournament teams", error)

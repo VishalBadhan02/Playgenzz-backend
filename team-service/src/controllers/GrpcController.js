@@ -52,11 +52,17 @@ const getTeamByUser = async (call, callback) => {
 
 };
 
-const GetTeamIds = async () => {
+const GetTeamIds = async (call, callback) => {
     try {
-        const ids = call.request.teamIds;
+        const ids = call.request.teams;
         const teams = await TeamModel.find({ _id: { $in: ids } }).select(["teamName", "profilePicture", "_id", "createdAt"]);
-        return callback(null, { bulk: teams });
+        const formateTeams = teams?.map((team) => ({
+            id: team._id,
+            name: team.teamName,
+            imageUrl: team.profilePicture,
+            createdAt: team.createdAt
+        }));
+        return callback(null, { bulk: formateTeams });
     } catch (error) {
         console.log("error fetching teams in grpcController of team service", error)
         // ✅ Only return INTERNAL if there's an actual server error

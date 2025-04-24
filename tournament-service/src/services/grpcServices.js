@@ -1,4 +1,4 @@
-const userClient = require("../grpc-clients/userClient");
+const teamClient = require("../grpc-clients/teamClient");
 
 class grpcClientService {
     constructor() { }
@@ -7,7 +7,7 @@ class grpcClientService {
     async getTeamFromTeamService(data) {
         try {
             const response = await new Promise((resolve, reject) => {
-                userClient.GetTeamIds({ teams: data }, (error, response) => {
+                teamClient.GetTeamIds({ teams: data }, (error, response) => {
                     if (error) {
                         reject(error);
                     } else {
