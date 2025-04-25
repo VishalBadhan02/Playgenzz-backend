@@ -62,6 +62,26 @@ const GetTeamIds = async (call, callback) => {
             imageUrl: team.profilePicture,
             createdAt: team.createdAt
         }));
+
+        const extractMembers = await AddTeamMemberModel.find({ teamId: { $in: ids } });
+        const members = extractMembers?.map((member) => ({
+            id: member._id,
+            teamId: member.teamId,
+            playerId: member.playerId,
+            status: member.status
+        }));
+        const teamMembers = members?.reduce((acc, member) => {
+            if (!acc[member.teamId]) {
+                acc[member.teamId] = [];
+            }
+            acc[member.teamId].push(member);
+            return acc;
+        }, {});
+        const teamsWithMembers = formateTeams?.map((team) => {
+            const membersCount = teamMembers[team.id]?.length || 0;
+            return { ...team, members: membersCount };
+        });
+
         return callback(null, { bulk: formateTeams });
     } catch (error) {
         console.log("error fetching teams in grpcController of team service", error)

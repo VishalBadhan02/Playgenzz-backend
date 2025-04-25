@@ -6,7 +6,8 @@ const formatedTeams = (teams, tournamentTeams) => {
             const matchingTournament = tournamentTeams.find(tt => tt.teamID.toString() === team.id.toString());
 
             return {
-                id: team.id,
+                id: matchingTournament?._id,
+                teamId: team.id,
                 name: team.name,
                 logo: team.imageUrl,
                 players: 15,

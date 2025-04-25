@@ -20,13 +20,13 @@ const TournamentTeamsSchema = mongoose.Schema({
     },
     paymentStatus: {
         type: String,
-        enum: ["pending", "completed"],
+        enum: ["pending", "completed", "rejected", "failed"],
         default: "pending",
         required: true
     },
     matchStatus: {
         type: String,
-        enum: ["promoted", "disqualified", "eleminated", "winner", "re-entry"]
+        enum: ["promoted", "disqualified", "eleminated", "winner", "re-entry", "registered", "rejected"]
     },
     matchesPlayed: {
         type: Number,

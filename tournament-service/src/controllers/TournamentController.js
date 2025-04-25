@@ -351,45 +351,45 @@ const deleteTeam = async (req, res) => {
 
 const updatePayment = async (req, res) => {
     try {
-        const { teamID, type } = req.body;
+        const { _id, modalId, status } = req.body;
+        console.log("teamID", req.body);
+        // let query = { teamID };
+        // let update = {};
+        // let message;
 
-        let query = { teamID };
-        let update = {};
-        let message;
+        // if (type === "payment") {
+        //     update = {
+        //         $set: {
+        //             status: 1,
+        //             paymentStatus: "completed"
+        //         }
+        //     };
+        //     message = "Payment completed successfully"
+        // }
+        // else if (type === "disqualified") {
+        //     update = {
+        //         $set: {
+        //             status: 0,
+        //             matchStatus: "disqualified"
+        //         }
+        //     };
+        //     message = "Team Diqualified !"
 
-        if (type === "payment") {
-            update = {
-                $set: {
-                    status: 1,
-                    paymentStatus: "completed"
-                }
-            };
-            message = "Payment completed successfully"
-        }
-        else if (type === "disqualified") {
-            update = {
-                $set: {
-                    status: 0,
-                    matchStatus: "disqualified"
-                }
-            };
-            message = "Team Diqualified !"
+        // } else if (type === "re-entry") {
+        //     update = {
+        //         $set: {
+        //             status: 1,
+        //             matchStatus: "re-entry"
+        //         }
+        //     };
+        //     message = "Team has been promoted to the next round !"
 
-        } else if (type === "re-entry") {
-            update = {
-                $set: {
-                    status: 1,
-                    matchStatus: "re-entry"
-                }
-            };
-            message = "Team has been promoted to the next round !"
+        // }
 
-        }
-
-        const resu = await TournamentTeamsModel.findOneAndUpdate(query, update, { new: true });
-        if (!resu) {
-            return res.json(reply.failure("Team not found"))
-        }
+        // const resu = await TournamentTeamsModel.findOneAndUpdate(query, update, { new: true });
+        // if (!resu) {
+        //     return res.json(reply.failure("Team not found"))
+        // }
 
         return res.json(reply.success(message))
     } catch (error) {

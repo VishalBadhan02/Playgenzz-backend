@@ -83,24 +83,23 @@ class TournamentService {
         }
     }
 
-    // async fetchNotifications(receiverId, page = 1, limit = 20) {
-    //     try {
-    //         const skip = (page - 1) * limit;
-    //         const notifications = await NotificationModel.find({
-    //             receiverId,
-    //             status: { $lte: 1 }
-    //         })
-    //             .sort({ createdAt: -1 })
-    //             .skip(skip)
-    //             .limit(limit);
-    //         return notifications;
-    //     } catch (error) {
-    //         throw error;
-    //     }
-    // }
+    async updateTeamModal(_id, update) {
+        try {
+            const updatedDoc = await TournamentTeamsModel.findOneAndUpdate(
+                { _id },
+                update,
+                { new: true } // This returns the updated document instead of the old one
+            );
 
+            if (!updatedDoc) {
+                return false; // or you could throw a custom error here
+            }
 
-
+            return updatedDoc;
+        } catch (error) {
+            throw new Error("Error updating team modal: " + error.message);
+        }
+    }
 
 
 }

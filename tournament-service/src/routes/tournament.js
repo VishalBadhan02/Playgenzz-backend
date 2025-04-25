@@ -10,7 +10,7 @@ Route.post('/login', checkTournamentAdmin, TournamentControlller.login)
 
 Route.put('/updateWinner', checkTournamentAdmin, TournamentControlller.UpdateWinner)
 Route.put('/deleteTeam', checkTournamentAdmin, TournamentControlller.deleteTeam)
-Route.put('/updatePayment', checkTournamentAdmin, TournamentControlller.updatePayment)
+Route.put('/updateTournamentTeam', checkTournamentAdmin, TournamentControlller.updatePayment)
 
 Route.get('/setTeams/:id?', TournamentControlller.setTeam)
 Route.get('/setFixtureData/:id?', TournamentControlller.getSelectedRound);
