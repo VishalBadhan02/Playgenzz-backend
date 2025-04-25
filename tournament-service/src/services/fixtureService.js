@@ -80,7 +80,6 @@ const generateFixtures = async (input) => {
     // Here you would generate the fixtures and store them
     return { roundNumber, teams: result };
 };
-
 module.exports = {
     generateFixtures
 };
