@@ -18,7 +18,9 @@ const Lang = {
     "TEAM_NOT_FOUND": "You don't have any registered team",
     "TOURNAMENT_NOT_FOUND": "Tournament not found",
     "MATCHES_FETCH_FAILED": "Matches fetch failed",
-    "SERVER_ERROR": "Server error"
+    "SERVER_ERROR": "Server error",
+    "UPDATE_SUCCESS": "Update successful",
+    "UPDATE_FAILED": "Update failed",
 };
 
 module.exports = Lang;

@@ -55,6 +55,25 @@ const handleRegister = async (req, res) => {
     }
 };
 
+const handleTournamentUpdate = async (req, res) => {
+    try {
+        const { id, ...updateData } = req.body; // Destructure request body
+        if (!id) {
+            return res.status(400).json(reply.failure("Tournament ID is required"));
+        }
+        const tournament = await TournamentModel.findById(id);
+        if (!tournament) {
+            return res.status(404).json(reply.failure("Tournament not found"));
+        }
+        // Update the tournament document with the provided data
+        const updatedTournament = await TournamentModel.findByIdAndUpdate(id, updateData, { new: true });
+        return res.status(200).json(reply.success("Tournament updated successfully", updatedTournament));
+    } catch (error) {
+        console.error("Error updating tournament:", error);
+        return res.status(500).json({ success: false, message: "Failed to update tournament", error: error.message });
+    }
+};
+
 const fetchtournament = async (req, res) => {
     try {
         const tournament = await TournamentModel.find().sort({ rank: "asc" })
@@ -349,49 +368,35 @@ const deleteTeam = async (req, res) => {
     }
 }
 
+// when team is registered here the admin can manage the teams according to the requirement
+// like payment status, match status, etc
+// this is the function to update the payment status of the team
 const updatePayment = async (req, res) => {
     try {
-        const { _id, modalId, status } = req.body;
-        console.log("teamID", req.body);
-        // let query = { teamID };
-        // let update = {};
-        // let message;
+        const { modalId, status, paymentStatus, matchStatus } = req.body;
 
-        // if (type === "payment") {
-        //     update = {
-        //         $set: {
-        //             status: 1,
-        //             paymentStatus: "completed"
-        //         }
-        //     };
-        //     message = "Payment completed successfully"
-        // }
-        // else if (type === "disqualified") {
-        //     update = {
-        //         $set: {
-        //             status: 0,
-        //             matchStatus: "disqualified"
-        //         }
-        //     };
-        //     message = "Team Diqualified !"
+        if (!modalId) {
+            return res.status(400).json(reply.failure("modalId is required"));
+        }
 
-        // } else if (type === "re-entry") {
-        //     update = {
-        //         $set: {
-        //             status: 1,
-        //             matchStatus: "re-entry"
-        //         }
-        //     };
-        //     message = "Team has been promoted to the next round !"
+        // query for the updates
+        const query = {
+            $set: {
+                ...(status && { status }),
+                ...(paymentStatus && { paymentStatus }),
+                ...(matchStatus && { matchStatus }),
+            },
+        };
 
-        // }
+        // database call to update
+        const update = await tournamentServices.updateTournamentTeamModal(modalId, query)
 
-        // const resu = await TournamentTeamsModel.findOneAndUpdate(query, update, { new: true });
-        // if (!resu) {
-        //     return res.json(reply.failure("Team not found"))
-        // }
+        //!!!! notification is pending
+        if (!update) {
+            return res.status(404).json(reply.failure("No team found with the provided modalId"));
+        }
 
-        return res.json(reply.success(message))
+        return res.status(200).json(reply.success(lang.UPDATE_SUCCESS))
     } catch (error) {
         return res.json(reply.failure("Error Updating payment"))
     }
@@ -409,6 +414,6 @@ const getUserRegisteredTournament = async (req, res) => {
 }
 
 module.exports = {
-    setEntry, setTeam, setFixtures, UpdateWinner, getSelectedRound, login, deleteTeam, getTournaments, updatePayment, handleRegister, fetchtournament,
+    setEntry, setTeam, setFixtures, UpdateWinner, getSelectedRound, login, deleteTeam, getTournaments, updatePayment, handleRegister, fetchtournament, handleTournamentUpdate,
     getUserRegisteredTournament
 }

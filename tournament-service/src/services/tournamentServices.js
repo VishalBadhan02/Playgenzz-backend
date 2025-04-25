@@ -83,7 +83,7 @@ class TournamentService {
         }
     }
 
-    async updateTeamModal(_id, update) {
+    async updateTournamentTeamModal(_id, update) {
         try {
             const updatedDoc = await TournamentTeamsModel.findOneAndUpdate(
                 { _id },
