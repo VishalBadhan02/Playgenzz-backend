@@ -81,7 +81,6 @@ const generateFixtures = async (input) => {
     return { roundNumber, teams: result };
 };
 
-
 module.exports = {
     generateFixtures
 };
