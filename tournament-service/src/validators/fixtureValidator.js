@@ -9,7 +9,7 @@ const FixtureInputValidator = z.object({
         randomize: z.boolean(),
         allowByes: z.boolean(),
         startDate: z.string(),
-        matchesPerDay: z.number()
+        matchesPerDay: z.number().optional(),
     })
 });
 

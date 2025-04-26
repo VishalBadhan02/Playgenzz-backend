@@ -1,6 +1,7 @@
 // const { NotificationModel } = require("../models/notification");
 const { TournamentModel } = require("../models/tournament");
 const TournamentTeamsModel = require("../models/tournamentEntry");
+const { RoundModel } = require("../models/tournamentRounds");
 // const grpcClientService = require("./grpcClientService");
 
 
@@ -96,6 +97,20 @@ class TournamentService {
             }
 
             return updatedDoc;
+        } catch (error) {
+            throw new Error("Error updating team modal: " + error.message);
+        }
+    }
+
+    async roundModal(query) {
+        try {
+            const round = await RoundModel.findOne(query).sort({ roundNumber: -1 });;
+
+            if (!round) {
+                return false; // or you could throw a custom error here
+            }
+
+            return round;
         } catch (error) {
             throw new Error("Error updating team modal: " + error.message);
         }

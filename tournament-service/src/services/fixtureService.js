@@ -1,13 +1,24 @@
 const TournamentTeamsModel = require("../models/TournamentTeams");
 const RoundModel = require("../models/Round");
 const { TournamentModel } = require("../models/tournament");
+const tournamentServices = require("./tournamentServices");
 // const TournamentModel = require("../models/Tournament");
 
 const generateFixtures = async (input) => {
     const { tournamentId, fixtures } = input;
     const { tournamentFormat, randomize, allowByes, startDate, matchesPerDay } = fixtures;
 
-    const teams = await TournamentTeamsModel.find({ tournamentId, status: 1 }).populate("teamID");
+    const query = {
+        tournametId: tournamentId,
+        status: 1,
+        paymentStatus: "confirmed",
+        matchStatus: "registered"
+    };
+
+    const teams = await tournamentServices.getTournamentTeams(query);
+    console.log("teams", teams)
+
+    // const teams = await TournamentTeamsModel.find({ tournamentId, status: 1 }).populate("teamID");
     const rematch = teams.filter(team => team.matchStatus === "re-entry");
 
     if (!teams.length) {
@@ -17,46 +28,47 @@ const generateFixtures = async (input) => {
     let result = [];
     let roundNumber;
 
-    const round = await RoundModel.findOne({ tournamentId })
-        .populate({ path: "winners byes", select: "teamName avatar _id user_id" })
-        .sort({ roundNumber: -1 });
+    const roundQuery = {
+        tournamentId,
+    };
+
+    const round = await tournamentServices.roundModal(roundQuery);
+    console.log("round", round)
 
     if (!round) {
         roundNumber = 1;
         result = teams.map(({ teamID }) => ({
-            id: teamID._id,
-            userID: teamID.user_id,
-            name: teamID.teamName,
-            avatar: teamID.profilePicture
+            id: teamID?._id || "dfkjcn",
+            userID: teamID?.user_id || "dfkjcn",
+            name: teamID?.teamName || "dfkjcn",
+            avatar: teamID?.profilePicture || "dfkjcn"
         }));
-
-        if (tournamentFormat === "single_elimination") {
-            await TournamentModel.findByIdAndUpdate(tournamentId, {
-                $set: {
-                    matches: teams.length - 1
-                }
-            });
-        }
-
+        // if (tournamentFormat === "single_elimination") {
+        //     await TournamentModel.findByIdAndUpdate(tournamentId, {
+        //         $set: {
+        //             matches: teams.length - 1,
+        //         },
+        //     });
+        // }
     } else {
         roundNumber = round.roundNumber + 1;
 
         if (round.winners?.length) {
             result = round.winners.map(teamID => ({
-                id: teamID._id,
-                userID: teamID.user_id,
-                name: teamID.teamName,
-                avatar: teamID.profilePicture
+                id: teamID?._id || "dfkjcn",
+                userID: teamID?.user_id || "dfkjcn",
+                name: teamID?.teamName || "dfkjcn",
+                avatar: teamID?.profilePicture || "dfkjcn"
             }));
         }
 
         if (round.byes?.length) {
             result.push(
                 ...round.byes.map(teamID => ({
-                    id: teamID._id,
-                    userID: teamID.user_id,
-                    name: teamID.teamName,
-                    avatar: teamID.profilePicture
+                    id: teamID?._id || "dfkjcn",
+                    userID: teamID?.user_id || "dfkjcn",
+                    name: teamID?.teamName || "dfkjcn",
+                    avatar: teamID?.profilePicture || "dfkjcn"
                 }))
             );
         }
@@ -64,10 +76,10 @@ const generateFixtures = async (input) => {
         if (rematch?.length) {
             result.push(
                 ...rematch.map(team => ({
-                    id: team.teamID._id,
-                    userID: team.teamID.user_id,
-                    name: team.teamID.teamName,
-                    avatar: team.teamID.profilePicture
+                    id: team?.teamID?._id || "dfkjcn",
+                    userID: team?.teamID?.user_id || "dfkjcn",
+                    name: team?.teamID?.teamName || "dfkjcn",
+                    avatar: team?.teamID?.profilePicture || "dfkjcn"
                 }))
             );
         }
