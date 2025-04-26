@@ -245,7 +245,7 @@ const UpdateWinner = async (req, res) => {
 const setFixtures = async (req, res) => {
     try {
         const parsed = FixtureInputValidator.safeParse(req.body);
-
+        console.log("parsed", req.body);
         if (!parsed.success) {
             console.error("Validation errors:", parsed.error.errors);
             return res.status(400).json(reply.failure("Invalid input", parsed.error.errors));

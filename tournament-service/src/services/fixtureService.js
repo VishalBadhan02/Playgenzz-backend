@@ -12,9 +12,7 @@ const generateFixtures = async (input) => {
     };
 
     const teams = await tournamentServices.getTournamentTeams(query);
-    // console.log("teams", teams)
 
-    // const teams = await TournamentTeamsModel.find({ tournamentId, status: 1 }).populate("teamID");
     const rematch = teams.filter(team => team.matchStatus === "re-entry");
 
     if (!teams.length) {

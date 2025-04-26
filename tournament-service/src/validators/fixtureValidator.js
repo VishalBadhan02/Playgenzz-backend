@@ -1,6 +1,7 @@
 const { z } = require("zod");
 
 const FixtureInputValidator = z.object({
+    save: z.boolean(),
     tournamentId: z.string().min(1),
     fixtures: z.object({
         tournamentFormat: z.enum(["single_elimination", "round_robin"]),
