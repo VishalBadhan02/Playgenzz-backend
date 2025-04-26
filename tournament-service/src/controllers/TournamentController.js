@@ -1,21 +1,15 @@
-// const { TeamModel } = require("../models/team")
 const TournamentTeamsModel = require("../models/tournamentEntry")
 const reply = require('../helper/reply');
 const { TournamentModel } = require("../models/tournament")
 const lang = require('../language/en');
-// const UserModel = require("../models/user");
-// const { knownExtended, c, r } = require("tar");
-// const { mongo } = require("mongoose");
-// const TournamentController = require("../helper/tournamnetFixture");
 const { RoundModel } = require("../models/tournamentRounds");
-// const { ScoreCardModel } = require("../models/socreCard");
-// const { AddTeamMemberModel } = require("../models/addTeamMember");
 const bcrypt = require('bcryptjs');
 const tournamentServices = require("../services/tournamentServices");
 const grpcClientService = require("../services/grpcServices");
 const { formatedTeams } = require("../utils/formatedTeams");
 const { FixtureInputValidator } = require("../validators/fixtureValidator");
 const { generateFixtures } = require("../services/fixtureService");
+const TournamentController = require("../fixtures/fixtureControl");
 
 const handleRegister = async (req, res) => {
     try {
@@ -257,13 +251,17 @@ const setFixtures = async (req, res) => {
             return res.status(400).json(reply.failure("Invalid input", parsed.error.errors));
         }
 
+        const { tournamentFormat, randomize, allowByes, startDate, matchesPerDay } = parsed.data.fixtures;
+        const { tournamentId } = req.body
         const result = await generateFixtures(parsed.data);
-        console.log("result", result);
+        // console.log("result", result);
 
         if (result.error) {
             console.error("Error generating fixtures:", result.error);
             // return res.status(500).json(reply.failure("Error generating fixtures", result.error));
         }
+        const tournamentController = new TournamentController(tournamentId, tournamentFormat, result.roundNumber, result.teams, res, allowByes, randomize, startDate, save = false);
+        await tournamentController._generateFixtures();
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json(reply.failure(error.message));

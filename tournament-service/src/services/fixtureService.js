@@ -1,8 +1,4 @@
-const TournamentTeamsModel = require("../models/TournamentTeams");
-const RoundModel = require("../models/Round");
-const { TournamentModel } = require("../models/tournament");
 const tournamentServices = require("./tournamentServices");
-// const TournamentModel = require("../models/Tournament");
 
 const generateFixtures = async (input) => {
     const { tournamentId, fixtures } = input;
@@ -16,7 +12,7 @@ const generateFixtures = async (input) => {
     };
 
     const teams = await tournamentServices.getTournamentTeams(query);
-    console.log("teams", teams)
+    // console.log("teams", teams)
 
     // const teams = await TournamentTeamsModel.find({ tournamentId, status: 1 }).populate("teamID");
     const rematch = teams.filter(team => team.matchStatus === "re-entry");
@@ -33,7 +29,7 @@ const generateFixtures = async (input) => {
     };
 
     const round = await tournamentServices.roundModal(roundQuery);
-    console.log("round", round)
+    // console.log("round", round)
 
     if (!round) {
         roundNumber = 1;

@@ -1,7 +1,7 @@
 const reply = require('../helper/reply');
-const { ScheduledMatchModel } = require('../model/scheduledMatch');
-const { TournamentModel } = require('../model/tournament');
-const { RoundModel } = require('../model/tournamentRounds');
+// const { ScheduledMatchModel } = require('../models/scheduledMatch');
+const { TournamentModel } = require('../models/tournament');
+const { RoundModel } = require('../models/tournamentRounds');
 
 class TournamentController {
     constructor(tournamentId, type, round, teams, res, withByes, randomize, dateOfMatch, save) {
@@ -91,16 +91,18 @@ class TournamentController {
             for (let i = 0; i < fixturesCount - 1; i += 2) {
                 const match = {
                     round: this.round,
+                    id: 'm1',
                     team1: currentRoundTeams[i],
                     team2: currentRoundTeams[i + 1] || null, // Handle odd teams
-                    status: "pending"
+                    status: "upcoming",
+                    dateTime: 'June 15, 2025 - 2:00 PM',
+                    venue: 'Main Stadium',
                 };
                 if (this.save) {
                     const matchId = await this.saveScheduleMatch(match);
                     match.id = matchId;
                 }// Ensure this is awaited
                 roundFixtures.push(match);
-
             }
 
             // Handle the last team if the number of teams is odd
@@ -120,7 +122,7 @@ class TournamentController {
             if (this.save) {
                 saved = await this.saveRoundFixtures(roundFixtures, generatedByes);
             }
-
+            // console.log("saved", fixtures)
             return this.res.status(200).json(reply.success("Fixtures generated successfully", { fixtures: roundFixtures, lastMatch }));
 
         } catch (error) {
@@ -329,7 +331,8 @@ class TournamentController {
                 return
             }
 
-            const scheduledMatch = new ScheduledMatchModel({
+            const scheduledMatch = {
+                _id: "match.id",
                 tournamentId: this.tournamentId,
                 roundNumber: this.round,
                 matchType: "tournament",
@@ -345,8 +348,9 @@ class TournamentController {
                 status: 1,
                 matchStatus: match.status,
                 sportType: "cricket"
-            });
-            await scheduledMatch.save();
+            };
+            console.log("scheduledMatch", scheduledMatch)
+            // await scheduledMatch.save();
 
             return scheduledMatch._id;
         } catch (error) {
@@ -367,7 +371,7 @@ class TournamentController {
                 status: "pending",
                 roundNumber: this.round
             });
-            console.log(saveRound)
+            // console.log(saveRound)
             await saveRound.save();
             return { success: true };  // ✅ Return a success object instead of sending a response
         } catch (error) {
