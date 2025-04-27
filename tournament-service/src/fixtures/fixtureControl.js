@@ -106,6 +106,7 @@ class TournamentController {
                 roundFixtures.push(match);
             }
 
+             
             // Handle the last team if the number of teams is odd
             if (fixturesCount % 2 !== 0) {
                 const Match = {
