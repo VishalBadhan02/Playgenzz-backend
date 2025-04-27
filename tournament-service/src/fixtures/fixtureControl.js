@@ -17,6 +17,7 @@ class TournamentController {
         this.randomize = randomize;
         this.dateOfMatch = dateOfMatch || new Date();
         this.save = save;
+        this.cacheKey = `fixtureKey:${this.tournamentId}`;
     }
 
     async _generateFixtures() {
