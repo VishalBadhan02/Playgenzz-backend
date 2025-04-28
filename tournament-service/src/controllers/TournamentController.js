@@ -245,7 +245,7 @@ const UpdateWinner = async (req, res) => {
 const setFixtures = async (req, res) => {
     try {
         const parsed = FixtureInputValidator.safeParse(req.body);
-        console.log("parsed", req.body);
+        // console.log("parsed", req.body);
         if (!parsed.success) {
             console.error("Validation errors:", parsed.error.errors);
             return res.status(400).json(reply.failure("Invalid input", parsed.error.errors));
@@ -260,10 +260,10 @@ const setFixtures = async (req, res) => {
             console.error("Error generating fixtures:", result.error);
             // return res.status(500).json(reply.failure("Error generating fixtures", result.error));
         }
-        const tournamentController = new TournamentController(tournamentId, tournamentFormat, result.roundNumber, result.teams, res, allowByes, randomize, startDate, save = false);
+        const tournamentController = new TournamentController(tournamentId, tournamentFormat, result.roundNumber, result.teams, res, allowByes, randomize, startDate, save = true);
         await tournamentController._generateFixtures();
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error:', error.message);
         res.status(500).json(reply.failure(error.message));
     }
 };

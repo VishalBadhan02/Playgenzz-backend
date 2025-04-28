@@ -32,6 +32,9 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
+      kafka:
+        specifier: ^0.2.3
+        version: 0.2.3
       kafkajs:
         specifier: ^2.2.4
         version: 2.2.4
@@ -748,6 +751,9 @@ packages:
   jws@3.2.2:
     resolution: {integrity: sha512-YHlZCB6lMTllWDtSPHz/ZXTsi8S00usEV6v1tjq8tOUZzw7DpSDWVXjXDre6ed1w/pd495ODpHZYSdkRTsa0HA==}
 
+  kafka@0.2.3:
+    resolution: {integrity: sha512-Qi9J1HgikGlZz4dGzG++sZ3L52JTE+LCWelz3MNmze0KePSeWvZHVtGe981/mD/u+wyLg6INFw3Rgrqyg+orTA==}
+
   kafkajs@2.2.4:
     resolution: {integrity: sha512-j/YeapB1vfPT2iOIUn/vxdyKEuhuY2PxMBvf5JWux6iSaukAccrMtXEY/Lb7OvavDhOWME589bpLrEdnVHjfjA==}
     engines: {node: '>=14.0.0'}
@@ -1013,6 +1019,9 @@ packages:
   statuses@2.0.1:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
     engines: {node: '>= 0.8'}
+
+  std@0.1.36:
+    resolution: {integrity: sha512-PZP6srpVKfDgMwgbo+0jOUV0IFAWxHKlyQj3wiZiov8AYbXtoDjhNtFaCLkthOp0T5I6HDFzYvo2mRVtU5HYdg==}
 
   stream-browserify@3.0.0:
     resolution: {integrity: sha512-H73RAHsVBapbim0tU2JwwOiXUj+fikfiaoYAKHF3VJfA0pe2BCzkhAHBlLG6REzE+2WNZcxOXjK7lkso+9euLA==}
@@ -2262,6 +2271,10 @@ snapshots:
       jwa: 1.4.1
       safe-buffer: 5.2.1
 
+  kafka@0.2.3:
+    dependencies:
+      std: 0.1.36
+
   kafkajs@2.2.4: {}
 
   kareem@2.6.3: {}
@@ -2527,6 +2540,8 @@ snapshots:
   standard-as-callback@2.1.0: {}
 
   statuses@2.0.1: {}
+
+  std@0.1.36: {}
 
   stream-browserify@3.0.0:
     dependencies:

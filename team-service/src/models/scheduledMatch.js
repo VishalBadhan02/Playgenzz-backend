@@ -17,6 +17,9 @@ const ScheduleSchema = mongoose.Schema({
         }
     },
 
+    /** unique match id */
+    matchId: String,
+
     /** Round number within the tournament */
     tournamentRound: {
         type: Number,

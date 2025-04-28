@@ -1,7 +1,9 @@
 const reply = require('../helper/reply');
-// const { ScheduledMatchModel } = require('../models/scheduledMatch');
 const { TournamentModel } = require('../models/tournament');
 const { RoundModel } = require('../models/tournamentRounds');
+const { v4: uuidv4 } = require('uuid');
+const tournamentServices = require('../services/tournamentServices');
+const sendMessage = require('../kafka/producer');
 
 class TournamentController {
     constructor(tournamentId, type, round, teams, res, withByes, randomize, dateOfMatch, save) {
@@ -43,7 +45,6 @@ class TournamentController {
         }
     }
 
-
     async validateTournament(type, _id) {
         if (["single_elimination", "round_robin", "double_elimination", "swiss_system", "group_stage"].includes(type)) {
             return true;
@@ -75,37 +76,45 @@ class TournamentController {
             if (this.withByes) {
                 let nextPowerOfTwo = Math.pow(2, Math.ceil(Math.log2(totalTeams)));
                 let byesNeeded = nextPowerOfTwo - totalTeams;
-
-
                 // Assign byes to the first N teams (automatically advance)
                 let byeTeams = currentRoundTeams.splice(0, byesNeeded);
                 fixtures.push(...byeTeams.map(team => (
                     team.id
                 )));
-
                 generatedByes = fixtures;
                 fixturesCount -= byesNeeded;
             }
 
             let roundFixtures = [];
+            let kafka = [];
 
             for (let i = 0; i < fixturesCount - 1; i += 2) {
                 const match = {
                     round: this.round,
-                    id: 'm1',
+                    id: uuidv4(),
                     team1: currentRoundTeams[i],
                     team2: currentRoundTeams[i + 1] || null, // Handle odd teams
                     status: "upcoming",
                     dateTime: 'June 15, 2025 - 2:00 PM',
                     venue: 'Main Stadium',
                 };
+
                 if (this.save) {
                     const matchId = await this.saveScheduleMatch(match);
-                    match.id = matchId;
+                    kafka.push(matchId);
+                    // match.id = matchId;
                 }// Ensure this is awaited
                 roundFixtures.push(match);
             }
 
+            if (kafka.length <= 10) {
+                await sendMessage("tournament-match-scheduling", kafka)
+                console.log("Kafka message sent successfully");
+            } else {
+                await sendMessage("tournament-match-scheduling", kafka)
+                console.log("Kafka message sent successfully");
+            }
+            // console.log("roundFixtures", kafka)
             // Handle the last team if the number of teams is odd
             if (fixturesCount % 2 !== 0) {
                 const Match = {
@@ -322,7 +331,7 @@ class TournamentController {
 
     async saveScheduleMatch(match) {
         try {
-            const tournament = await TournamentModel.findOne({ _id: this.tournamentId });
+            const tournament = await tournamentServices.findTournament(this.tournamentId);
 
             if (!tournament) {
                 return this.res.status(404).json(reply.failure("Tournament not found"));
@@ -333,7 +342,7 @@ class TournamentController {
             }
 
             const scheduledMatch = {
-                _id: "match.id",
+                matchId: match.id,
                 tournamentId: this.tournamentId,
                 roundNumber: this.round,
                 matchType: "tournament",
@@ -350,10 +359,10 @@ class TournamentController {
                 matchStatus: match.status,
                 sportType: "cricket"
             };
-            console.log("scheduledMatch", scheduledMatch)
+            // console.log("scheduledMatch", scheduledMatch)
             // await scheduledMatch.save();
 
-            return scheduledMatch._id;
+            return scheduledMatch
         } catch (error) {
             console.error("Error saving match:", error);
             if (!this.res.headersSent) {

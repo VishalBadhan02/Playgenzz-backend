@@ -29,12 +29,18 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
+      kafka:
+        specifier: ^0.2.3
+        version: 0.2.3
       kafkajs:
         specifier: ^2.2.4
         version: 2.2.4
       mongoose:
         specifier: ^8.12.1
         version: 8.12.1
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.0
       zod:
         specifier: ^3.24.3
         version: 3.24.3
@@ -312,6 +318,9 @@ packages:
   jws@3.2.2:
     resolution: {integrity: sha512-YHlZCB6lMTllWDtSPHz/ZXTsi8S00usEV6v1tjq8tOUZzw7DpSDWVXjXDre6ed1w/pd495ODpHZYSdkRTsa0HA==}
 
+  kafka@0.2.3:
+    resolution: {integrity: sha512-Qi9J1HgikGlZz4dGzG++sZ3L52JTE+LCWelz3MNmze0KePSeWvZHVtGe981/mD/u+wyLg6INFw3Rgrqyg+orTA==}
+
   kafkajs@2.2.4:
     resolution: {integrity: sha512-j/YeapB1vfPT2iOIUn/vxdyKEuhuY2PxMBvf5JWux6iSaukAccrMtXEY/Lb7OvavDhOWME589bpLrEdnVHjfjA==}
     engines: {node: '>=14.0.0'}
@@ -525,6 +534,9 @@ packages:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
     engines: {node: '>= 0.8'}
 
+  std@0.1.36:
+    resolution: {integrity: sha512-PZP6srpVKfDgMwgbo+0jOUV0IFAWxHKlyQj3wiZiov8AYbXtoDjhNtFaCLkthOp0T5I6HDFzYvo2mRVtU5HYdg==}
+
   string-width@4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
     engines: {node: '>=8'}
@@ -555,6 +567,10 @@ packages:
   utils-merge@1.0.1:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
+
+  uuid@11.1.0:
+    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
+    hasBin: true
 
   vary@1.1.2:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
@@ -885,6 +901,10 @@ snapshots:
       jwa: 1.4.1
       safe-buffer: 5.2.1
 
+  kafka@0.2.3:
+    dependencies:
+      std: 0.1.36
+
   kafkajs@2.2.4: {}
 
   kareem@2.6.3: {}
@@ -1089,6 +1109,8 @@ snapshots:
 
   statuses@2.0.1: {}
 
+  std@0.1.36: {}
+
   string-width@4.2.3:
     dependencies:
       emoji-regex: 8.0.0
@@ -1115,6 +1137,8 @@ snapshots:
   unpipe@1.0.0: {}
 
   utils-merge@1.0.1: {}
+
+  uuid@11.1.0: {}
 
   vary@1.1.2: {}
 

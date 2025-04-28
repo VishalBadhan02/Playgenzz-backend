@@ -5,12 +5,13 @@ const consumer = kafka.consumer({ groupId: "notification-group" });
 
 async function startConsumer() {
   await consumer.connect();
-  await consumer.subscribe({ topics: ['friend-request', 'delete-request'], fromBeginning: true });
+  await consumer.subscribe({ topics: ['friend-request', 'delete-request', 'approve-request'], fromBeginning: true });
 
   await consumer.run({
     eachMessage: async ({ topic, partition, message }) => {
       try {
         const messageValue = message.value.toString();
+
         const data = JSON.parse(messageValue);
 
         switch (topic) {

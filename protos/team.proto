@@ -8,6 +8,9 @@ service TeamService {
 
    // Get team id's 
   rpc GetTeamIds (teamIds) returns (BulkTeams);
+
+  // tounament match Scheduling
+  rpc BulkCreateSchedules (BulkCreateScheduleRequest) returns (BulkCreateScheduleResponse);
 }
 
 // Request message to fetch a user's team
@@ -54,5 +57,51 @@ message BulkTeams {
   repeated teamRes bulk =1;
 }
 
+
+
+
+
+
+
+
+
+
+
+// Scheduling matches of tounrmaent 
+
+// One Scheduled Match
+message ScheduledMatch {
+    string matchType = 1;
+    string tournamentId = 2;
+    int32 tournamentRound = 3;
+    string homeTeam = 4;
+    string scheduledByUserId = 5;
+    string awayTeam = 6;
+    string opponentUserId = 7;
+    string matchDate = 8;
+    int32 numberOfMatches = 9;
+    string matchLocation = 10;
+    string groundName = 11;
+    string numberOfOvers = 12;
+    int32 numberOfPlayers = 13;
+    int32 internalStatus = 14;
+    string matchStatus = 15;
+    int32 rematchCount = 16;
+    string sessionId = 17;
+    string sportType = 18;
+    string matchResultJson = 19; // we send matchResult as JSON string
+}
+
+
+
+// Request to bulk create matches
+message BulkCreateScheduleRequest {
+    repeated ScheduledMatch matches = 1; // array of matches
+}
+
+// Response after bulk create
+message BulkCreateScheduleResponse {
+    repeated string matchIds = 1; // array of created match IDs
+}   
 
 
