@@ -4,6 +4,7 @@ const { RoundModel } = require('../models/tournamentRounds');
 const { v4: uuidv4 } = require('uuid');
 const tournamentServices = require('../services/tournamentServices');
 const sendMessage = require('../kafka/producer');
+const { ScheduleMatchResponse } = require('../services/grpcServices');
 
 class TournamentController {
     constructor(tournamentId, type, round, teams, res, withByes, randomize, dateOfMatch, save) {
@@ -107,13 +108,6 @@ class TournamentController {
                 roundFixtures.push(match);
             }
 
-            if (kafka.length <= 10) {
-                await sendMessage("tournament-match-scheduling", kafka)
-                console.log("Kafka message sent successfully");
-            } else {
-                await sendMessage("tournament-match-scheduling", kafka)
-                console.log("Kafka message sent successfully");
-            }
             // console.log("roundFixtures", kafka)
             // Handle the last team if the number of teams is odd
             if (fixturesCount % 2 !== 0) {
@@ -125,6 +119,20 @@ class TournamentController {
                 };
                 lastMatch.push(Match);
                 generatedByes.push(currentRoundTeams[fixturesCount - 1].id)
+            }
+
+            if (kafka.length > 0) {
+                if (kafka.length <= 10) {
+                    // GRPC Call for less then 10 matches
+                    const res = await ScheduleMatchResponse(kafka)
+                    if (!res?.matchIds) {
+                        return this.res.status(500).json(reply.failure("Internal server error"));
+                    }
+                } else {
+                    // Kafka Call for more then 10 matches
+                    await sendMessage("tournament-match-scheduling", kafka)
+                    console.log("Kafka message sent successfully");
+                }
             }
 
             fixtures.push(...roundFixtures);
@@ -344,20 +352,21 @@ class TournamentController {
             const scheduledMatch = {
                 matchId: match.id,
                 tournamentId: this.tournamentId,
-                roundNumber: this.round,
+                tournamentRound: this.round,
                 matchType: "tournament",
                 userTeamId: match.team1.id || null,
                 userId: match.team1.userID || null,
                 opponentId: match.team2.id || null,
                 opponentUserId: match.team2.userID || null,
-                dateOfMatch: this.dateOfMatch,
+                matchDate: this.dateOfMatch,
                 totalMatches: 1,
                 ground: tournament.location,
-                overs: tournament.overs || 0,
-                players: tournament.players || 6,
+                numberOfOvers: tournament.overs || 0,
+                numberOfPlayers: tournament.players || 6,
                 status: 1,
                 matchStatus: match.status,
-                sportType: "cricket"
+                sportType: "cricket",
+                internalStatus: 0
             };
             // console.log("scheduledMatch", scheduledMatch)
             // await scheduledMatch.save();

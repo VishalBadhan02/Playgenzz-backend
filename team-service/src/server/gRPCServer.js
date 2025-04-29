@@ -3,7 +3,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
 const mongoose = require('mongoose');
-const { getTeamByUser, GetTeamIds } = require("../controllers/GrpcController");
+const { getTeamByUser, GetTeamIds, handleScheduleMessages } = require("../controllers/GrpcController");
 const Config = require("../config");
 
 // Load proto file
@@ -19,10 +19,16 @@ mongoose.connect(Config.DATABASE.URL).then(() => console.log('✅ Team Service c
 
 
 // Start gRPC Server
-const server = new grpc.Server();
+const server = new grpc.Server(
+    {
+        'grpc.max_receive_message_length': 10 * 1024 * 1024,  // 10 MB
+        'grpc.max_send_message_length': 10 * 1024 * 1024      // 10 MB
+    }
+);
 server.addService(teamProto.TeamService.service, {
     getTeamByUser: getTeamByUser,
-    GetTeamIds: GetTeamIds
+    GetTeamIds: GetTeamIds,
+    BulkCreateSchedules: handleScheduleMessages
 });
 
 server.bindAsync("0.0.0.0:5006", grpc.ServerCredentials.createInsecure(), () => {

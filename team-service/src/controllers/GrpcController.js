@@ -1,5 +1,6 @@
 const { TeamModel } = require("../models/team");
 const { AddTeamMemberModel } = require("../models/addTeamMember");
+const teamServices = require("../services/teamServices");
 
 const getTeamByUser = async (call, callback) => {
     try {
@@ -55,12 +56,14 @@ const getTeamByUser = async (call, callback) => {
 const GetTeamIds = async (call, callback) => {
     try {
         const ids = call.request.teams;
-        const teams = await TeamModel.find({ _id: { $in: ids } }).select(["teamName", "profilePicture", "_id", "createdAt"]);
+        const teams = await TeamModel.find({ _id: { $in: ids } }).select(["teamName", "profilePicture", "_id", "createdAt", "user_id", "games"]);
         const formateTeams = teams?.map((team) => ({
             id: team._id,
             name: team.teamName,
             imageUrl: team.profilePicture,
-            createdAt: team.createdAt
+            createdAt: team.createdAt,
+            userId: team.user_id,
+            sport: team.games,
         }));
 
         const extractMembers = await AddTeamMemberModel.find({ teamId: { $in: ids } });
@@ -93,8 +96,25 @@ const GetTeamIds = async (call, callback) => {
         });
     }
 }
+const handleScheduleMessages = async (call, callback) => {
+    try {
+        const matche = call.request.matches;
+        const matches = await teamServices.bulkMatchScheduling(matche)
+        const matchIds = matches.map(match => match._id.toString());
+        return callback(null, { matchIds });
+    } catch (error) {
+        console.log("error fetching teams in grpcController of team service", error)
+        // ✅ Only return INTERNAL if there's an actual server error
+        return callback({
+            code: grpc.status.INTERNAL,
+            message: 'Internal server error',
+            details: error.message,
+        });
+    }
+}
 
 module.exports = {
     getTeamByUser,
-    GetTeamIds
+    GetTeamIds,
+    handleScheduleMessages
 }

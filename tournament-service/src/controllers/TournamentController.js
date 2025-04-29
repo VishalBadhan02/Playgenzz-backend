@@ -260,7 +260,7 @@ const setFixtures = async (req, res) => {
             console.error("Error generating fixtures:", result.error);
             // return res.status(500).json(reply.failure("Error generating fixtures", result.error));
         }
-        const tournamentController = new TournamentController(tournamentId, tournamentFormat, result.roundNumber, result.teams, res, allowByes, randomize, startDate, save = true);
+        const tournamentController = new TournamentController(tournamentId, tournamentFormat, result.roundNumber, result.teams, res, allowByes, randomize, startDate, save = false);
         await tournamentController._generateFixtures();
     } catch (error) {
         console.error('Error:', error.message);

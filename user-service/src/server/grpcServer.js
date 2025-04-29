@@ -21,7 +21,12 @@ mongoose.connect(Config.DATABASE.URL).then(() => console.log('✅ Grpc Service c
     .catch(err => console.error('❌ DB Connection Error:', err));
 
 function main() {
-    const server = new grpc.Server();
+    const server = new grpc.Server(
+        {
+            'grpc.max_receive_message_length': 10 * 1024 * 1024,  // 10 MB
+            'grpc.max_send_message_length': 10 * 1024 * 1024      // 10 MB
+        }
+    );
 
     server.addService(userProto.UserService.service, {
         CreateUser: createUser,

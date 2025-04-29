@@ -1,8 +1,8 @@
+const grpcServices = require("./grpcServices");
 const tournamentServices = require("./tournamentServices");
 
 const generateFixtures = async (input) => {
-    const { tournamentId, fixtures } = input;
-    const { tournamentFormat, randomize, allowByes, startDate, matchesPerDay } = fixtures;
+    const { tournamentId } = input;
 
     const query = {
         tournametId: tournamentId,
@@ -13,6 +13,15 @@ const generateFixtures = async (input) => {
 
     const teams = await tournamentServices.getTournamentTeams(query);
 
+    // filtering the teamId's to make a grpc call to get the team details
+    const teamIds = teams?.map(team => team.teamID);
+
+    // making the grpc call to get the team details
+    const teamDetail = await grpcServices.getTeamFromTeamService(teamIds);
+
+    const teamDetails = teamDetail?.bulk
+
+    // console.log("teamIds", teamIds);
     const rematch = teams.filter(team => team.matchStatus === "re-entry");
 
     if (!teams.length) {
@@ -31,11 +40,11 @@ const generateFixtures = async (input) => {
 
     if (!round) {
         roundNumber = 1;
-        result = teams.map(({ teamID }) => ({
-            id: teamID?._id || "dfkjcn",
-            userID: teamID?.user_id || "dfkjcn",
-            name: teamID?.teamName || "dfkjcn",
-            avatar: teamID?.profilePicture || "dfkjcn"
+        result = teamDetails?.map((value) => ({
+            id: value?.id || "unknown",
+            userID: value?.userId || "unknown",
+            name: value?.name || "unknown",
+            avatar: value?.imageUrl || "unknown"
         }));
         // if (tournamentFormat === "single_elimination") {
         //     await TournamentModel.findByIdAndUpdate(tournamentId, {
@@ -48,11 +57,11 @@ const generateFixtures = async (input) => {
         roundNumber = round.roundNumber + 1;
 
         if (round.winners?.length) {
-            result = round.winners.map(teamID => ({
-                id: teamID?._id || "dfkjcn",
-                userID: teamID?.user_id || "dfkjcn",
-                name: teamID?.teamName || "dfkjcn",
-                avatar: teamID?.profilePicture || "dfkjcn"
+            result = teamDetails?.map((value) => ({
+                id: value?.id || "unknown",
+                userID: value?.userId || "unknown",
+                name: value?.name || "unknown",
+                avatar: value?.imageUrl || "unknown"
             }));
         }
 

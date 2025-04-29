@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const startConsumer = require('../kafka/consumer');
+
 
 const TeamRouter = require('../routes/team');
 const verifyJWT = require('../middleware/JWT');
@@ -29,4 +31,5 @@ app.use('/team', verifyJWT, TeamRouter);
 // Start Server
 app.listen(PORT, () => {
   console.log(`🚀 Team Service is running on port ${PORT}`);
+  startConsumer();
 });

@@ -21,10 +21,10 @@ class grpcClientService {
         }
     }
 
-    async getFreindModalResponse(id, action) {
+    async ScheduleMatchResponse(data) {
         try {
             const response = await new Promise((resolve, reject) => {
-                userClient.GetModalId({ _id: id, action: action }, (error, response) => {
+                teamClient.BulkCreateSchedules({ matches: data }, (error, response) => {
                     if (error) {
                         reject(error);
                     } else {

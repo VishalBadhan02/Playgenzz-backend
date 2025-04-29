@@ -142,6 +142,18 @@ class TeamService {
         }
     }
 
+    async bulkMatchScheduling(matchData) {
+        try {
+            const match = await ScheduledMatchModel.insertMany(matchData);
+            if (!match) {
+                return false;
+            }
+            return match;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     async findScheduledMatch(query) {
         try {
             const match = await ScheduledMatchModel.findOneAndUpdate(query);
