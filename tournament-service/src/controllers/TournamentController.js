@@ -172,10 +172,13 @@ const setTeam = async (req, res) => {
         const query = { tournametId: id }
         const data = await tournamentServices.getTournamentTeams(query)
 
+        // extracting the team id's from the modal to make a call;
         const extractedTeamIds = data.map((team) => team.teamID);
 
+        // grpc call to extract teams from the team-service 
         const teams = await grpcClientService.getTeamFromTeamService(extractedTeamIds);
 
+        // formating the data into right formate for further functionalities
         const formattedTournamentTeams = await formatedTeams(teams?.bulk, data);
 
         const tournament = await tournamentServices.findTournament(id);
