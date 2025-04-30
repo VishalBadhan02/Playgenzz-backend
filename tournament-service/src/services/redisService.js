@@ -9,7 +9,46 @@ async function storeFixtureRound(cacheKey, enrichedData) {
     }
 }
 
+async function storeTeamDetails(cacheKey, enrichedData) {
+    try {
+        await redis.set(cacheKey, JSON.stringify(enrichedData), 'EX', 1800);
+    } catch (error) {
+        console.error(`Redis store error for key ${cacheKey}:`, error);
+    }
+}
+
+async function storeFixtures(cacheKey, enrichedData) {
+    const cachekey = `ScheduledMatches:${cacheKey}`;
+    try {
+        await redis.set(cachekey, JSON.stringify(enrichedData), 'EX', 1800);
+    } catch (error) {
+        console.error(`Redis store error for key ${cacheKey}:`, error);
+    }
+}
+
 async function getFixtureRound(cacheKey) {
+    const cachekey = `fixtureKey:${cacheKey}`;
+    try {
+        const data = await redis.get(cachekey);
+        return data ? JSON.parse(data) : null;
+    } catch (error) {
+        console.error(`Redis get error for key ${cacheKey}:`, error);
+        return null;
+    }
+}
+
+async function getstoredFixtures(cacheKey) {
+    const cachekey = `ScheduledMatches:${cacheKey}`;
+    try {
+        const data = await redis.get(cachekey);
+        return data ? JSON.parse(data) : null;
+    } catch (error) {
+        console.error(`Redis get error for key ${cacheKey}:`, error);
+        return null;
+    }
+}
+
+async function getTeamDetails(cacheKey) {
     try {
         return await redis.get(cacheKey);
     } catch (error) {
@@ -19,6 +58,24 @@ async function getFixtureRound(cacheKey) {
 }
 
 async function deleteFixtureRound(cacheKey) {
+    try {
+        return await redis.del(cacheKey);
+    } catch (error) {
+        console.error(`Redis get error for key ${cacheKey}:`, error);
+        return null;
+    }
+}
+
+async function deleteTeamDetails(cacheKey) {
+    try {
+        return await redis.del(cacheKey);
+    } catch (error) {
+        console.error(`Redis get error for key ${cacheKey}:`, error);
+        return null;
+    }
+}
+
+async function deletestoredFixtures(cacheKey) {
     try {
         return await redis.del(cacheKey);
     } catch (error) {
@@ -72,11 +129,12 @@ module.exports = {
     storedOtpModal,
     getOtp,
     deleteOtp,
-    deleteFixtureRound
-
-
-
-
-    
+    deleteFixtureRound,
+    storeTeamDetails,
+    getTeamDetails,
+    deleteTeamDetails,
+    storeFixtures,
+    getstoredFixtures,
+    deletestoredFixtures
 };
 

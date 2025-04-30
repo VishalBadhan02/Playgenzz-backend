@@ -116,6 +116,23 @@ class TournamentService {
         }
     }
 
+    async registerRound(rounData) {
+        console.log("rounData in t-service", rounData)
+        try {
+            const round = new RoundModel({
+                ...rounData
+            });
+            await round.save();
+            if (!round) {
+                return false; // or you could throw a custom error here
+            }
+
+            return round;
+        } catch (error) {
+            throw new Error("Error updating team modal: " + error.message);
+        }
+    }
+
 
 }
 

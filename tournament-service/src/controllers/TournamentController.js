@@ -8,8 +8,10 @@ const tournamentServices = require("../services/tournamentServices");
 const grpcClientService = require("../services/grpcServices");
 const { formatedTeams } = require("../utils/formatedTeams");
 const { FixtureInputValidator } = require("../validators/fixtureValidator");
-const { generateFixtures } = require("../services/fixtureService");
+const { generateFixtures, saveGeneratedFixture } = require("../services/fixtureService");
 const TournamentController = require("../fixtures/fixtureControl");
+const { getFixtureRound } = require("../services/redisService");
+const Lang = require("../language/en");
 
 const handleRegister = async (req, res) => {
     try {
@@ -244,15 +246,27 @@ const UpdateWinner = async (req, res) => {
 
 const setFixtures = async (req, res) => {
     try {
+        const { tournamentId, regenerate, save } = req.body;
+
+        // After preview i user want to re-generate or save the fixtures
+        if (regenerate || save) {
+            const saveRegen = await saveGeneratedFixture(regenerate, save, tournamentId)
+            console.log("saveRegen", saveRegen)
+            if (!saveRegen?.status) {
+                console.log("saveRegen", saveRegen)
+                return res.status(500).json(reply.failure(saveRegen.message));
+            }
+            return res.status(202).json(reply.success(Lang.FIXTURE_SUCCESS));
+        }
+
+        // validatin for the request
         const parsed = FixtureInputValidator.safeParse(req.body);
-        // console.log("parsed", req.body);
         if (!parsed.success) {
-            console.error("Validation errors:", parsed.error.errors);
+            // console.error("Validation errors:", parsed.error.errors);
             return res.status(400).json(reply.failure("Invalid input", parsed.error.errors));
         }
 
         const { tournamentFormat, randomize, allowByes, startDate, matchesPerDay } = parsed.data.fixtures;
-        const { tournamentId } = req.body
         const result = await generateFixtures(parsed.data);
         // console.log("result", result);
 
@@ -260,10 +274,10 @@ const setFixtures = async (req, res) => {
             console.error("Error generating fixtures:", result.error);
             // return res.status(500).json(reply.failure("Error generating fixtures", result.error));
         }
-        const tournamentController = new TournamentController(tournamentId, tournamentFormat, result.roundNumber, result.teams, res, allowByes, randomize, startDate, save = false);
+        const tournamentController = new TournamentController(tournamentId, tournamentFormat, result.roundNumber, result.teams, res, allowByes, randomize, startDate, save);
         await tournamentController._generateFixtures();
     } catch (error) {
-        console.error('Error:', error.message);
+        console.error('Error:', error);
         res.status(500).json(reply.failure(error.message));
     }
 };

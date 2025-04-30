@@ -1,5 +1,11 @@
+const { Status } = require("@grpc/grpc-js/build/src/constants");
+const sendMessage = require("../kafka/producer");
 const grpcServices = require("./grpcServices");
 const tournamentServices = require("./tournamentServices");
+const reply = require('../helper/reply');
+const Lang = require("../language/en");
+const { getFixtureRound, deleteFixtureRound, deletestoredFixtures, getstoredFixtures } = require("./redisService");
+
 
 const generateFixtures = async (input) => {
     const { tournamentId } = input;
@@ -96,6 +102,47 @@ const generateFixtures = async (input) => {
     return { roundNumber, teams: result };
 };
 
+const saveGeneratedFixture = async (regenerate, save, tournamentId) => {
+    if (regenerate) {
+        await deleteFixtureRound(tournamentId);
+        await deletestoredFixtures(tournamentId);
+        return true
+    } else {
+        // the round that we saved in the cache is being stored in the database
+        const chacheRound = await getFixtureRound(tournamentId);
+        const chacheFixtures = await getstoredFixtures(tournamentId);
+
+        if (!chacheRound && chacheFixtures) {
+            return reply.failure("Empty cache")
+        }
+        // saving the cached data of round in the database
+        const res = await tournamentServices.registerRound(chacheRound);
+
+        if (!res) {
+            return reply.failure(Lang.ROUND_REGISTER_FAIL)
+        }
+
+        // Now fixtures stored in the cache is being stored in the schema by making grpc or kakfka call
+        if (chacheFixtures.length > 0) {
+            if (chacheFixtures.length <= 10) {
+                // GRPC Call for less then 10 matches
+                const res = await grpcServices.ScheduleMatchResponse(chacheFixtures)
+                if (!res.matchIds) {
+                    console.log("error getting grpc res in fixture service", res)
+                    return reply.failure(res.details)
+                }
+            } else {
+                // Kafka Call for more then 10 matches
+                await sendMessage("tournament-match-scheduling", chacheFixtures)
+                console.log("Kafka message sent successfully");
+            }
+            return reply.success(Lang.SUCCESS)
+        }
+
+    }
+}
+
 module.exports = {
-    generateFixtures
+    generateFixtures,
+    saveGeneratedFixture
 };

@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const tournamentServices = require('../services/tournamentServices');
 const sendMessage = require('../kafka/producer');
 const { ScheduleMatchResponse } = require('../services/grpcServices');
+const { storeFixtureRound, storeFixtures } = require('../services/redisService');
 
 class TournamentController {
     constructor(tournamentId, type, round, teams, res, withByes, randomize, dateOfMatch, save) {
@@ -87,7 +88,7 @@ class TournamentController {
             }
 
             let roundFixtures = [];
-            let kafka = [];
+            let ScheduledMatches = [];
 
             for (let i = 0; i < fixturesCount - 1; i += 2) {
                 const match = {
@@ -100,11 +101,11 @@ class TournamentController {
                     venue: 'Main Stadium',
                 };
 
-                if (this.save) {
-                    const matchId = await this.saveScheduleMatch(match);
-                    kafka.push(matchId);
-                    // match.id = matchId;
-                }// Ensure this is awaited
+                // if (this.save) {
+                const matchId = await this.saveScheduleMatch(match);
+                ScheduledMatches.push(matchId);
+                // match.id = matchId;
+                // }// Ensure this is awaited
                 roundFixtures.push(match);
             }
 
@@ -121,25 +122,21 @@ class TournamentController {
                 generatedByes.push(currentRoundTeams[fixturesCount - 1].id)
             }
 
-            if (kafka.length > 0) {
-                if (kafka.length <= 10) {
-                    // GRPC Call for less then 10 matches
-                    const res = await ScheduleMatchResponse(kafka)
-                    if (!res?.matchIds) {
-                        return this.res.status(500).json(reply.failure("Internal server error"));
-                    }
-                } else {
-                    // Kafka Call for more then 10 matches
-                    await sendMessage("tournament-match-scheduling", kafka)
-                    console.log("Kafka message sent successfully");
-                }
-            }
+            // console.log("ScheduledMatches", ScheduledMatches)
+
+            await storeFixtures(this.tournamentId, ScheduledMatches);
+
 
             fixtures.push(...roundFixtures);
-            let saved = { success: false };
-            if (this.save) {
-                saved = await this.saveRoundFixtures(roundFixtures, generatedByes);
+
+
+            const saved = await this.saveRoundFixtures(roundFixtures, generatedByes);
+
+            if (!saved.success) {
+                console.log("error getting the formated data of saveRoundFixtures", saved)
+                return this.res.status(500).json(reply.failure("Internal server error"));
             }
+
             // console.log("saved", fixtures)
             return this.res.status(200).json(reply.success("Fixtures generated successfully", { fixtures: roundFixtures, lastMatch }));
 
@@ -382,16 +379,17 @@ class TournamentController {
 
     async saveRoundFixtures(fixtures, generatedByes) {
         try {
-            const saveRound = new RoundModel({
+            const saveRound = {
                 tournamentId: this.tournamentId,
                 tournamentType: this.type,
                 matches: fixtures,
                 byes: generatedByes,
                 status: "pending",
                 roundNumber: this.round
-            });
+            };
             // console.log(saveRound)
-            await saveRound.save();
+            await storeFixtureRound(this.cacheKey, saveRound);
+
             return { success: true };  // ✅ Return a success object instead of sending a response
         } catch (error) {
             console.error("Error saving round fixtures:", error);
