@@ -52,7 +52,8 @@ async function getstoredFixtures(cacheKey) {
 async function getTeamDetails(cacheKey) {
     const cachekey = `TeamDetails:${cacheKey}`;
     try {
-        return await redis.get(cachekey);
+        const data = await redis.get(cachekey);
+        return data ? JSON.parse(data) : null;
     } catch (error) {
         console.error(`Redis get error for key ${cacheKey}:`, error);
         return null;

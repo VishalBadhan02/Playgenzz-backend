@@ -182,10 +182,10 @@ const setTeam = async (req, res) => {
         // grpc call to extract teams from the team-service 
         const teams = cacheTeams ? cacheTeams : await grpcClientService.getTeamFromTeamService(extractedTeamIds);
 
+        // storing the teamDetails in the cache if not availeble 
         if (!cacheTeams) {
             await storeTeamDetails(id, teams)
         }
-
 
         // formating the data into right formate for further functionalities
         const formattedTournamentTeams = await formatedTeams(teams?.bulk, data);
