@@ -140,5 +140,6 @@ module.exports = {
     storeFixtures,
     getstoredFixtures,
     deletestoredFixtures
+    
 };
 
