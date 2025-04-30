@@ -10,8 +10,9 @@ async function storeFixtureRound(cacheKey, enrichedData) {
 }
 
 async function storeTeamDetails(cacheKey, enrichedData) {
+    const cachekey = `TeamDetails:${cacheKey}`;
     try {
-        await redis.set(cacheKey, JSON.stringify(enrichedData), 'EX', 1800);
+        await redis.set(cachekey, JSON.stringify(enrichedData), 'EX', 1800);
     } catch (error) {
         console.error(`Redis store error for key ${cacheKey}:`, error);
     }
@@ -49,8 +50,9 @@ async function getstoredFixtures(cacheKey) {
 }
 
 async function getTeamDetails(cacheKey) {
+    const cachekey = `TeamDetails:${cacheKey}`;
     try {
-        return await redis.get(cacheKey);
+        return await redis.get(cachekey);
     } catch (error) {
         console.error(`Redis get error for key ${cacheKey}:`, error);
         return null;
@@ -67,8 +69,9 @@ async function deleteFixtureRound(cacheKey) {
 }
 
 async function deleteTeamDetails(cacheKey) {
+    const cachekey = `TeamDetails:${cacheKey}`;
     try {
-        return await redis.del(cacheKey);
+        return await redis.del(cachekey);
     } catch (error) {
         console.error(`Redis get error for key ${cacheKey}:`, error);
         return null;

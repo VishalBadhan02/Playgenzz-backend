@@ -10,7 +10,7 @@ const { formatedTeams } = require("../utils/formatedTeams");
 const { FixtureInputValidator } = require("../validators/fixtureValidator");
 const { generateFixtures, saveGeneratedFixture } = require("../services/fixtureService");
 const TournamentController = require("../fixtures/fixtureControl");
-const { getFixtureRound } = require("../services/redisService");
+const { getFixtureRound, storeTeamDetails, getTeamDetails } = require("../services/redisService");
 const Lang = require("../language/en");
 
 const handleRegister = async (req, res) => {
@@ -170,13 +170,22 @@ const setTeam = async (req, res) => {
     try {
         const id = req.params.id;
         const query = { tournametId: id }
+
+        const cacheTeams = await getTeamDetails(id)
+
+        // fetching the team's from the database who registered in the tournament
         const data = await tournamentServices.getTournamentTeams(query)
 
         // extracting the team id's from the modal to make a call;
         const extractedTeamIds = data.map((team) => team.teamID);
 
         // grpc call to extract teams from the team-service 
-        const teams = await grpcClientService.getTeamFromTeamService(extractedTeamIds);
+        const teams = cacheTeams ? cacheTeams : await grpcClientService.getTeamFromTeamService(extractedTeamIds);
+
+        if (!cacheTeams) {
+            await storeTeamDetails(id, teams)
+        }
+
 
         // formating the data into right formate for further functionalities
         const formattedTournamentTeams = await formatedTeams(teams?.bulk, data);
