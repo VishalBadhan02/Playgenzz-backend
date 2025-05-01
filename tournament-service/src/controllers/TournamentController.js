@@ -10,7 +10,7 @@ const { formatedTeams } = require("../utils/formatedTeams");
 const { FixtureInputValidator } = require("../validators/fixtureValidator");
 const { generateFixtures, saveGeneratedFixture } = require("../services/fixtureService");
 const TournamentController = require("../fixtures/fixtureControl");
-const { getFixtureRound, storeTeamDetails, getTeamDetails } = require("../services/redisService");
+const { getFixtureRound, storeTeamDetails, getTeamDetails, deleteTeamDetails } = require("../services/redisService");
 const Lang = require("../language/en");
 
 const handleRegister = async (req, res) => {
@@ -116,6 +116,8 @@ const setEntry = async (req, res) => {
 
         await entry.save();
 
+        await deleteTeamDetails(id);
+
         return res.status(200).json(reply.success(lang.TOURNAMENT_TEAM_REGISTERATION));
     } catch (error) {
         console.error("Error in setEntry:", error);  // Logs error in server
@@ -214,7 +216,13 @@ const setTeam = async (req, res) => {
 const getSelectedRound = async (req, res) => {
     try {
         const { id, round } = req.params;
-        const rounds = await RoundModel.findOne({ tournamentId: id }).sort({ createdAt: -1 })
+
+        const query = {
+            tournamentId: id,
+            roundNumber: round
+        };
+
+        const rounds = await tournamentServices.roundModal(query);
         // console.log("id", rounds.matches)
 
         if (!rounds) {
