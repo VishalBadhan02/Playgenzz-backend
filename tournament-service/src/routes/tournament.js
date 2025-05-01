@@ -14,7 +14,7 @@ Route.put('/updateTournamentTeam', checkTournamentAdmin, TournamentControlller.u
 Route.put('/updateTournament', checkTournamentAdmin, TournamentControlller.handleTournamentUpdate)
 
 Route.get('/setTeams/:id?', TournamentControlller.setTeam)
-Route.get('/setFixtureData/:id?', TournamentControlller.getSelectedRound);
+Route.get('/setFixtureData/:id?/:round?', TournamentControlller.getSelectedRound);
 Route.get("/getTournamnets/:id", TournamentControlller.getTournaments)
 Route.get("/gettournament", TournamentControlller.fetchtournament)
 Route.get("/getUserRegisteredTournament", TournamentControlller.getUserRegisteredTournament)

@@ -4,7 +4,7 @@ const grpcServices = require("./grpcServices");
 const tournamentServices = require("./tournamentServices");
 const reply = require('../helper/reply');
 const Lang = require("../language/en");
-const { getFixtureRound, deleteFixtureRound, deletestoredFixtures, getstoredFixtures } = require("./redisService");
+const { getFixtureRound, deleteFixtureRound, deletestoredFixtures, getstoredFixtures, getTeamDetails } = require("./redisService");
 
 
 const generateFixtures = async (input) => {
@@ -19,13 +19,16 @@ const generateFixtures = async (input) => {
 
     const teams = await tournamentServices.getTournamentTeams(query);
 
+    const cacheTeams = await getTeamDetails(tournamentId)
+
+
     // filtering the teamId's to make a grpc call to get the team details
     const teamIds = teams?.map(team => team.teamID);
 
     // making the grpc call to get the team details
-    const teamDetail = await grpcServices.getTeamFromTeamService(teamIds);
+    const teamDetail = cacheTeams ? cacheTeams : await grpcServices.getTeamFromTeamService(teamIds);
 
-    const teamDetails = teamDetail?.bulk
+    const teamDetails = cacheTeams ? cacheTeams : teamDetail?.bulk
 
     // console.log("teamIds", teamIds);
     const rematch = teams.filter(team => team.matchStatus === "re-entry");

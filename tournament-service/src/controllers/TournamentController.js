@@ -213,9 +213,9 @@ const setTeam = async (req, res) => {
 
 const getSelectedRound = async (req, res) => {
     try {
-        const id = req.params.id;
-        const rounds = await RoundModel.find({ tournamentId: id }).populate("winners byes")
-            .populate("looser");;
+        const { id, round } = req.params;
+        const rounds = await RoundModel.findOne({ tournamentId: id }).sort({ createdAt: -1 })
+        // console.log("id", rounds.matches)
 
         if (!rounds) {
             return res.json(reply.failure("Rounds fetched"));
@@ -334,7 +334,6 @@ const deleteTeam = async (req, res) => {
         return res.json(reply.failure("fail deleting"))
     }
 }
-
 // when team is registered here the admin can manage the teams according to the requirement
 // like payment status, match status, etc
 // this is the function to update the payment status of the team
