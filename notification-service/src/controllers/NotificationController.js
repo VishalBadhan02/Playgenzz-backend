@@ -31,9 +31,11 @@ const getFriendRequest = async (req, res) => {
 
         // gethering the data using grpc call the user-service 
         const finalResponse = await dataGathering(groups)
+        console.log("final response", finalResponse)
 
         // now assigning the names to the notifications according to the ides 
         const enrichedNotification = await enrichNotifications(notifications, finalResponse)
+        // console.log("final response", enrichedNotification)
 
         // 3. Set in cache (expire in 60 seconds or whatever suits you)
         await storeNotifications(cacheKey, enrichedNotification);

@@ -1,6 +1,7 @@
 const { TeamModel } = require("../models/team");
 const { AddTeamMemberModel } = require("../models/addTeamMember");
 const teamServices = require("../services/teamServices");
+const { default: mongoose } = require("mongoose");
 
 const getTeamByUser = async (call, callback) => {
     try {
@@ -56,7 +57,17 @@ const getTeamByUser = async (call, callback) => {
 const GetTeamIds = async (call, callback) => {
     try {
         const ids = call.request.teams;
-        const teams = await TeamModel.find({ _id: { $in: ids } }).select(["teamName", "profilePicture", "_id", "createdAt", "user_id", "games"]);
+        // console.log("ids", ids)
+        const validObjectIds = ids.filter(id => mongoose.Types.ObjectId.isValid(id));
+        const nonObjectIds = ids.filter(id => !mongoose.Types.ObjectId.isValid(id));
+
+        const teams = await TeamModel.find({
+            $or: [
+                { _id: { $in: validObjectIds } },
+                { user_id: { $in: nonObjectIds } }
+            ]
+        }).select(["teamName", "profilePicture", "_id", "createdAt", "user_id", "games"]);
+
         const formateTeams = teams?.map((team) => ({
             id: team._id,
             name: team.teamName,
@@ -84,6 +95,7 @@ const GetTeamIds = async (call, callback) => {
             const membersCount = teamMembers[team.id]?.length || 0;
             return { ...team, members: membersCount };
         });
+        // console.log("teams", formateTeams)
 
         return callback(null, { bulk: formateTeams });
     } catch (error) {

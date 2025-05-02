@@ -19,10 +19,10 @@ async function startConsumer() {
             console.log("Tournament match scheduling topic received", data);
             await scheduleMatches(data);
             break;
-          case 'kafkajs':
-            console.log("Tournament match scheduling topic received", data);
-            // await scheduleMatches(data);
-            break;
+          // case 'kafkajs':
+          //   console.log("Tournament match scheduling topic received", data);
+          //   // await scheduleMatches(data);
+          //   break;
           default:
             console.warn(`No handler for topic ${topic}`);
         }

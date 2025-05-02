@@ -5,6 +5,7 @@ const groupNotificationsByType = (notifications) => {
         tournament: [],
         venue: [],
         score: [],
+        match: [],
     };
 
     for (const notif of notifications) {
