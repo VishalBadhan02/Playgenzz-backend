@@ -13,6 +13,7 @@ const Config = require('../config');
 const sendMessage = require('../kafka/producer');
 const { getUpdateDataByType } = require('../utils/teamMember');
 const { createNotificationPayload } = require('../utils/notifications');
+const { formatedMatches } = require('../utils/formatedMatches');
 
 const registerTeam = async (req, res) => {
     try {
@@ -492,37 +493,13 @@ const getMatches = async (req, res) => {
         const teamIds = await AddTeamMemberModel.find({ playerId: user, status: 1 }).distinct('teamId');
 
         // Fetch matches with sessionId added in one step
-        const matches = await ScheduledMatchModel.find({
-            $and: [
-                // Team condition
-                {
-                    $or: [
-                        { userTeamId: { $in: teamIds } },
-                        { opponentId: { $in: teamIds } }
-                    ]
-                },
-                // Status and reMatch conditions
-                {
-                    $or: [
-                        { status: { $in: [1, 2] } },  // Accepted or completed matches
-                        { reMatch: 1 }                 // Rematch games
-                    ]
-                }
-            ]
-        })
-            .populate([
-                { path: 'opponentId' },
-                { path: 'userTeamId' }
-            ])
-            .lean() // Convert documents to plain objects in one go
-            .then((matchData) =>
-                matchData.map((match) => ({
-                    ...match,
-                    sessionId: user
-                }))
-            );
+        const matches = await teamServices.ScheduledMatches(teamIds, user);
 
-        return res.json(reply.success(Lang.MATCHES_FETCHED, matches));
+        const formattedMatches = await formatedMatches(matches);
+
+        // console.log("teamIds", matches)
+
+        return res.json(reply.success(Lang.MATCHES_FETCHED, formattedMatches));
     } catch (error) {
         return res.status(500).json(reply.failure(Lang.MATCHES_FETCH_FAILED, error.message));
     }

@@ -101,6 +101,39 @@ class TeamService {
         return await ScheduledMatchModel.find(query);
     }
 
+    async ScheduledMatches(teamIds, user) {
+        return await ScheduledMatchModel.find({
+            $and: [
+                // Team condition
+                {
+                    $or: [
+                        { homeTeam: { $in: teamIds } },
+                        { awayTeam: { $in: teamIds } }
+                    ]
+                },
+                // Status and reMatch conditions
+                {
+                    $or: [
+                        { internalStatus: { $in: [1, 2] } },  // Accepted or completed matches
+                        { reMatch: 1 }                 // Rematch games
+                    ]
+                }
+            ]
+        })
+            .populate([
+                { path: 'homeTeam' },
+                { path: 'awayTeam' }
+            ])
+            .lean() // Convert documents to plain objects in one go
+            .then((matchData) =>
+                matchData.map((match) => ({
+                    ...match,
+                    sessionId: user
+                }))
+            );
+
+    }
+
     async findTeamMembers(query) {
         try {
             const member = await AddTeamMemberModel.findOneAndUpdate(query);

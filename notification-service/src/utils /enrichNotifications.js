@@ -27,7 +27,6 @@ const enrichNotifications = async (notifications, finalResponse) => {
 
         return enrichedNotifications;
 
-    
     } catch (error) {
         console.error("Error in enrichNotifications:", error);
         return error;
