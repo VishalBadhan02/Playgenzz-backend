@@ -133,7 +133,6 @@ class TournamentService {
         }
     }
 
-
 }
 
 module.exports = new TournamentService();
