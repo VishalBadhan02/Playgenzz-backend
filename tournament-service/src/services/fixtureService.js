@@ -109,8 +109,8 @@ const saveGeneratedFixture = async (regenerate, save, tournamentId) => {
     if (regenerate) {
         await deleteFixtureRound(tournamentId);
         await deletestoredFixtures(tournamentId);
-        return true
-    } else {
+        return { regenerate: true, message: "Cache deleted successfully", status: true }
+    } if (save) {
         // the round that we saved in the cache is being stored in the database
         const chacheRound = await getFixtureRound(tournamentId);
         const chacheFixtures = await getstoredFixtures(tournamentId);

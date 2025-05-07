@@ -277,7 +277,7 @@ const setFixtures = async (req, res) => {
                 console.log("saveRegen", saveRegen)
                 return res.status(500).json(reply.failure(saveRegen.message));
             }
-            return res.status(202).json(reply.success(Lang.FIXTURE_SUCCESS));
+            return res.status(202).json(reply.success(Lang.FIXTURE_SUCCESS, saveRegen));
         }
 
         // validatin for the request
