@@ -841,5 +841,4 @@ module.exports = {
     ScoreCard, getScore, handleScore, handlePlayerSelection, ScoreUpdate, InningUpdate
 
 
-
 };
