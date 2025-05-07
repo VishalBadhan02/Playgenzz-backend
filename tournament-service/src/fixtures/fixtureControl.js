@@ -348,23 +348,55 @@ class TournamentController {
 
             const scheduledMatch = {
                 matchId: match.id,
+                matchType: "tournament",
                 tournamentId: this.tournamentId,
                 tournamentRound: this.round,
-                matchType: "tournament",
-                userTeamId: match.team1.id || null,
-                userId: match.team1.userID || null,
-                opponentId: match.team2.id || null,
+
+                homeTeam: match.team1.id || null,
+                scheduledByUserId: match.team1.userID || null,
+
+                awayTeam: match.team2.id || null,
                 opponentUserId: match.team2.userID || null,
-                matchDate: this.dateOfMatch,
-                totalMatches: 1,
-                ground: tournament.location,
-                numberOfOvers: tournament.overs || 0,
+
+                matchDate: match.dateTime || this.dateOfMatch,
+                numberOfMatches: 1,
+
+                matchLocation: tournament.venue || null,
+                groundName: tournament.venue || null,
+
+                numberOfOvers: tournament?.playingPeriod?.toString() || "0", // schema expects String
                 numberOfPlayers: tournament.players || 6,
-                status: 1,
-                matchStatus: match.status,
-                sportType: "cricket",
-                internalStatus: 0
+
+                internalStatus: 0,
+                matchStatus: match.status, // e.g. "upcoming"
+
+                rematchCount: 0, // optional, defaulting to 0
+                sessionId: null, // set if applicable
+                sportType: "cricket", // make dynamic if needed
+
+                matchResult: {} // or provide actual result data if available
             };
+
+
+            // const scheduledMatch = {
+            //     matchId: match.id,
+            //     tournamentId: this.tournamentId,
+            //     tournamentRound: this.round,
+            //     matchType: "tournament",
+            //     userTeamId: match.team1.id || null,
+            //     userId: match.team1.userID || null,
+            //     opponentId: match.team2.id || null,
+            //     opponentUserId: match.team2.userID || null,
+            //     matchDate: this.dateOfMatch,
+            //     totalMatches: 1,
+            //     ground: tournament.location,
+            //     numberOfOvers: tournament.overs || 0,
+            //     numberOfPlayers: tournament.players || 6,
+            //     status: 1,
+            //     matchStatus: match.status,
+            //     sportType: "cricket",
+            //     internalStatus: 0
+            // };
             // console.log("scheduledMatch", scheduledMatch)
             // await scheduledMatch.save();
 
@@ -410,7 +442,7 @@ class TournamentController {
                 }
 
                 // Update the tournament with the winner
-                console.log(teamID._id)
+                // console.log(teamID._id)
                 if (save) {
                     await TournamentModel.findOneAndUpdate(
                         { _id: id },

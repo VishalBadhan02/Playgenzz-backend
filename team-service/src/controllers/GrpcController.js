@@ -129,6 +129,16 @@ const handleScheduleMessages = async (call, callback) => {
 const getMatchById = async (call, callback) => {
     try {
         const match = await ScheduledMatchModel.findById(call.request.id);
+
+        const teamA = match?.homeTeam;
+        const teamB = match?.awayTeam;
+
+        const teamAData = await teamServices.findTeamMembers({ teamId: teamA, status: 1 });
+        const teamBData = await teamServices.findTeamMembers({ teamId: teamB, status: 1 });
+
+        const teamAPlayerIds = teamAData.map(player => player.playerId.toString());
+        const teamBPlayerIds = teamBData.map(player => player.playerId.toString());
+
         if (!match) {
             return callback(new Error("Match not found"));
         }

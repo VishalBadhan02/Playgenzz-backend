@@ -298,7 +298,7 @@ const getTeamsForRequest = async (req, res) => {
         // 6. Add scheduled match info and members count to each team
         const teamsWithDetails = await Promise.all(
             teams.map(async (team) => {
-                const members = await teamServices.fetchTeamMembers(team._id);
+                const members = await teamServices.fetchTeamMembers({ teamId: team._id, status: 1 });
                 return {
                     id: team?._id,
                     name: team?.teamName,

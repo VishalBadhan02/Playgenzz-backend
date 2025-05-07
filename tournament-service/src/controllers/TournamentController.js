@@ -266,12 +266,13 @@ const UpdateWinner = async (req, res) => {
 
 const setFixtures = async (req, res) => {
     try {
-        const { tournamentId, regenerate, save } = req.body;
+        const { tournamentId, regenerate, save, fixtures } = req.body;
 
+        console.log("regenerate", req.body)
         // After preview i user want to re-generate or save the fixtures
-        if (regenerate || save) {
+        if (regenerate || save || !fixtures) {
             const saveRegen = await saveGeneratedFixture(regenerate, save, tournamentId)
-            console.log("saveRegen", saveRegen)
+            // console.log("saveRegen", saveRegen)
             if (!saveRegen?.status) {
                 console.log("saveRegen", saveRegen)
                 return res.status(500).json(reply.failure(saveRegen.message));

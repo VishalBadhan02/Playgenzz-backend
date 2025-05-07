@@ -93,8 +93,9 @@ class TeamService {
         }
     }
 
-    async fetchTeamMembers(teamId) {
-        return await AddTeamMemberModel.find({ teamId, status: 1 });
+    async fetchTeamMembers(query) {
+        return await AddTeamMemberModel.find(query).populate("teamId", "teamName createdAt profilePicture")
+            .select("-__v");
     }
 
     async fetchScheduledMatches(query) {
