@@ -4,8 +4,10 @@ const Config = {
     "HOST": process.env.HOST,
     "PORT": process.env.PORT,
     "SOCKET_PORT": process.env.SOCKET_PORT,
-    "USER_GRPC_PORT": process.env.USER_GRPC_PORT,
-    "USER_GRPC_HOST": process.env.USER_GRPC_HOST,
+    "TOURNAMENT_GRPC_PORT": process.env.TOURNAMENT_GRPC_PORT,
+    "TOURNAMENT_GRPC_HOST": process.env.TOURNAMENT_GRPC_HOST,
+    "TEAM_GRPC_PORT": process.env.TEAM_GRPC_PORT,
+    "TEAM_GRPC_HOST": process.env.TEAM_GRPC_HOST,
     "DATABASE": {
         URL: process.env.DATABASE_URL,
     },

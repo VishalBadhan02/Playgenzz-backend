@@ -11,6 +11,12 @@ service TeamService {
 
   // tounament match Scheduling
   rpc BulkCreateSchedules (BulkCreateScheduleRequest) returns (BulkCreateScheduleResponse);
+
+  // get single scheduled match for scoring
+  rpc GetMatch (GetMatchRequest) returns (GetMatchResponse);
+
+  // for bulk responses 
+  rpc ListMatches (ListMatchesRequest) returns (ListMatchesResponse);
 }
 
 // Request message to fetch a user's team
@@ -102,6 +108,25 @@ message BulkCreateScheduleRequest {
 // Response after bulk create
 message BulkCreateScheduleResponse {
     repeated string matchIds = 1; // array of created match IDs
-}   
+} 
+
+// request for single match
+message GetMatchRequest {
+  string id = 1;
+}
+
+// response for single match
+message GetMatchResponse {
+  ScheduledMatch match = 1;
+}
+
+message ListMatchesRequest {
+  int32 page = 1;
+  int32 limit = 2;
+}
+
+message ListMatchesResponse {
+  repeated ScheduledMatch matches = 1;
+}
 
 

@@ -2,6 +2,7 @@ const { TeamModel } = require("../models/team");
 const { AddTeamMemberModel } = require("../models/addTeamMember");
 const teamServices = require("../services/teamServices");
 const { default: mongoose } = require("mongoose");
+const { ScheduledMatchModel } = require("../models/scheduledMatch");
 
 const getTeamByUser = async (call, callback) => {
     try {
@@ -125,8 +126,35 @@ const handleScheduleMessages = async (call, callback) => {
     }
 }
 
+const getMatchById = async (call, callback) => {
+    try {
+        const match = await ScheduledMatchModel.findById(call.request.id);
+        if (!match) {
+            return callback(new Error("Match not found"));
+        }
+        callback(null, { match: match.toObject() });
+    } catch (error) {
+        callback(error);
+    }
+};
+
+const listMatches = async (call, callback) => {
+    try {
+        const page = call.request.page || 1;
+        const limit = call.request.limit || 10;
+        const matches = await ScheduledMatchModel.find()
+            .skip((page - 1) * limit)
+            .limit(limit);
+        callback(null, { matches });
+    } catch (error) {
+        callback(error);
+    }
+};
+
 module.exports = {
     getTeamByUser,
     GetTeamIds,
-    handleScheduleMessages
+    handleScheduleMessages,
+    listMatches,
+    getMatchById
 }

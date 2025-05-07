@@ -5,216 +5,161 @@
 // const { ScoreCardModel } = require('../models/socreCard');
 // const { TournamentModel } = require('../model/tournament');
 const WebSocket = require('ws');
+const { getTournament, getMatch } = require('../services/grpcService');
+const { formatedMatches } = require('../utils/formatedScorecard');
+const scorecardService = require('../services/scorecardService');
 // const TournamentTeamsModel = require('../model/tournamentEntry');
 
 const ScoreCard = async (req, res) => {
-    // try {
-    //     const { id, teamA, teamB, tournamentId } = req.body;
-    //     const currentTime = new Date();
-    //     let match;
-    //     // Attempt to find the tournament first
-    //     const tournament = await TournamentModel.findById(tournamentId);
-    //     const scheduledMatch = await ScheduledMatchModel.findById(id);
-    //     let total_over = tournament ? tournament.playingPeriod || 10 : null;
-    //     let sportType = tournament ? tournament.sport : null;
-    //     let players = tournament ? tournament.tournamentDescription.players.playing : null
-    //     match = scheduledMatch._id
-    //     // If tournament not found, attempt to find the scheduled match
-    //     if (!tournament) {
-    //         if (!scheduledMatch) {
-    //             return res.status(404).json(reply.failure("Tournament or scheduled match not found"));
-    //         }
-    //         total_over = scheduledMatch.overs || 10;
-    //         sportType = scheduledMatch.sportType;
-    //         players = scheduledMatch.players
-    //         match = scheduledMatch;
-    //     }
-    //     if (sportType !== "cricket") {
-    //         return res.json(reply.failure("Scorecard of this sport is not available yet"))
-    //     }
-    //     // Get players for both teams
-    //     const teamAPlayers = await AddTeamMemberModel.find({ teamId: teamA, status: 1 })
-    //         .populate("teamId", "teamName createdAt profilePicture") // Select fields from teamId
-    //         .select("-__v"); // Optionally exclude __v field
+    try {
+        const { id, teamA, teamB, tournamentId } = req.body;
+        const currentTime = new Date();
+        let match;
+        // Attempt to find the tournament first
+        const tournament = await getTournament(tournamentId);
+        const scheduledMatch = await getMatch(id);
+        let total_over = tournament ? tournament.playingPeriod || 10 : null;
+        let sportType = tournament ? tournament.sport : null;
+        let players = tournament ? tournament.tournamentDescription.players.playing : null
+        match = scheduledMatch._id
 
-    //     const teamBPlayers = await AddTeamMemberModel.find({ teamId: teamB, status: 1 })
-    //         .populate("teamId", "teamName createdAt profilePicture")
-    //         .select("-__v");
+        if (!isValidSportType(sportType) || !total_over || !players) {
+            return res.status(404).json(reply.failure("Invalid sport type"));
+        }
 
-    //     const teamAPlayerIds = teamAPlayers.map(player => player.playerId.toString());
-    //     const teamBPlayerIds = teamBPlayers.map(player => player.playerId.toString());
+        // If tournament not found, attempt to find the scheduled match
+        if (!tournament) {
+            if (!scheduledMatch) {
+                return res.status(404).json(reply.failure("Tournament or scheduled match not found"));
+            }
+            total_over = scheduledMatch.overs || 10;
+            sportType = scheduledMatch.sportType;
+            players = scheduledMatch.players
+            match = scheduledMatch;
+        }
+        if (sportType !== "cricket") {
+            return res.json(reply.failure("Scorecard of this sport is not available yet"))
+        }
 
-    //     // Find duplicates using intersection
-    //     const duplicatePlayers = teamAPlayerIds.filter(playerId =>
-    //         teamBPlayerIds.includes(playerId)
-    //     );
+        // Get players for both teams
+        const teamAPlayers = await AddTeamMemberModel.find({ teamId: teamA, status: 1 })
+            .populate("teamId", "teamName createdAt profilePicture") // Select fields from teamId
+            .select("-__v"); // Optionally exclude __v field
 
-    //     if (duplicatePlayers.length > 0) {
-    //         // Get player details for better error message
-    //         const duplicatePlayerDetails = await AddTeamMemberModel.find({
-    //             playerId: { $in: duplicatePlayers },
-    //             $or: [
-    //                 { teamId: teamA },
-    //                 { teamId: teamB }
-    //             ]
-    //         }).select('userName playerId');
+        const teamBPlayers = await AddTeamMemberModel.find({ teamId: teamB, status: 1 })
+            .populate("teamId", "teamName createdAt profilePicture")
+            .select("-__v");
 
-    //         return res.json(reply.failure({
-    //             message: "Players cannot be in both teams",
-    //             duplicatePlayers: duplicatePlayerDetails.map(player => ({
-    //                 userName: player.userName,
-    //                 playerId: player.playerId
-    //             }))
-    //         }));
-    //     }
-    //     if (tournament) {
-    //         // Fetch current playersParticipations
-    //         const tournamentData = await TournamentModel.findById(id).select('playersParticipations teamsParticipations');
-    //         const existingPlayers = new Set(tournamentData?.playersParticipations?.map(player => player.playerId.toString()));
-    //         const existingTeams = new Set(tournamentData?.teamsParticipations?.map(team => team.teamID.toString()));
+        const teamAPlayerIds = teamAPlayers.map(player => player.playerId.toString());
+        const teamBPlayerIds = teamBPlayers.map(player => player.playerId.toString());
 
-    //         // Fetch both teams from TournamentTeamsModel
-    //         const teamsToAdd = await TournamentTeamsModel.find(
-    //             { tournametId: tournamentId, teamID: { $in: [teamA, teamB] }, status: 1 }
-    //         ).populate("teamID", "teamName createdAt profilePicture");
+        // Find duplicates using intersection
+        const duplicatePlayers = teamAPlayerIds.filter(playerId =>
+            teamBPlayerIds.includes(playerId)
+        );
+
+        if (duplicatePlayers.length > 0) {
+            // Get player details for better error message
+            const duplicatePlayerDetails = await AddTeamMemberModel.find({
+                playerId: { $in: duplicatePlayers },
+                $or: [
+                    { teamId: teamA },
+                    { teamId: teamB }
+                ]
+            }).select('userName playerId');
+
+            return res.json(reply.failure({
+                message: "Players cannot be in both teams",
+                duplicatePlayers: duplicatePlayerDetails.map(player => ({
+                    userName: player.userName,
+                    playerId: player.playerId
+                }))
+            }));
+        }
+        if (tournament) {
+            // Fetch current playersParticipations
+            const tournamentData = await TournamentModel.findById(id).select('playersParticipations teamsParticipations');
+            const existingPlayers = new Set(tournamentData?.playersParticipations?.map(player => player.playerId.toString()));
+            const existingTeams = new Set(tournamentData?.teamsParticipations?.map(team => team.teamID.toString()));
+
+            // Fetch both teams from TournamentTeamsModel
+            const teamsToAdd = await TournamentTeamsModel.find(
+                { tournametId: tournamentId, teamID: { $in: [teamA, teamB] }, status: 1 }
+            ).populate("teamID", "teamName createdAt profilePicture");
 
 
-    //         // Filter teams that are NOT already in teamsParticipations
-    //         const newTeams = teamsToAdd.filter(team => !existingTeams.has(team.teamID.toString()));
+            // Filter teams that are NOT already in teamsParticipations
+            const newTeams = teamsToAdd.filter(team => !existingTeams.has(team.teamID.toString()));
 
-    //         // Filter out players who are already in playersParticipations
-    //         const newPlayers = [...teamAPlayers, ...teamBPlayers]
-    //             .filter(player => !existingPlayers.has(player.playerId.toString()))
-    //             .map(player => ({
-    //                 playerId: player.playerId,
-    //                 userName: player.userName,
-    //                 teamId: {
-    //                     _id: player.teamId._id,  // Store teamId with reference
-    //                     teamName: player.teamId.teamName,
-    //                     createdAt: player.teamId.createdAt,
-    //                     profilePicture: player.teamId.profilePicture
-    //                 }
-    //             }));
+            // Filter out players who are already in playersParticipations
+            const newPlayers = [...teamAPlayers, ...teamBPlayers]
+                .filter(player => !existingPlayers.has(player.playerId.toString()))
+                .map(player => ({
+                    playerId: player.playerId,
+                    userName: player.userName,
+                    teamId: {
+                        _id: player.teamId._id,  // Store teamId with reference
+                        teamName: player.teamId.teamName,
+                        createdAt: player.teamId.createdAt,
+                        profilePicture: player.teamId.profilePicture
+                    }
+                }));
 
-    //         const updateData = {};
+            const updateData = {};
 
-    //         if (newPlayers.length > 0) {
-    //             updateData.$addToSet = { playersParticipations: { $each: newPlayers } };
-    //         }
+            if (newPlayers.length > 0) {
+                updateData.$addToSet = { playersParticipations: { $each: newPlayers } };
+            }
 
-    //         if (newTeams.length > 0) {
-    //             updateData.$addToSet = { ...updateData.$addToSet, teamsParticipations: { $each: newTeams } };
-    //         }
+            if (newTeams.length > 0) {
+                updateData.$addToSet = { ...updateData.$addToSet, teamsParticipations: { $each: newTeams } };
+            }
 
-    //         if (Object.keys(updateData).length > 0) {
-    //             await TournamentModel.findOneAndUpdate(
-    //                 { _id: tournamentId },
-    //                 updateData,
-    //                 { new: true }
-    //             );
-    //         }
+            if (Object.keys(updateData).length > 0) {
+                await TournamentModel.findOneAndUpdate(
+                    { _id: tournamentId },
+                    updateData,
+                    { new: true }
+                );
+            }
 
-    //     }
+        }
 
-    //     // Initialize the scorecard with the new schema structure
-    //     const scoreCard = new ScoreCardModel({
-    //         matchId: id,
-    //         sportType: sportType,
-    //         scheduledMatch: match,
-    //         tournamentId,
-    //         // Teams Information
-    //         teams: {
-    //             teamA: {
-    //                 teamId: teamA,
-    //                 score: 0,
-    //                 wickets: 0,
-    //                 players: teamAPlayers.map(player => ({
-    //                     _id: player._id,
-    //                     playerId: player.playerId,
-    //                     userName: player.userName,
-    //                     statistics: new Map()
-    //                 }))
-    //             },
-    //             teamB: {
-    //                 teamId: teamB,
-    //                 score: 0,
-    //                 wickets: 0,
-    //                 players: teamBPlayers.map(player => ({
-    //                     _id: player._id,
-    //                     playerId: player.playerId,
-    //                     userName: player.userName,
-    //                     statistics: new Map()
-    //                 }))
-    //             }
-    //         },
+        // Initialize the scorecard with the new schema structure
+        const formatedScoreard = formatedMatches(id, match, teamAPlayers, teamA, sportType, tournamentId, teamB, teamBPlayers, currentTime, total_over, players,);
 
-    //         // Match Status
-    //         matchStatus: 'scheduled',
+        // storing the scorecard in the database
+        const scoreCard = await scorecardService.setScorecard(formatedScoreard)
 
-    //         // Current Period/Inning
-    //         currentPeriod: {
-    //             periodNumber: 1,
-    //             periodType: sportType === 'cricket' ? 'inning' : 'half',
-    //             startTime: currentTime
-    //         },
+        // Add metadata if you're using it
+        if (scoreCard.metadata) {
+            scoreCard.metadata = {
+                createdBy: req.user.id || 'VishalBadhan02',
+                updatedBy: req.user.id || 'VishalBadhan02',
+                matchStartTime: currentTime,
+                lastUpdateTime: currentTime
+            };
+        }
 
-    //         // Sport Specific Details
-    //         sportSpecificDetails: new Map(
-    //             sportType === 'cricket'
-    //                 ? [
-    //                     ['tossWinner', 'pending'],
-    //                     ['currentInning', 1],
-    //                     ['totalOvers', total_over],
-    //                     ['currentOver', 0],
-    //                     ['striker', null],
-    //                     ['nonStriker', null],
-    //                     ['currentBowler', null],
-    //                     ['players', players],
-    //                 ]
-    //                 : sportType === 'football'
-    //                     ? [
-    //                         ['currentHalf', 1],
-    //                         ['timeElapsed', '00:00'],
-    //                         ['possession', { teamA: 50, teamB: 50 }],
-    //                         ['corners', { teamA: 0, teamB: 0 }],
-    //                         ['fouls', { teamA: 0, teamB: 0 }]
-    //                     ]
-    //                     : []
-    //         ),
+        // Add initial timeline entry if you're using it
+        if (scoreCard.timeline) {
+            scoreCard.timeline = [{
+                time: currentTime,
+                updatedBy: req.user.id || 'VishalBadhan02',
+                action: 'CREATE_MATCH',
+                details: {
+                    matchId: id,
+                    sportType,
+                    teamA,
+                    teamB
+                }
+            }];
+        }
 
-    //         // Initialize empty match statistics
-    //         matchStatistics: new Map()
-    //     });
-    //     // Add metadata if you're using it
-    //     if (scoreCard.metadata) {
-    //         scoreCard.metadata = {
-    //             createdBy: req.user.id || 'VishalBadhan02',
-    //             updatedBy: req.user.id || 'VishalBadhan02',
-    //             matchStartTime: currentTime,
-    //             lastUpdateTime: currentTime
-    //         };
-    //     }
-
-    //     // Add initial timeline entry if you're using it
-    //     if (scoreCard.timeline) {
-    //         scoreCard.timeline = [{
-    //             time: currentTime,
-    //             updatedBy: req.user.id || 'VishalBadhan02',
-    //             action: 'CREATE_MATCH',
-    //             details: {
-    //                 matchId: id,
-    //                 sportType,
-    //                 teamA,
-    //                 teamB
-    //             }
-    //         }];
-    //     }
-
-    //     await scoreCard.save();
-    //     return res.json(reply.success("Scorecard initialized", scoreCard._id));
-    // } catch (error) {
-    //     return res.status(500).json(reply.failure("Failed handling score card"));
-    // }
+        return res.json(reply.success("Scorecard initialized", scoreCard._id));
+    } catch (error) {
+        return res.status(500).json(reply.failure("Failed handling score card"));
+    }
 };
 
 // Helper function to validate sport type

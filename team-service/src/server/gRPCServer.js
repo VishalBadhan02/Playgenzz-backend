@@ -3,7 +3,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
 const mongoose = require('mongoose');
-const { getTeamByUser, GetTeamIds, handleScheduleMessages } = require("../controllers/GrpcController");
+const { getTeamByUser, GetTeamIds, handleScheduleMessages, getMatchById, listMatches } = require("../controllers/GrpcController");
 const Config = require("../config");
 
 // Load proto file
@@ -28,7 +28,9 @@ const server = new grpc.Server(
 server.addService(teamProto.TeamService.service, {
     getTeamByUser: getTeamByUser,
     GetTeamIds: GetTeamIds,
-    BulkCreateSchedules: handleScheduleMessages
+    BulkCreateSchedules: handleScheduleMessages,
+    GetMatch: getMatchById,
+    ListMatches: listMatches
 });
 
 server.bindAsync("0.0.0.0:5006", grpc.ServerCredentials.createInsecure(), () => {
