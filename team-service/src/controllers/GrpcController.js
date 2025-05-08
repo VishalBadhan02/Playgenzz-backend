@@ -128,21 +128,34 @@ const handleScheduleMessages = async (call, callback) => {
 
 const getMatchById = async (call, callback) => {
     try {
-        const match = await ScheduledMatchModel.findById(call.request.id);
-
-        const teamA = match?.homeTeam;
-        const teamB = match?.awayTeam;
-
-        const teamAData = await teamServices.findTeamMembers({ teamId: teamA, status: 1 });
-        const teamBData = await teamServices.findTeamMembers({ teamId: teamB, status: 1 });
-
-        const teamAPlayerIds = teamAData.map(player => player.playerId.toString());
-        const teamBPlayerIds = teamBData.map(player => player.playerId.toString());
+        const match = await ScheduledMatchModel.findOne({ matchId: call.request.id });
 
         if (!match) {
             return callback(new Error("Match not found"));
         }
-        callback(null, { match: match.toObject() });
+
+        const teamA = match?.homeTeam;
+        const teamB = match?.awayTeam;
+
+        const teamAData = await teamServices.fetchTeamMembers({ teamId: teamA, status: 1 });
+        const teamBData = await teamServices.fetchTeamMembers({ teamId: teamB, status: 1 });
+
+        const mapPlayer = (player) => ({
+            teamName: player?.teamId?.teamName || '',
+            createdAt: player?.createdAt?.toISOString() || '',
+            profilePicture: player?.profilePicture || '',
+            playerId: player?.playerId || '',
+            commit: player?.commit || '',
+            id: player?._id?.toString() || '',
+        });
+
+        const response = {
+            ...match.toObject(),
+            teamA: teamAData.map(mapPlayer),
+            teamB: teamBData.map(mapPlayer),
+        };
+
+        callback(null, { match: response });
     } catch (error) {
         callback(error);
     }

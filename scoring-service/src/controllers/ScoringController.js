@@ -1,63 +1,61 @@
-// const reply = require('../helper/reply');
+const reply = require('../helper/reply');
 // const Lang = require("../language/en");
 // const { AddTeamMemberModel } = require('../model/addTeamMember');
 // const { ScheduledMatchModel } = require('../model/scheduledMatch');
 // const { ScoreCardModel } = require('../models/socreCard');
 // const { TournamentModel } = require('../model/tournament');
 const WebSocket = require('ws');
-const { getTournament, getMatch } = require('../services/grpcService');
+const { getTournament, getMatch, getUsers } = require('../services/grpcService');
 const { formatedMatches } = require('../utils/formatedScorecard');
 const scorecardService = require('../services/scorecardService');
 // const TournamentTeamsModel = require('../model/tournamentEntry');
 
 const ScoreCard = async (req, res) => {
     try {
-        const { id, teamA, teamB, tournamentId } = req.body;
+        const { id, matchId, teamA, teamB, tournamentId } = req.body;
+
+        // console.log("id", req.body)
         const currentTime = new Date();
         let match;
         // Attempt to find the tournament first
         const tournament = await getTournament(tournamentId);
-        const scheduledMatch = await getMatch(id);
-        let total_over = tournament ? tournament.playingPeriod || 10 : null;
-        let sportType = tournament ? tournament.sport : null;
-        let players = tournament ? tournament.tournamentDescription.players.playing : null
-        match = scheduledMatch._id
+        const scheduledMatch = await getMatch(matchId);
+
+        // console.log("scheduledMatch", scheduledMatch)
+
+        let total_over = scheduledMatch?.numberOfOvers;
+        let sportType = scheduledMatch?.sportType
+        let players = scheduledMatch?.numberOfPlayers
+        match = scheduledMatch.matchId
 
         if (!isValidSportType(sportType) || !total_over || !players) {
+            console.log("duplicatePlayers", sportType, total_over, players)
+            console.log("duplicatePlayers", scheduledMatch)
+
             return res.status(404).json(reply.failure("Invalid sport type"));
         }
 
         // If tournament not found, attempt to find the scheduled match
-        if (!tournament) {
-            if (!scheduledMatch) {
-                return res.status(404).json(reply.failure("Tournament or scheduled match not found"));
-            }
-            total_over = scheduledMatch.overs || 10;
-            sportType = scheduledMatch.sportType;
-            players = scheduledMatch.players
-            match = scheduledMatch;
-        }
         if (sportType !== "cricket") {
-            return res.json(reply.failure("Scorecard of this sport is not available yet"))
+            return res.status(400).json(reply.failure("Scorecard of this sport is not available yet"))
         }
 
         // Get players for both teams
-        const teamAPlayers = await AddTeamMemberModel.find({ teamId: teamA, status: 1 })
-            .populate("teamId", "teamName createdAt profilePicture") // Select fields from teamId
-            .select("-__v"); // Optionally exclude __v field
-
-        const teamBPlayers = await AddTeamMemberModel.find({ teamId: teamB, status: 1 })
-            .populate("teamId", "teamName createdAt profilePicture")
-            .select("-__v");
+        const teamAPlayers = scheduledMatch?.teamA
+        const teamBPlayers = scheduledMatch?.teamB
 
         const teamAPlayerIds = teamAPlayers.map(player => player.playerId.toString());
         const teamBPlayerIds = teamBPlayers.map(player => player.playerId.toString());
 
+        const userIndo = await getUsers(teamAPlayerIds.concat(teamBPlayerIds));
+        console.log("userIndo", userIndo)
+        // console.log("teamAPlayerIds", teamAPlayerIds)
+        // console.log("teamBPlayerIds", teamBPlayerIds)
         // Find duplicates using intersection
         const duplicatePlayers = teamAPlayerIds.filter(playerId =>
             teamBPlayerIds.includes(playerId)
         );
-
+        console.log("duplicatePlayers", duplicatePlayers)
         if (duplicatePlayers.length > 0) {
             // Get player details for better error message
             const duplicatePlayerDetails = await AddTeamMemberModel.find({
@@ -158,6 +156,7 @@ const ScoreCard = async (req, res) => {
 
         return res.json(reply.success("Scorecard initialized", scoreCard._id));
     } catch (error) {
+        console.error("Error initializing scorecard:", error);
         return res.status(500).json(reply.failure("Failed handling score card"));
     }
 };

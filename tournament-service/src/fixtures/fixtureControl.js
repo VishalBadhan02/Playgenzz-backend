@@ -377,7 +377,7 @@ class TournamentController {
                 matchResult: {} // or provide actual result data if available
             };
 
-
+            console.log("scheduledMatch", scheduledMatch)
             // const scheduledMatch = {
             //     matchId: match.id,
             //     tournamentId: this.tournamentId,

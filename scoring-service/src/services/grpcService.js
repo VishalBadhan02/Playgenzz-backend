@@ -1,12 +1,43 @@
+const teamClient = require("../grpc-clients/teamClient");
 const client = require("../grpc-clients/tournamentClient");
+const userClient = require("../grpc-clients/userClient");
 
 function getTournament(id) {
-    client.GetTournament({ id }, (error, response) => {
-        if (error) {
-            console.error("Error fetching tournament:", error.message);
-        } else {
-            console.log("Tournament Details:", response.tournament);
-        }
+    return new Promise((resolve, reject) => {
+        client.GetTournament({ id }, (error, response) => {
+            if (error) {
+                console.error("Error fetching tournament:", error.message);
+                reject(error);
+            } else {
+                resolve(response.tournament);
+            }
+        });
+    });
+}
+
+function getMatch(id) {
+    return new Promise((resolve, reject) => {
+        teamClient.GetMatch({ id }, (err, response) => {
+            if (err) {
+                console.error("Error fetching match:", err.message);
+                reject(err);
+            } else {
+                resolve(response.match);
+            }
+        });
+    });
+}
+
+function getUsers(id) {
+    return new Promise((resolve, reject) => {
+        userClient.GetUserIds({ users: id }, (err, response) => {
+            if (err) {
+                console.error("Error fetching match:", err.message);
+                reject(err);
+            } else {
+                resolve(response.bulk);
+            }
+        });
     });
 }
 
@@ -24,15 +55,10 @@ function listTournaments(page = 1, limit = 5) {
     });
 }
 
-function getMatch(id) {
-    client.GetMatch({ id }, (err, response) => {
-        if (err) return console.error("Error fetching match:", err.message);
-        console.log("✅ Match data:", response.match);
-    });
-}
+
 
 function listMatches(page = 1, limit = 5) {
-    client.ListMatches({ page: 1, limit: 5 }, (err, response) => {
+    teamClient.ListMatches({ page: 1, limit: 5 }, (err, response) => {
         if (err) return console.error("Error listing matches:", err.message);
         console.log("📦 Matches:", response.matches);
     });
@@ -41,5 +67,6 @@ module.exports = {
     getTournament,
     listTournaments,
     getMatch,
-    listMatches
+    listMatches,
+    getUsers
 };

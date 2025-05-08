@@ -96,9 +96,21 @@ message ScheduledMatch {
     string sessionId = 17;
     string sportType = 18;
     string matchResultJson = 19; // we send matchResult as JSON string
+    string matchId= 20;
+    repeated TeamMember teamA = 21;
+    repeated TeamMember teamB = 22;
 }
 
-
+// Team members of the team
+message TeamMember {
+  string teamName = 1;
+  string createdAt = 2;
+  string profilePicture = 3;
+  string playerId = 4;
+  string commit = 5;
+  string id = 6;
+  string playerName = 7;
+}
 
 // Request to bulk create matches
 message BulkCreateScheduleRequest {

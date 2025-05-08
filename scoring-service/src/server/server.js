@@ -22,7 +22,7 @@ mongoose.connect(Config.DATABASE.URL, {
   .catch(err => console.error('❌ DB Connection Error:', err));
 
 // Routes
-app.use('/score', verifyJWT, ScoreRouter);
+app.use('/scoring', verifyJWT, ScoreRouter);
 
 // Start Server
 app.listen(PORT, () => {
