@@ -1,8 +1,23 @@
 const { Kafka } = require("kafkajs");
 
 const kafka = new Kafka({
-  clientId: "kafka", // Service name as clientId
-  brokers: ["localhost:9092"], // Kafka broker address
+  clientId: "score-service", // Service name as clientId
+  brokers: ['0.0.0.0:9092'], // Kafka broker address
 });
 
-module.exports = kafka;
+const admin = kafka.admin();
+
+const checkConnection = async () => {
+  try {
+    await admin.connect();
+    console.log('✅ Successfully connected to the Kafka broker.');
+  } catch (error) {
+    console.error('Failed to connect to the Kafka broker:', error);
+  } finally {
+    await admin.disconnect();
+  }
+};
+
+checkConnection();
+
+module.exports = { kafka };

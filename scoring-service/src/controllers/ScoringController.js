@@ -8,6 +8,10 @@ const WebSocket = require('ws');
 const { getTournament, getMatch, getUsers } = require('../services/grpcService');
 const { formatedMatches } = require('../utils/formatedScorecard');
 const scorecardService = require('../services/scorecardService');
+const { storeUsers, getCacheUsers } = require('../services/redisService');
+const { enrichedUserData } = require('../utils/enrichedUserData');
+const { duplicatePlayerDetail } = require('../utils/duplicatePlayerDetails');
+const sendMessage = require('../kafka/producer');
 // const TournamentTeamsModel = require('../model/tournamentEntry');
 
 const ScoreCard = async (req, res) => {
@@ -29,97 +33,60 @@ const ScoreCard = async (req, res) => {
         match = scheduledMatch.matchId
 
         if (!isValidSportType(sportType) || !total_over || !players) {
-            console.log("duplicatePlayers", sportType, total_over, players)
-            console.log("duplicatePlayers", scheduledMatch)
-
             return res.status(404).json(reply.failure("Invalid sport type"));
-        }
-
-        // If tournament not found, attempt to find the scheduled match
-        if (sportType !== "cricket") {
-            return res.status(400).json(reply.failure("Scorecard of this sport is not available yet"))
         }
 
         // Get players for both teams
         const teamAPlayers = scheduledMatch?.teamA
         const teamBPlayers = scheduledMatch?.teamB
 
+        // Filtering out the userId's/ playerId's from both teams
         const teamAPlayerIds = teamAPlayers.map(player => player.playerId.toString());
         const teamBPlayerIds = teamBPlayers.map(player => player.playerId.toString());
 
-        const userIndo = await getUsers(teamAPlayerIds.concat(teamBPlayerIds));
-        console.log("userIndo", userIndo)
-        // console.log("teamAPlayerIds", teamAPlayerIds)
-        // console.log("teamBPlayerIds", teamBPlayerIds)
+        // users details stored in redis
+        const userIn = await getCacheUsers(matchId)
+
+        // Fetch user details from the database if not found in cache
+        const userIndo = userIn ? userIn : await getUsers(teamAPlayerIds.concat(teamBPlayerIds));
+
+        // Store user details in Redis if not already present
+        if (!userIn) {
+            await storeUsers(matchId, userIndo)
+        }
+
+
+        const userMap = new Map();
+
+        userIndo.forEach(user => {
+            userMap.set(user._id.toString(), user); // id here is same as playerId
+        });
+
+        const enrichedTeamA = await enrichedUserData(userMap, teamAPlayers);
+        const enrichedTeamB = await enrichedUserData(userMap, teamBPlayers);
+
         // Find duplicates using intersection
         const duplicatePlayers = teamAPlayerIds.filter(playerId =>
             teamBPlayerIds.includes(playerId)
         );
-        console.log("duplicatePlayers", duplicatePlayers)
+
         if (duplicatePlayers.length > 0) {
             // Get player details for better error message
-            const duplicatePlayerDetails = await AddTeamMemberModel.find({
-                playerId: { $in: duplicatePlayers },
-                $or: [
-                    { teamId: teamA },
-                    { teamId: teamB }
-                ]
-            }).select('userName playerId');
+            const duplicatePlayerDetails = duplicatePlayerDetail(duplicatePlayers, userMap);
 
-            return res.json(reply.failure({
-                message: "Players cannot be in both teams",
-                duplicatePlayers: duplicatePlayerDetails.map(player => ({
-                    userName: player.userName,
-                    playerId: player.playerId
-                }))
-            }));
+            return res.status(202).json(reply.success(
+                "Players cannot be in both teams",
+                duplicatePlayerDetails
+            ));
         }
+
         if (tournament) {
             // Fetch current playersParticipations
-            const tournamentData = await TournamentModel.findById(id).select('playersParticipations teamsParticipations');
-            const existingPlayers = new Set(tournamentData?.playersParticipations?.map(player => player.playerId.toString()));
-            const existingTeams = new Set(tournamentData?.teamsParticipations?.map(team => team.teamID.toString()));
-
-            // Fetch both teams from TournamentTeamsModel
-            const teamsToAdd = await TournamentTeamsModel.find(
-                { tournametId: tournamentId, teamID: { $in: [teamA, teamB] }, status: 1 }
-            ).populate("teamID", "teamName createdAt profilePicture");
-
-
-            // Filter teams that are NOT already in teamsParticipations
-            const newTeams = teamsToAdd.filter(team => !existingTeams.has(team.teamID.toString()));
-
-            // Filter out players who are already in playersParticipations
-            const newPlayers = [...teamAPlayers, ...teamBPlayers]
-                .filter(player => !existingPlayers.has(player.playerId.toString()))
-                .map(player => ({
-                    playerId: player.playerId,
-                    userName: player.userName,
-                    teamId: {
-                        _id: player.teamId._id,  // Store teamId with reference
-                        teamName: player.teamId.teamName,
-                        createdAt: player.teamId.createdAt,
-                        profilePicture: player.teamId.profilePicture
-                    }
-                }));
-
-            const updateData = {};
-
-            if (newPlayers.length > 0) {
-                updateData.$addToSet = { playersParticipations: { $each: newPlayers } };
-            }
-
-            if (newTeams.length > 0) {
-                updateData.$addToSet = { ...updateData.$addToSet, teamsParticipations: { $each: newTeams } };
-            }
-
-            if (Object.keys(updateData).length > 0) {
-                await TournamentModel.findOneAndUpdate(
-                    { _id: tournamentId },
-                    updateData,
-                    { new: true }
-                );
-            }
+            await sendMessage("team_player_joined_tournament", {
+                tournamentId,
+                teams: [teamA, teamB],
+                players: [...teamAPlayers, ...teamBPlayers]
+            })
 
         }
 
