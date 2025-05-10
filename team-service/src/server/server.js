@@ -31,5 +31,5 @@ app.use('/team', verifyJWT, TeamRouter);
 // Start Server
 app.listen(PORT, () => {
   console.log(`🚀 Team Service is running on port ${PORT}`);
-  // startConsumer();
+  startConsumer();
 });

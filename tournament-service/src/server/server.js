@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const startConsumer = require('../kafka/consumer');
 
 
 const TournamentRouter = require('../routes/tournament');
@@ -28,4 +29,5 @@ app.use('/tournament', verifyJWT, TournamentRouter);
 // Start Server
 app.listen(PORT, () => {
   console.log(`🚀 Tournament Service is running on port ${PORT}`);
+  startConsumer();
 });

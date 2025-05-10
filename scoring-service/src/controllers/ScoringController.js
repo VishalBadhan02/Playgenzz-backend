@@ -41,8 +41,8 @@ const ScoreCard = async (req, res) => {
         const teamBPlayers = scheduledMatch?.teamB
 
         // Filtering out the userId's/ playerId's from both teams
-        const teamAPlayerIds = teamAPlayers.map(player => player.playerId.toString());
-        const teamBPlayerIds = teamBPlayers.map(player => player.playerId.toString());
+        const teamAPlayerIds = teamAPlayers.map(player => player.playerId);
+        const teamBPlayerIds = teamBPlayers.map(player => player.playerId);
 
         // users details stored in redis
         const userIn = await getCacheUsers(matchId)
@@ -96,30 +96,7 @@ const ScoreCard = async (req, res) => {
         // storing the scorecard in the database
         const scoreCard = await scorecardService.setScorecard(formatedScoreard)
 
-        // Add metadata if you're using it
-        if (scoreCard.metadata) {
-            scoreCard.metadata = {
-                createdBy: req.user.id || 'VishalBadhan02',
-                updatedBy: req.user.id || 'VishalBadhan02',
-                matchStartTime: currentTime,
-                lastUpdateTime: currentTime
-            };
-        }
 
-        // Add initial timeline entry if you're using it
-        if (scoreCard.timeline) {
-            scoreCard.timeline = [{
-                time: currentTime,
-                updatedBy: req.user.id || 'VishalBadhan02',
-                action: 'CREATE_MATCH',
-                details: {
-                    matchId: id,
-                    sportType,
-                    teamA,
-                    teamB
-                }
-            }];
-        }
 
         return res.json(reply.success("Scorecard initialized", scoreCard._id));
     } catch (error) {

@@ -11,7 +11,7 @@ const formatedMatches = (
     total_over,
     players,
 ) => {
-    return scoreCard = {
+    const scoreCard = {
         matchId: id,
         sportType: sportType,
         scheduledMatch: match,
@@ -79,6 +79,31 @@ const formatedMatches = (
         // Initialize empty match statistics
         matchStatistics: new Map()
     };
+    // Add metadata if you're using it
+    if (scoreCard.metadata) {
+        scoreCard.metadata = {
+            createdBy: req.user.id || 'VishalBadhan02',
+            updatedBy: req.user.id || 'VishalBadhan02',
+            matchStartTime: currentTime,
+            lastUpdateTime: currentTime
+        };
+    }
+
+    // Add initial timeline entry if you're using it
+    if (scoreCard.timeline) {
+        scoreCard.timeline = [{
+            time: currentTime,
+            updatedBy: req.user.id || 'VishalBadhan02',
+            action: 'CREATE_MATCH',
+            details: {
+                matchId: id,
+                sportType,
+                teamA,
+                teamB
+            }
+        }];
+    }
+    return scoreCard;
 }
 
 

@@ -1,4 +1,13 @@
-const manageTournament = async (tournamentId, [teamA, teamB], players) => {
+const { TournamentModel } = require("../models/tournament");
+const TournamentTeamsModel = require("../models/tournamentEntry");
+
+const manageTournament = async (data) => {
+    const { tournamentId, teams, players } = data;
+    const [teamA, teamB] = teams;
+
+    console.log("teams", data)
+
+
     const tournamentData = await TournamentModel.findById(tournamentId)
         .select("playersParticipations teamsParticipations");
 
@@ -23,12 +32,13 @@ const manageTournament = async (tournamentId, [teamA, teamB], players) => {
             playerId: p.playerId,
             userName: p.userName,
             teamId: {
-                _id: p.teamId._id,
-                teamName: p.teamId.teamName,
-                createdAt: p.teamId.createdAt,
-                profilePicture: p.teamId.profilePicture
+                _id: p.id,
+                teamName: p.teamName,
+                createdAt: p.createdAt,
+                profilePicture: p.profilePicture
             }
         }));
+
 
     const updateData = {};
 
