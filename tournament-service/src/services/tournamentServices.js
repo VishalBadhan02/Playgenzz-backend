@@ -115,6 +115,31 @@ class TournamentService {
             throw new Error("Error updating team modal: " + error.message);
         }
     }
+    async updateRoundModal(tournamentId, matchId, newStatus) {
+        try {
+            const round = await RoundModel.findOneAndUpdate(
+                {
+                    tournamentId,
+                    'matches.id': matchId, // Find match inside matches array
+                },
+                {
+                    $set: {
+                        'matches.$.status': newStatus, // Use positional operator to update specific match
+                    },
+                },
+                { new: true } // Return updated document
+            );
+
+            if (!round) {
+                return false;
+            }
+
+            return round;
+        } catch (error) {
+            throw new Error("Error updating match status: " + error.message);
+        }
+    }
+
 
     async registerRound(rounData) {
         console.log("rounData in t-service", rounData)

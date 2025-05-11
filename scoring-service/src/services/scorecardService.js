@@ -15,7 +15,7 @@ class ScoreService {
             if (!noti) {
                 return false
             }
-            return true
+            return noti
         } catch (error) {
             throw error;
         }

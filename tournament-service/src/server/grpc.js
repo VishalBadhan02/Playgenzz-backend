@@ -4,7 +4,7 @@ const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
 const mongoose = require('mongoose');
 const Config = require("../config");
-const { GetTournament, ListTournaments } = require("../controllers/GrpcController");
+const { GetTournament, ListTournaments,getMatchById } = require("../controllers/GrpcController");
 
 // Load proto file
 const PROTO_PATH = path.resolve(__dirname, "../../../protos/tournament.proto");
@@ -28,6 +28,7 @@ const server = new grpc.Server(
 server.addService(tournamentProto.TournamentService.service, {
     GetTournament: GetTournament,
     ListTournaments: ListTournaments,
+    GetMatchById:getMatchById
 });
 
 server.bindAsync(`${Config.TOURNAMENT_GRPC_HOST}:${Config.TOURNAMENT_GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), () => {

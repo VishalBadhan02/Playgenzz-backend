@@ -17,12 +17,12 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 const tournamentProto = grpc.loadPackageDefinition(packageDefinition).tournament;
 
 // Create client
-const client = new tournamentProto.TournamentService(
+const tournamentlient = new tournamentProto.TournamentService(
     `${Config.TOURNAMENT_GRPC_HOST}:${Config.TOURNAMENT_GRPC_PORT}`,
     grpc.credentials.createInsecure()
 );
 
-module.exports = client;
+module.exports = tournamentlient;
 
 
 

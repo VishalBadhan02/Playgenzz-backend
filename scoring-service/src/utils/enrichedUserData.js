@@ -5,7 +5,6 @@ const enrichedUserData = (userData, teamData) => {
             ...player,
             userName: userInfo?.userName || 'Unknown',
             profilePicture: userInfo?.profilePicture || '',
-            _id: userInfo?._id,
             firstName: userInfo?.firstName || '',
         };
     });

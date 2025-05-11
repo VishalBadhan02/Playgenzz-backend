@@ -1,10 +1,10 @@
 const teamClient = require("../grpc-clients/teamClient");
-const client = require("../grpc-clients/tournamentClient");
+const tournamentlient = require("../grpc-clients/tournamentClient");
 const userClient = require("../grpc-clients/userClient");
 
 function getTournament(id) {
     return new Promise((resolve, reject) => {
-        client.GetTournament({ id }, (error, response) => {
+        tournamentlient.GetTournament({ id }, (error, response) => {
             if (error) {
                 console.error("Error fetching tournament:", error.message);
                 reject(error);
@@ -43,7 +43,7 @@ function getUsers(id) {
 
 // List multiple tournaments
 function listTournaments(page = 1, limit = 5) {
-    client.ListTournaments({ page, limit }, (error, response) => {
+    tournamentlient.ListTournaments({ page, limit }, (error, response) => {
         if (error) {
             console.error("Error listing tournaments:", error.message);
         } else {
@@ -55,6 +55,19 @@ function listTournaments(page = 1, limit = 5) {
     });
 }
 
+function updateFixtureRound(query) {
+    return new Promise((resolve, reject) => {
+        tournamentlient.GetMatchById(query, (error, response) => {
+            if (error) {
+                console.error("Error listing tournaments:", error.message);
+                reject(error)
+            } else {
+                resolve(response)
+            }
+        })
+    });
+
+}
 
 
 function listMatches(page = 1, limit = 5) {
@@ -68,5 +81,6 @@ module.exports = {
     listTournaments,
     getMatch,
     listMatches,
-    getUsers
+    getUsers,
+    updateFixtureRound
 };

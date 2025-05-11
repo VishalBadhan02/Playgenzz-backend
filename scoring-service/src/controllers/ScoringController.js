@@ -5,7 +5,7 @@ const reply = require('../helper/reply');
 // const { ScoreCardModel } = require('../models/socreCard');
 // const { TournamentModel } = require('../model/tournament');
 const WebSocket = require('ws');
-const { getTournament, getMatch, getUsers } = require('../services/grpcService');
+const { getTournament, getMatch, getUsers, updateFixtureRound } = require('../services/grpcService');
 const { formatedMatches } = require('../utils/formatedScorecard');
 const scorecardService = require('../services/scorecardService');
 const { storeUsers, getCacheUsers } = require('../services/redisService');
@@ -55,7 +55,6 @@ const ScoreCard = async (req, res) => {
             await storeUsers(matchId, userIndo)
         }
 
-
         const userMap = new Map();
 
         userIndo.forEach(user => {
@@ -80,7 +79,7 @@ const ScoreCard = async (req, res) => {
             ));
         }
 
-        if (tournament) {
+        if (scheduledMatch?.matchType === "tournament") {
             // Fetch current playersParticipations
             await sendMessage("team_player_joined_tournament", {
                 tournamentId,
@@ -91,14 +90,27 @@ const ScoreCard = async (req, res) => {
         }
 
         // Initialize the scorecard with the new schema structure
-        const formatedScoreard = formatedMatches(id, match, teamAPlayers, teamA, sportType, tournamentId, teamB, teamBPlayers, currentTime, total_over, players,);
+        const formatedScoreard = formatedMatches(matchId, match, enrichedTeamA, teamA, sportType, tournamentId, teamB, enrichedTeamB, currentTime, total_over, players,);
 
         // storing the scorecard in the database
         const scoreCard = await scorecardService.setScorecard(formatedScoreard)
 
+        if (!scoreCard) {
+            console.log("SDSDSsdfc")
+        }
 
+        const query = {
+            matchId,
+            tournamentId,
+            status: "in_progress"
+        }
+        const response = await updateFixtureRound(query)
 
-        return res.json(reply.success("Scorecard initialized", scoreCard._id));
+        if (!response) {
+            return res.status(400).json(reply.failure("Scorecard initialized"));
+        }
+
+        return res.status(200).json(reply.success("Scorecard initialized", scoreCard.matchId));
     } catch (error) {
         console.error("Error initializing scorecard:", error);
         return res.status(500).json(reply.failure("Failed handling score card"));

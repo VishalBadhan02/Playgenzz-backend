@@ -8,9 +8,9 @@ const mongoose = require("mongoose");
 const ScoreCardSchema = mongoose.Schema({
     // Match Identification
     matchId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         ref: 'scheduled_matches',
-        required: true
+        // required: true
     },
     scheduledMatch: Object,
     tournamentId: {
@@ -37,8 +37,7 @@ const ScoreCardSchema = mongoose.Schema({
             },
             players: [{
                 playerId: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'users'
+                    type: String,
                 },
                 statistics: {
                     type: Map,
@@ -62,8 +61,7 @@ const ScoreCardSchema = mongoose.Schema({
             },
             players: [{
                 playerId: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'users'
+                    type: String,
                 },
                 statistics: {
                     type: Map,

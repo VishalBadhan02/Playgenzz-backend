@@ -8,6 +8,9 @@ service TournamentService {
 
   // Fetch multiple tournaments with pagination
   rpc ListTournaments(ListTournamentsRequest) returns (ListTournamentsResponse);
+
+  // updating the fixtures for scoring 
+   rpc GetMatchById (MatchRequest) returns (MatchResponse);
 }
 
 // A single tournament
@@ -66,4 +69,15 @@ message ListTournamentsRequest {
 
 message ListTournamentsResponse {
   repeated Tournament tournaments = 1;
+}
+
+
+message MatchRequest {
+  string matchId = 1;
+  string tournamentId = 2;
+  string status = 3;
+}
+
+message MatchResponse {
+   bool status = 1;
 }

@@ -1,4 +1,5 @@
 const { TournamentModel } = require("../models/tournament");
+const tournamentServices = require("../services/tournamentServices");
 
 /**
  * Converts a Mongoose tournament document into the gRPC-compatible format
@@ -73,7 +74,29 @@ async function ListTournaments(call, callback) {
     }
 }
 
+const getMatchById = async (call, callback) => {
+    try {
+        const { tournamentId, matchId, status } = call.request;
+
+        const updatedRound = await tournamentServices.updateRoundModal(
+            tournamentId,
+            matchId,
+            status // or 'completed', 'paused', etc.
+        );
+
+        if (!updatedRound) {
+            return callback({ code: grpc.status.NOT_FOUND, message: "Match not found" });
+        }
+
+        return callback(null, { status: true });
+
+    } catch (error) {
+        callback(err, null);
+    }
+}
+
 module.exports = {
     GetTournament,
-    ListTournaments
+    ListTournaments,
+    getMatchById
 };
