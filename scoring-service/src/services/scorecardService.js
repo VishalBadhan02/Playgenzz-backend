@@ -33,10 +33,6 @@ class ScoreService {
             throw error;
         }
     }
-
-
-
-
 }
 
 module.exports = new ScoreService();
