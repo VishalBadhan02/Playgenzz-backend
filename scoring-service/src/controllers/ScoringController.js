@@ -177,10 +177,6 @@ const calculateRunRate = (score) => {
     return overs > 0 ? (runs / overs).toFixed(2) : 0;
 };
 
-
-
-
-
 const calculateRequiredRunRate = (score) => {
     if (score.currentPeriod.periodNumber !== 2) return 0;
 
