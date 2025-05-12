@@ -15,7 +15,7 @@ const wss = new WebSocket.Server({ server });
 
 
 wss.on('connection', (ws, req) => {
-    console.log('✅ New WebSocket Client Connected');
+    console.log('⛳️ New WebSocket Client Connected');
 
     // Extract token from headers
     const token = req.headers['sec-websocket-protocol'];
