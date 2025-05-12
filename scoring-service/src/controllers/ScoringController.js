@@ -179,6 +179,7 @@ const calculateRunRate = (score) => {
 
 
 
+
 const calculateRequiredRunRate = (score) => {
     if (score.currentPeriod.periodNumber !== 2) return 0;
 
