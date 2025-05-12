@@ -124,54 +124,49 @@ const isValidSportType = (sport) => {
 
 
 const getScore = async (req, res) => {
-    // try {
-    //     const { id } = req.params;
-    //     const score = await ScoreCardModel.findOne({ _id: id })
-    //         .populate('matchId')  // Populate scheduled match details
-    //         .populate('teams.teamA.teamId')  // Populate team A details
-    //         .populate('teams.teamB.teamId')  // Populate team B details
-    //         // .populate('teams.teamB.players.playerId')  // Populate team B players
-    //         .lean();  // Convert to plain JavaScript object for better performance
+    try {
+        const { id } = req.params;
+        const score = await scorecardService.getScorecard({ matchId: id })
 
-    //     if (!score) {
-    //         return res.status(404).json(reply.failure(Lang.SCORE_NOT_FOUND));
-    //     }
+        if (!score) {
+            return res.status(404).json(reply.failure(Lang.SCORE_NOT_FOUND));
+        }
 
-    //     // Transform Map objects to regular objects for JSON serialization
-    //     const transformedScore = {
-    //         ...score,
-    //         sportSpecificDetails: Object.fromEntries(
-    //             score.sportSpecificDetails instanceof Map
-    //                 ? score.sportSpecificDetails
-    //                 : new Map(Object.entries(score.sportSpecificDetails))
-    //         ),
-    //         matchStatistics: Object.fromEntries(
-    //             score.matchStatistics instanceof Map
-    //                 ? score.matchStatistics
-    //                 : new Map(Object.entries(score.matchStatistics))
-    //         ),
-    //         // Add metadata about the current state
-    //         metadata: {
-    //             ...score.metadata,
-    //             lastFetched: new Date("2025-01-15 15:25:45").toISOString(),
-    //             fetchedBy: req.user.userName
-    //         }
-    //     };
+        // Transform Map objects to regular objects for JSON serialization
+        const transformedScore = {
+            ...score,
+            sportSpecificDetails: Object.fromEntries(
+                score.sportSpecificDetails instanceof Map
+                    ? score.sportSpecificDetails
+                    : new Map(Object.entries(score.sportSpecificDetails))
+            ),
+            matchStatistics: Object.fromEntries(
+                score.matchStatistics instanceof Map
+                    ? score.matchStatistics
+                    : new Map(Object.entries(score.matchStatistics))
+            ),
+            // Add metadata about the current state
+            metadata: {
+                ...score.metadata,
+                lastFetched: new Date("2025-01-15 15:25:45").toISOString(),
+                fetchedBy: req.user.userName
+            }
+        };
 
-    //     // Add computed statistics
-    //     if (transformedScore.sportType === 'cricket') {
-    //         transformedScore.computedStats = {
-    //             currentRunRate: calculateRunRate(transformedScore),
-    //             requiredRunRate: calculateRequiredRunRate(transformedScore),
-    //             projectedScore: calculateProjectedScore(transformedScore)
-    //         };
-    //     }
+        // Add computed statistics
+        if (transformedScore.sportType === 'cricket') {
+            transformedScore.computedStats = {
+                currentRunRate: calculateRunRate(transformedScore),
+                requiredRunRate: calculateRequiredRunRate(transformedScore),
+                projectedScore: calculateProjectedScore(transformedScore)
+            };
+        }
 
-    //     return res.json(reply.success(Lang.SCORE_FETCHED, transformedScore));
+        return res.status(200).json(reply.success(Lang.SCORE_FETCHED, transformedScore));
 
-    // } catch (error) {
-    //     return res.status(500).json(reply.failure("Error fetching scorecard details"));
-    // }
+    } catch (error) {
+        return res.status(500).json(reply.failure("Error fetching scorecard details"));
+    }
 };
 
 // Helper functions for cricket statistics
@@ -181,6 +176,7 @@ const calculateRunRate = (score) => {
     const overs = currentInningDetails.overs || 0;
     return overs > 0 ? (runs / overs).toFixed(2) : 0;
 };
+
 
 const calculateRequiredRunRate = (score) => {
     if (score.currentPeriod.periodNumber !== 2) return 0;
