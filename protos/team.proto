@@ -99,6 +99,8 @@ message ScheduledMatch {
     string matchId= 20;
     repeated TeamMember teamA = 21;
     repeated TeamMember teamB = 22;
+    string teamAName= 23;
+    string teamBName= 24;
 }
 
 // Team members of the team

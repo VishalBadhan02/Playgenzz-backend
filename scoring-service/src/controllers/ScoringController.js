@@ -1,5 +1,5 @@
 const reply = require('../helper/reply');
-// const Lang = require("../language/en");
+const Lang = require("../language/en");
 // const { AddTeamMemberModel } = require('../model/addTeamMember');
 // const { ScheduledMatchModel } = require('../model/scheduledMatch');
 // const { ScoreCardModel } = require('../models/socreCard');
@@ -22,15 +22,13 @@ const ScoreCard = async (req, res) => {
         const currentTime = new Date();
         let match;
         // Attempt to find the tournament first
-        const tournament = await getTournament(tournamentId);
+        // const tournament = await getTournament(tournamentId);
         const scheduledMatch = await getMatch(matchId);
-
-        // console.log("scheduledMatch", scheduledMatch)
 
         let total_over = scheduledMatch?.numberOfOvers;
         let sportType = scheduledMatch?.sportType
         let players = scheduledMatch?.numberOfPlayers
-        match = scheduledMatch.matchId
+        match = scheduledMatch?.matchId
 
         if (!isValidSportType(sportType) || !total_over || !players) {
             return res.status(404).json(reply.failure("Invalid sport type"));
@@ -90,7 +88,9 @@ const ScoreCard = async (req, res) => {
         }
 
         // Initialize the scorecard with the new schema structure
-        const formatedScoreard = formatedMatches(matchId, match, enrichedTeamA, teamA, sportType, tournamentId, teamB, enrichedTeamB, currentTime, total_over, players,);
+        const formatedScoreard = formatedMatches(matchId, match, enrichedTeamA, teamA, sportType, tournamentId, teamB, enrichedTeamB, currentTime, total_over, players, scheduledMatch?.teamAName, scheduledMatch?.teamBName);
+
+        console.log(formatedScoreard)
 
         // storing the scorecard in the database
         const scoreCard = await scorecardService.setScorecard(formatedScoreard)
@@ -165,6 +165,7 @@ const getScore = async (req, res) => {
         return res.status(200).json(reply.success(Lang.SCORE_FETCHED, transformedScore));
 
     } catch (error) {
+        console.log("error occuring in get score", error)
         return res.status(500).json(reply.failure("Error fetching scorecard details"));
     }
 };

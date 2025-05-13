@@ -137,6 +137,9 @@ const getMatchById = async (call, callback) => {
         const teamA = match?.homeTeam;
         const teamB = match?.awayTeam;
 
+        const teamAName = await teamServices.findTeam(teamA)
+        const teamBName = await teamServices.findTeam(teamB)
+
         const teamAData = await teamServices.fetchTeamMembers({ teamId: teamA, status: 1 });
         const teamBData = await teamServices.fetchTeamMembers({ teamId: teamB, status: 1 });
 
@@ -153,7 +156,11 @@ const getMatchById = async (call, callback) => {
             ...match.toObject(),
             teamA: teamAData.map(mapPlayer),
             teamB: teamBData.map(mapPlayer),
+            teamAName: teamAName?.teamName,
+            teamBName: teamBName?.teamName
         };
+
+        console.log(response)
 
         callback(null, { match: response });
     } catch (error) {

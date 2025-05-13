@@ -10,6 +10,8 @@ const formatedMatches = (
     currentTime,
     total_over,
     players,
+    teamAName,
+    teamBName
 ) => {
     const scoreCard = {
         matchId: id,
@@ -20,6 +22,7 @@ const formatedMatches = (
         teams: {
             teamA: {
                 teamId: teamA,
+                name: teamAName,
                 score: 0,
                 wickets: 0,
                 players: teamAPlayers.map(player => ({
@@ -31,6 +34,7 @@ const formatedMatches = (
             },
             teamB: {
                 teamId: teamB,
+                name: teamBName,
                 score: 0,
                 wickets: 0,
                 players: teamBPlayers.map(player => ({

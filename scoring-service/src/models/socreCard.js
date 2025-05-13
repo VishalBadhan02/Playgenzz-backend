@@ -35,6 +35,10 @@ const ScoreCardSchema = mongoose.Schema({
                 type: Number,
                 default: 0
             },
+            name: {
+                type: String,
+                required: true
+            },
             players: [{
                 playerId: {
                     type: String,
@@ -58,6 +62,10 @@ const ScoreCardSchema = mongoose.Schema({
             score: {
                 type: Number,
                 default: 0
+            },
+            name: {
+                type: String,
+                required: true
             },
             players: [{
                 playerId: {
