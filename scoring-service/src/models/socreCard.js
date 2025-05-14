@@ -128,7 +128,6 @@ ScoreCardSchema.index({ 'teams.teamB.teamId': 1 });
 
 
 
-
 // ScoreCardSchema.methods.updatePlayerStats = async function (teamId, playerId, stats) {
 //     try {
 //         // Determine which team the player belongs to
