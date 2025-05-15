@@ -210,7 +210,7 @@ const handleScore = async (req, res) => {
         const currentUser = req.user.userName;
 
         // Find the existing scorecard
-        const scoreCard = await scorecardService.getScorecard(matchId);
+        const scoreCard = await scorecardService.getScorecard({matchId});
         if (!scoreCard) {
             return res.status(404).json(reply.failure("Scorecard not found"));
         }

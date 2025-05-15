@@ -1,3 +1,6 @@
+const scorecardService = require("../services/scorecardService");
+const { setPlaying } = require("../utils/setPlaying");
+
 async function ScoreUpdate(ws, data, wss) {
     try {
         const { matchId, data: scoreData, sequenceNumber, timestamp, updatedBy } = data;
@@ -317,6 +320,59 @@ async function InningUpdate(req, res) {
         return res.json(reply.failure("error updating new inning"))
     }
 }
+
+async function matchSetup(matchData) {
+    try {
+        const { matchId, data } = matchData
+        const { toss, battingTeam, bowlingTeam, playerSettigns } = data
+        const scorecard = await scorecardService.getScorecard({ matchId })
+
+        const userMap = new Map();
+
+        const sportSpecificDetails = scorecard?.sportSpecificDetails;
+        const teamAPlayer = scorecard?.teams.teamA.players
+        const teamBPlayer = scorecard?.teams.teamB.players
+
+        const totalPlayers = [...teamAPlayer, ...teamBPlayer]
+
+        totalPlayers?.forEach(user => {
+            userMap.set(user.playerId.toString(), user); // id here is same as playerId
+        });
+
+        const formatedDataforUpdate = {
+            tossWinner: toss.winner.id,
+            inningChoice: toss.decision,
+            striker: setPlaying(playerSettigns.selectedStriker, userMap),
+            nonStriker: setPlaying(playerSettigns.selectedNonStriker, userMap),
+            currentBowler: setPlaying(playerSettigns.selectedBowler, userMap),
+            firstInnings: {
+                battingTeam: battingTeam.id,
+                battingTeamName: battingTeam.name,
+                bowlingTeam: bowlingTeam.id,
+                bowlingTeamName: bowlingTeam.name
+            },
+            secondInnings: {
+                battingTeam: bowlingTeam.id,
+                battingTeamName: bowlingTeam.name,
+                bowlingTeam: battingTeam.id,
+                bowlingTeamName: battingTeam.name,
+            }
+        }
+
+
+
+        let i = 1
+        for (const value of sportSpecificDetails) {
+
+            console.log(i, value.key)
+            i++;
+        }
+
+    } catch (error) {
+        console.log("Error occuring in the match setup")
+        throw error
+    }
+}
 module.exports = {
-    ScoreUpdate, InningUpdate
+    ScoreUpdate, InningUpdate, matchSetup
 };
