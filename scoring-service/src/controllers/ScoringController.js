@@ -203,6 +203,7 @@ const calculateProjectedScore = (score) => {
     return Math.round(currentScore + (currentRunRate * remainingOvers));
 };
 
+
 const handleScore = async (req, res) => {
     // try {
     //     const { matchId, tossWinner, tossWinnerName, sportSpecificDetails } = req.body;
