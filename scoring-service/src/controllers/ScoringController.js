@@ -6,7 +6,7 @@ const Lang = require("../language/en");
 // const { TournamentModel } = require('../model/tournament');
 const WebSocket = require('ws');
 const { getTournament, getMatch, getUsers, updateFixtureRound } = require('../services/grpcService');
-const { formatedMatches } = require('../utils/formatedScorecard');
+const { formatedMatches, formateScorecardData } = require('../utils/formatedScorecard');
 const scorecardService = require('../services/scorecardService');
 const { storeUsers, getCacheUsers } = require('../services/redisService');
 const { enrichedUserData } = require('../utils/enrichedUserData');
@@ -16,7 +16,7 @@ const sendMessage = require('../kafka/producer');
 
 const ScoreCard = async (req, res) => {
     try {
-        const { id, matchId, teamA, teamB, tournamentId } = req.body;
+        const { matchId, teamA, teamB, tournamentId } = req.body;
 
         // console.log("id", req.body)
         const currentTime = new Date();
@@ -162,7 +162,10 @@ const getScore = async (req, res) => {
             };
         }
 
-        return res.status(200).json(reply.success(Lang.SCORE_FETCHED, transformedScore));
+        const transformedData = await formateScorecardData(transformedScore)
+
+
+        return res.status(200).json(reply.success(Lang.SCORE_FETCHED, transformedData));
 
     } catch (error) {
         console.log("error occuring in get score", error)

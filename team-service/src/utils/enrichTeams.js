@@ -8,7 +8,8 @@ const enrichedTeams = async (playersWithoutId, finalResponse) => {
                 return {
                     modalId: player._id,
                     id: user._id,
-                    name: user.firstName,
+                    name: user.userName,
+                    firstName: user.firstName,
                     avatar: user.profilePicture || null, // or some default
                     role: player.commit,
                     joinedDate: new Date(player.createdAt).toLocaleDateString(),

@@ -160,7 +160,7 @@ const getTeamProfile = async (req, res) => {
         // filtering the userIDs from the playser to get details of user from user service 
         const fetchPlayers = await fetchPlayersId(players)
 
-        // fetching the data from othe services through gpc
+        // fetching the data from grpc services
         const finalResponse = await dataGathering(fetchPlayers)
 
         //formating the data in right formate
