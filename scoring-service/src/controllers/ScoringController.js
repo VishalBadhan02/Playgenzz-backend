@@ -90,7 +90,7 @@ const ScoreCard = async (req, res) => {
         // Initialize the scorecard with the new schema structure
         const formatedScoreard = formatedMatches(matchId, match, enrichedTeamA, teamA, sportType, tournamentId, teamB, enrichedTeamB, currentTime, total_over, players, scheduledMatch?.teamAName, scheduledMatch?.teamBName);
 
-        console.log(formatedScoreard)
+        // console.log(formatedScoreard)
 
         // storing the scorecard in the database
         const scoreCard = await scorecardService.setScorecard(formatedScoreard)
@@ -204,119 +204,120 @@ const calculateProjectedScore = (score) => {
 };
 
 const handleScore = async (req, res) => {
-    // try {
-    //     const { matchId, tossWinner, tossWinnerName, sportSpecificDetails } = req.body;
-    //     const currentTime = new Date("2025-01-15 16:10:06");
-    //     const currentUser = req.user.userName;
-    //     // Find the existing scorecard
-    //     const scoreCard = await ScoreCardModel.findById(matchId);
-    //     if (!scoreCard) {
-    //         return res.status(404).json(reply.failure("Scorecard not found"));
-    //     }
+    try {
+        const { matchId, tossWinner, tossWinnerName, sportSpecificDetails } = req.body;
+        const currentTime = new Date("2025-01-15 16:10:06");
+        const currentUser = req.user.userName;
 
-    //     // If tossWinner is provided, update toss details
-    //     if (tossWinner) {
-    //         // Update toss winner details
-    //         scoreCard.sportSpecificDetails.set('tossWinner', tossWinner);
-    //         scoreCard.sportSpecificDetails.set('tossWinnerName', sportSpecificDetails.tossWinnerName);
-    //         scoreCard.sportSpecificDetails.set('tossTime', currentTime);
-    //         scoreCard.matchStatus = 'toss_completed';
-    //     }
+        // Find the existing scorecard
+        const scoreCard = await scorecardService.getScorecard(matchId);
+        if (!scoreCard) {
+            return res.status(404).json(reply.failure("Scorecard not found"));
+        }
 
-    //     // If inningChoice is provided in sportSpecificDetails
-    //     if (sportSpecificDetails?.inningChoice) {
-    //         const tossWinnerTeam = scoreCard.sportSpecificDetails.get('tossWinner');
-    //         const otherTeamId = tossWinnerTeam === scoreCard.teams.teamA.teamId.toString()
-    //             ? scoreCard.teams.teamB.teamId
-    //             : scoreCard.teams.teamA.teamId;
+        // If tossWinner is provided, update toss details
+        if (tossWinner) {
+            // Update toss winner details
+            scoreCard.sportSpecificDetails.set('tossWinner', tossWinner);
+            scoreCard.sportSpecificDetails.set('tossWinnerName', sportSpecificDetails.tossWinnerName);
+            scoreCard.sportSpecificDetails.set('tossTime', currentTime);
+            scoreCard.matchStatus = 'toss_completed';
+        }
+
+        // If inningChoice is provided in sportSpecificDetails
+        if (sportSpecificDetails?.inningChoice) {
+            const tossWinnerTeam = scoreCard.sportSpecificDetails.get('tossWinner');
+            const otherTeamId = tossWinnerTeam === scoreCard.teams.teamA.teamId.toString()
+                ? scoreCard.teams.teamB.teamId
+                : scoreCard.teams.teamA.teamId;
 
 
-    //         // Determine batting and bowling teams
-    //         const battingTeamId = sportSpecificDetails.inningChoice === 'Bat'
-    //             ? tossWinnerTeam
-    //             : otherTeamId;
+            // Determine batting and bowling teams
+            const battingTeamId = sportSpecificDetails.inningChoice === 'Bat'
+                ? tossWinnerTeam
+                : otherTeamId;
 
-    //         const bowlingTeamId = sportSpecificDetails.inningChoice === 'Ball'
-    //             ? tossWinnerTeam
-    //             : otherTeamId;
+            const bowlingTeamId = sportSpecificDetails.inningChoice === 'Ball'
+                ? tossWinnerTeam
+                : otherTeamId;
 
-    //         // Update match details
-    //         scoreCard.sportSpecificDetails.set('inningChoice', sportSpecificDetails.inningChoice);
-    //         scoreCard.sportSpecificDetails.set('battingTeam', battingTeamId);
-    //         scoreCard.sportSpecificDetails.set('bowlingTeam', bowlingTeamId);
-    //         scoreCard.sportSpecificDetails.set('currentInning', 1);
-    //         scoreCard.matchStatus = 'innings_setup';
+            // Update match details
+            scoreCard.sportSpecificDetails.set('inningChoice', sportSpecificDetails.inningChoice);
+            scoreCard.sportSpecificDetails.set('battingTeam', battingTeamId);
+            scoreCard.sportSpecificDetails.set('bowlingTeam', bowlingTeamId);
+            scoreCard.sportSpecificDetails.set('currentInning', 1);
+            scoreCard.matchStatus = 'innings_setup';
 
-    //         // Initialize first innings details
-    //         scoreCard.sportSpecificDetails.set('firstInnings', {
-    //             battingTeam: battingTeamId,
-    //             bowlingTeam: bowlingTeamId,
-    //             totalScore: 0,
-    //             wickets: 0,
-    //             overs: 0,
-    //             balls: 0,
-    //             extras: {
-    //                 wides: 0,
-    //                 noBalls: 0,
-    //                 byes: 0,
-    //                 legByes: 0
-    //             }
-    //         });
-    //         scoreCard.sportSpecificDetails.set('secondInnings', {
-    //             battingTeam: bowlingTeamId,
-    //             bowlingTeam: battingTeamId,
-    //             totalScore: 0,
-    //             wickets: 0,
-    //             overs: 0,
-    //             balls: 0,
-    //             extras: {
-    //                 wides: 0,
-    //                 noBalls: 0,
-    //                 byes: 0,
-    //                 legByes: 0
-    //             }
-    //         });
+            // Initialize first innings details
+            scoreCard.sportSpecificDetails.set('firstInnings', {
+                battingTeam: battingTeamId,
+                bowlingTeam: bowlingTeamId,
+                totalScore: 0,
+                wickets: 0,
+                overs: 0,
+                balls: 0,
+                extras: {
+                    wides: 0,
+                    noBalls: 0,
+                    byes: 0,
+                    legByes: 0
+                }
+            });
+            scoreCard.sportSpecificDetails.set('secondInnings', {
+                battingTeam: bowlingTeamId,
+                bowlingTeam: battingTeamId,
+                totalScore: 0,
+                wickets: 0,
+                overs: 0,
+                balls: 0,
+                extras: {
+                    wides: 0,
+                    noBalls: 0,
+                    byes: 0,
+                    legByes: 0
+                }
+            });
 
-    //         // Add to match timeline
-    //         if (scoreCard.timeline) {
-    //             scoreCard.timeline.push({
-    //                 time: currentTime,
-    //                 updatedBy: currentUser,
-    //                 action: 'INNINGS_CHOICE',
-    //                 details: {
-    //                     choice: sportSpecificDetails.inningChoice,
-    //                     battingTeam: battingTeamId,
-    //                     bowlingTeam: bowlingTeamId
-    //                 }
-    //             });
-    //         }
+            // Add to match timeline
+            if (scoreCard.timeline) {
+                scoreCard.timeline.push({
+                    time: currentTime,
+                    updatedBy: currentUser,
+                    action: 'INNINGS_CHOICE',
+                    details: {
+                        choice: sportSpecificDetails.inningChoice,
+                        battingTeam: battingTeamId,
+                        bowlingTeam: bowlingTeamId
+                    }
+                });
+            }
 
-    //         // Update metadata
-    //         if (scoreCard.metadata) {
-    //             scoreCard.metadata.lastUpdateTime = currentTime;
-    //             scoreCard.metadata.updatedBy = currentUser;
-    //         }
-    //     }
+            // Update metadata
+            if (scoreCard.metadata) {
+                scoreCard.metadata.lastUpdateTime = currentTime;
+                scoreCard.metadata.updatedBy = currentUser;
+            }
+        }
 
-    //     // Save the updated scorecard
-    //     await scoreCard.save();
+        // Save the updated scorecard
+        await scoreCard.save();
 
-    //     // Prepare response data
-    //     const responseData = {
-    //         matchStatus: scoreCard.matchStatus,
-    //         tossWinner: scoreCard.sportSpecificDetails.get('tossWinner'),
-    //         tossWinnerName: scoreCard.sportSpecificDetails.get('tossWinnerName'),
-    //         inningChoice: scoreCard.sportSpecificDetails.get('inningChoice'),
-    //         battingTeam: scoreCard.sportSpecificDetails.get('battingTeam'),
-    //         bowlingTeam: scoreCard.sportSpecificDetails.get('bowlingTeam'),
-    //         currentInning: scoreCard.sportSpecificDetails.get('currentInning')
-    //     };
+        // Prepare response data
+        const responseData = {
+            matchStatus: scoreCard.matchStatus,
+            tossWinner: scoreCard.sportSpecificDetails.get('tossWinner'),
+            tossWinnerName: scoreCard.sportSpecificDetails.get('tossWinnerName'),
+            inningChoice: scoreCard.sportSpecificDetails.get('inningChoice'),
+            battingTeam: scoreCard.sportSpecificDetails.get('battingTeam'),
+            bowlingTeam: scoreCard.sportSpecificDetails.get('bowlingTeam'),
+            currentInning: scoreCard.sportSpecificDetails.get('currentInning')
+        };
 
-    //     return res.json(reply.success("Scorecard updated successfully", responseData));
+        return res.json(reply.success("Scorecard updated successfully", responseData));
 
-    // } catch (error) {
-    //     return res.status(500).json(reply.failure("Error updating scorecard"));
-    // }
+    } catch (error) {
+        return res.status(500).json(reply.failure("Error updating scorecard"));
+    }
 };
 
 const handlePlayerSelection = async (req, res) => {

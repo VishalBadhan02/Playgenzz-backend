@@ -115,7 +115,6 @@ const formateScorecardData = (scorecard) => {
 
     const sportSpecificDetailsObj = Object.fromEntries(data.sportSpecificDetails);
 
-    console.log(sportSpecificDetailsObj)
     const cricketTeam1 = {
         id: data?.teams?.teamA?.teamId || "1234",
         name: data?.teams?.teamA?.name || "1234",
