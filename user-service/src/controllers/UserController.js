@@ -285,7 +285,7 @@ const getUserFriends = async (req, res) => {
 const getChat = async (req, res) => {
     try {
         const { conversationId } = req.params
-
+        // console.log(req.params)
         const chat = await messageService.getMessage(conversationId)
 
         return res.status(202).json(reply.success("Message fetched Succesfully", chat));

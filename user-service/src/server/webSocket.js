@@ -36,7 +36,6 @@ wss.on('connection', (ws, req) => {
         ws.on('message', async (message) => {
             try {
                 const data = JSON.parse(message);
-                // console.log(data)
                 if (data.type === "USER") {
                     await messageControl(ws, data, wss);
                 }
@@ -64,6 +63,6 @@ wss.on('connection', (ws, req) => {
     });
 });
 
-server.listen(5060, "0.0.0.0", () => {
+server.listen(Config.SOCKET_PORT, () => {
     console.log(`🚀 WebSocket Server running on port ${Config.SOCKET_PORT || 5060}`);
 });

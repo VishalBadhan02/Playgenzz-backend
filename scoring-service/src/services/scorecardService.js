@@ -33,6 +33,18 @@ class ScoreService {
             throw error;
         }
     }
+
+    async updateScorecard(query) {
+        try {
+            const modal = await ScoreCardModel.findOneAndUpdate(query)
+            if (!modal) {
+                return "no modal found"
+            }
+            return modal
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 module.exports = new ScoreService();

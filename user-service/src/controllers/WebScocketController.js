@@ -1,14 +1,14 @@
 const { MessageModel } = require("../models/messageModal");
-const { getConversation, storeConversation } = require("../services/redisServices");
+const { getConversation, storeConversation, deleteConversation } = require("../services/redisServices");
 const userService = require("../services/userService");
 
 
 const messageControl = async (ws, datat, wss) => {
     try {
-        const { matchId, data, subType } = datat;
+        const { matchId, data, subType, senderId } = datat;
         let status = 0;
+        console.log(datat)
 
-        console.log("message data", datat);
 
         if (!ws.user || !data.message) {
             console.error("Missing required fields");
@@ -16,8 +16,8 @@ const messageControl = async (ws, datat, wss) => {
         }
 
         // Try getting conversationId from Redis
-        let conversationId = await getConversation(ws.user, matchId);
-
+        let conversationId = await getConversation(matchId);
+        console.log("conversationId", conversationId)
         if (!conversationId) {
             const participants = [
                 { entityId: ws.user, entityType: "user" },
@@ -25,22 +25,23 @@ const messageControl = async (ws, datat, wss) => {
             ];
 
             const conversation = await userService.conversationModal(ws.user, matchId, participants, subType);
+
             conversationId = conversation._id.toString();
 
             // Store it in Redis for 1 day
-            await storeConversation(ws.user, matchId, conversationId);
+            await storeConversation(conversationId);
         }
 
         const modalData = {
             from: ws.user,
-            to: matchId,
+            to,
             message: data.message,
             sessionId: ws.user,
             status,
             conversationId
         };
 
-        
+
 
         const messageData = await userService.messageModal(modalData);
         // console.log("message data", messageData);

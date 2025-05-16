@@ -1,7 +1,7 @@
 const { redis } = require('../clients/redisClient');
 
-async function storeConversation(userId, recieverId, conversationId) {
-    await redis.set(`conversation:${userId}:${recieverId}`, conversationId, 'EX', 60 * 60 * 24); // 1 day
+async function storeConversation(conversationId) {
+    await redis.set(`conversation:${conversationId}`, conversationId, 'EX', 60 * 60 * 24); // 1 day
 }
 
 const getConversation = async (userId, recieverId) => {

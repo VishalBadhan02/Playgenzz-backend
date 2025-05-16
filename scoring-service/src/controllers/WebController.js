@@ -321,19 +321,18 @@ async function InningUpdate(req, res) {
     }
 }
 
+
 async function matchSetup(matchData) {
     try {
-        const { matchId, data } = matchData
-        const { toss, battingTeam, bowlingTeam, playerSettigns } = data
-        const scorecard = await scorecardService.getScorecard({ matchId })
+        const { matchId, data } = matchData;
+        const { toss, battingTeam, bowlingTeam, playerSettigns } = data;
+        const scorecard = await scorecardService.getScorecard({ matchId });
 
         const userMap = new Map();
-
         const sportSpecificDetails = scorecard?.sportSpecificDetails;
-        const teamAPlayer = scorecard?.teams.teamA.players
-        const teamBPlayer = scorecard?.teams.teamB.players
-
-        const totalPlayers = [...teamAPlayer, ...teamBPlayer]
+        const teamAPlayer = scorecard?.teams.teamA.players;
+        const teamBPlayer = scorecard?.teams.teamB.players;
+        const totalPlayers = [...teamAPlayer, ...teamBPlayer];
 
         totalPlayers?.forEach(user => {
             userMap.set(user.playerId.toString(), user); // id here is same as playerId
@@ -349,7 +348,7 @@ async function matchSetup(matchData) {
                 battingTeam: battingTeam.id,
                 battingTeamName: battingTeam.name,
                 bowlingTeam: bowlingTeam.id,
-                bowlingTeamName: bowlingTeam.name
+                bowlingTeamName: bowlingTeam.name,
             },
             secondInnings: {
                 battingTeam: bowlingTeam.id,
@@ -357,22 +356,28 @@ async function matchSetup(matchData) {
                 bowlingTeam: battingTeam.id,
                 bowlingTeamName: battingTeam.name,
             }
+        };
+
+        // ✅ Convert to Map
+        const sportDetailsMap = scorecard.sportSpecificDetails;
+
+        // ✅ Update existing keys only
+        for (const [key, value] of Object.entries(formatedDataforUpdate)) {
+            sportDetailsMap.set(key, value);
+
         }
 
-
-
-        let i = 1
-        for (const value of sportSpecificDetails) {
-
-            console.log(i, value.key)
-            i++;
-        }
+        // ✅ Convert back to plain object
+        scorecard.sportSpecificDetails = sportDetailsMap;
+        scorecard.markModified('sportSpecificDetails');
+        await scorecard.save();
 
     } catch (error) {
-        console.log("Error occuring in the match setup")
-        throw error
+        console.log("Error occurring in the match setup");
+        throw error;
     }
 }
+
 module.exports = {
     ScoreUpdate, InningUpdate, matchSetup
 };
