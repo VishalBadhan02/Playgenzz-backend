@@ -208,7 +208,6 @@ class UserService {
                     }
                 }
             }).sort({ updatedAt: -1 }); // optional: sort by latest
-
             return conversations;
         } catch (error) {
             throw error;

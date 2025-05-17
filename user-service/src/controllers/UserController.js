@@ -11,6 +11,7 @@ const { MessageModel } = require("../models/messageModal");
 const { getParticipantsWithDetails } = require("../utils/groupParticipents");
 const messageService = require("../services/messageService");
 const Config = require("../config");
+const Conversation = require("../models/conversationSchema");
 
 
 
@@ -239,6 +240,15 @@ const getUserFriends = async (req, res) => {
                 const lastMsg = await messageService.getLastMessageForConversation(id);
                 const receiverId = lastMsg?.from === user_id ? lastMsg?.to : user_id;
                 userData = await userService.findUser(receiverId);
+                const participants = [
+                    { entityId: user_id, entityType: "user" },
+                    { entityId: receiverId, entityType: "user" }
+                ];
+                const convo = new Conversation({
+                    participants: participants,
+                    type: 'one-on-one',
+                })
+                console.log("convo", convo)
             }
 
             const data = {
@@ -253,20 +263,28 @@ const getUserFriends = async (req, res) => {
                 type: "user"
             };
 
+            console.log("data", data)
+
             return res.status(202).json(reply.success(Lang.SUCCESS, { userData: data, t }));
         }
 
         // Else, fetch contacts and friends
         const [userFriends, userTeams, userContacts] = await Promise.all([
             setFriends(user_id),
+            //frtching the teams registered by the user
             getTeamByUser(user_id).catch(err => {
                 console.error("Failed to retrieve team data:", err);
                 return [];
             }),
+            // fetching the conversations of the users
             userService.getUserContacts(user_id)
         ]);
 
+
+        //formating the data assigning the names according to the id's
         const userChats = await getParticipantsWithDetails(userContacts, user_id);
+
+
 
         return res.status(202).json(reply.success(Lang.SUCCESS, {
             userFriends,
@@ -343,16 +361,6 @@ const getChat = async (req, res) => {
 // }
 
 
-
-
-
-
-
-
-
-
-
-
 module.exports = {
     getProfile,
     searchUsers,
@@ -364,6 +372,7 @@ module.exports = {
     getChat
     //     addFriend, getPlayers, getPlayingFriends, statusControl 
 
+    
 }
 
 
