@@ -68,6 +68,7 @@ const getUser = async (data) => {
         return error;
     }
 };
+
 const UniqueUserName = async (data) => {
     // Wrap the gRPC call in a promise
     const CheckUser = () => {
