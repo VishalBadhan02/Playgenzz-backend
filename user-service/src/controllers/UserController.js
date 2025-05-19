@@ -12,6 +12,8 @@ const { getParticipantsWithDetails } = require("../utils/groupParticipents");
 const messageService = require("../services/messageService");
 const Config = require("../config");
 const Conversation = require("../models/conversationSchema");
+const { storeConversationModal, getConversationModal } = require("../services/redisServices");
+const { getParticipantDisplayData } = require("../utils/getParticipantDisplayData");
 
 
 
@@ -230,40 +232,49 @@ const getUserFriends = async (req, res) => {
     try {
         const user_id = req.user._id;
         const { t, id } = req.params;
-
         // If this is a new conversation request
         if (t === "n") {
-            const existingConvo = await messageService.checkConvo(user_id, id);
-            let userData = await userService.findUser(id);
+            // getting the data for cache
+            const cacheData = await getConversationModal(id)
 
-            if (!userData && !existingConvo) {
-                const lastMsg = await messageService.getLastMessageForConversation(id);
-                const receiverId = lastMsg?.from === user_id ? lastMsg?.to : user_id;
-                userData = await userService.findUser(receiverId);
-                const participants = [
+            // if exist then user cache data else find it in the checkConvo mens in databse
+            let existingConvo = cacheData ? cacheData : await messageService.checkConvo(user_id, id);
+
+            //initializing the 
+            let participants; participants
+
+            //if coversation is not exist then we are creating new and store it in redis
+            if (!existingConvo) {
+
+                // formating the data to store in the database 
+                participants = [
                     { entityId: user_id, entityType: "user" },
-                    { entityId: receiverId, entityType: "user" }
+                    { entityId: id, entityType: "user" }
                 ];
-                const convo = new Conversation({
+
+                // modal maked to store in the data base
+                existingConvo = new Conversation({
                     participants: participants,
                     type: 'one-on-one',
                 })
-                console.log("convo", convo)
+                console.log(existingConvo)
+                await storeConversationModal(existingConvo?._id, existingConvo)
             }
+            const lastMsg = await messageService.getLastMessageForConversation(id);
+
+            const displayData = await getParticipantDisplayData(existingConvo.participants, user_id);
 
             const data = {
-                _id: existingConvo?._id || userData?._id,
-                name: userData?.userName || "",
-                avatar: userData?.profilePicture || "",
+                _id: existingConvo?._id,
+                name: displayData?.name || "unknown",
+                avatar: displayData?.profilePicture || "",
                 status: "",
-                lastMessage: "",
+                lastMessage: lastMsg || "",
                 lastMessageTime: "",
                 unreadCount: 0,
                 isTyping: false,
                 type: "user"
             };
-
-            console.log("data", data)
 
             return res.status(202).json(reply.success(Lang.SUCCESS, { userData: data, t }));
         }

@@ -2,6 +2,7 @@ const Conversation = require("../models/conversationSchema");
 const { MessageModel } = require("../models/messageModal");
 const { FriendModel } = require("../models/useFriends");
 const UserModel = require("../models/user");
+const { deleteConversationModal } = require("./redisServices");
 
 class UserService {
     constructor() { }
@@ -170,7 +171,7 @@ class UserService {
     // conversation.service.js
     async conversationModal(senderId, recipientId, participants, subType) {
         try {
-            const conversation = await Conversation.findOneAndUpdate(
+            let participantDoc = await Conversation.findOneAndUpdate(
                 {
                     participants: {
                         $all: [
@@ -178,20 +179,16 @@ class UserService {
                             { $elemMatch: { entityId: recipientId, entityType: subType } }
                         ]
                     }
-                },
-                {
-                    $setOnInsert: {
-                        participants: participants,
-                        type: 'one-on-one'
-                    }
-                },
-                {
-                    new: true,
-                    upsert: true
                 }
             );
-
-            return conversation;
+            if (!participantDoc) {
+                // Create the participants doc
+                participantDoc = await Conversation.create({
+                    ...participants
+                })
+                await deleteConversationModal(participantDoc?._id)
+            }
+            return participantDoc;
         } catch (error) {
             throw error;
         }

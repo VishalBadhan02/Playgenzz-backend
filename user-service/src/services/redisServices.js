@@ -1,11 +1,12 @@
 const { redis } = require('../clients/redisClient');
 
-async function storeConversation(conversationId) {
-    await redis.set(`conversation:${conversationId}`, conversationId, 'EX', 60 * 60 * 24); // 1 day
+async function storeConversation(conversationId, data) {
+    console.log(`${conversationId} data ${data}`)
+    await redis.set(`conversation:${conversationId}`, JSON.stringify(data), 'EX', 60 * 60 * 24); // 1 day
 }
 
-const getConversation = async (userId, recieverId) => {
-    const key = `conversation:${userId}:${recieverId}`;
+const getConversation = async (cacheKey) => {
+    const key = `conversation:${cacheKey}`;
     const conversation = await redis.get(key);
 
     if (conversation) {
@@ -23,9 +24,25 @@ const storeAccessToken = async (userId, token) => {
     await redis.set(`access:${userId}`, token, 'EX', 60 * 15); // 15 minutes
 }
 
+async function storeConversationModal(key, ConversationModalData) {
+    await redis.set(`ConversationModal:${key}`, JSON.stringify(ConversationModalData), 'EX', 60 * 60 * 24); // 1 day
+}
+
+const getConversationModal = async (cacheKey) => {
+    const key = `ConversationModal:${cacheKey}`;
+    const data = await redis.get(key);
+    return data ? JSON.parse(data) : null;
+};
+
+const deleteConversationModal = async (cacheKey) => {
+    await redis.del(`ConversationModal:${cacheKey}`);
+}
 module.exports = {
     storeConversation,
     getConversation,
     deleteConversation,
-    storeAccessToken
+    storeAccessToken,
+    storeConversationModal,
+    getConversationModal,
+    deleteConversationModal
 };

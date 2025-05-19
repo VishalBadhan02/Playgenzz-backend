@@ -3,6 +3,11 @@ const { Kafka } = require('kafkajs');
 const kafka = new Kafka({
   clientId: 'notification-service',
   brokers: ['0.0.0.0:9092'],
+  retry: {
+    retries: 5,
+    initialRetryTime: 1000, // ms
+    factor: 0.2,            // backoff multiplier
+  },
 });
 
 const admin = kafka.admin();

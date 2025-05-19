@@ -1,13 +1,12 @@
 const { MessageModel } = require("../models/messageModal");
-const { getConversation, storeConversation, deleteConversation } = require("../services/redisServices");
+const { getConversation, storeConversation, deleteConversation, getConversationModal } = require("../services/redisServices");
 const userService = require("../services/userService");
 
 
 const messageControl = async (ws, datat, wss) => {
     try {
-        const { matchId, data, subType, senderId } = datat;
+        const { matchId, data, subType, to } = datat;
         let status = 0;
-        console.log(datat)
 
 
         if (!ws.user || !data.message) {
@@ -17,19 +16,18 @@ const messageControl = async (ws, datat, wss) => {
 
         // Try getting conversationId from Redis
         let conversationId = await getConversation(matchId);
-        console.log("conversationId", conversationId)
+
+        //if conversationId doesnt exist it measn it might be new coversation and if it is new then need to store it in data base else store id again in redis 
         if (!conversationId) {
-            const participants = [
-                { entityId: ws.user, entityType: "user" },
-                { entityId: matchId, entityType: subType }
-            ];
+            // fetching the data from redis to store in databse if any else simply find
+            const participants = await getConversationModal(matchId)
 
-            const conversation = await userService.conversationModal(ws.user, matchId, participants, subType);
-
+            // finding or storing in the database
+            const conversation = await userService.conversationModal(ws.user, to, participants, subType);
             conversationId = conversation._id.toString();
 
             // Store it in Redis for 1 day
-            await storeConversation(conversationId);
+            await storeConversation(conversationId, conversation);
         }
 
         const modalData = {
@@ -38,14 +36,11 @@ const messageControl = async (ws, datat, wss) => {
             message: data.message,
             sessionId: ws.user,
             status,
-            conversationId
+            conversationId: matchId
         };
 
-
-
         const messageData = await userService.messageModal(modalData);
-        // console.log("message data", messageData);
-
+        return messageData
     } catch (err) {
         console.log({ msg: "error in backend" }, err);
     }

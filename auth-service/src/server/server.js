@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
 
-const AuthRouter = require("./routes/auth");
+const AuthRouter = require("../routes/auth");
 
 const app = express();
 const PORT = process.env.PORT || 4001;
