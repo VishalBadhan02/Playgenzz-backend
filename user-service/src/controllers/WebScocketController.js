@@ -1,14 +1,12 @@
 const { MessageModel } = require("../models/messageModal");
 const { getConversation, storeConversation, deleteConversation, getConversationModal } = require("../services/redisServices");
 const userService = require("../services/userService");
+const WebSocket = require('ws');
 
-
-const messageControl = async (ws, datat, wss) => {
+const messageControl = async (ws, datat, wss, userConnections) => {
     try {
         const { matchId, data, subType, to } = datat;
         let status = 0;
-        const userConnections = new Map();
-        userConnections.set(ws.user, ws);
 
         if (!ws.user || !data.message) {
             console.error("Missing required fields");
@@ -44,37 +42,38 @@ const messageControl = async (ws, datat, wss) => {
 
         // Only send to the receiver if they are connected
         const receiverSocket = userConnections.get(to);
-
         if (receiverSocket && receiverSocket.readyState === WebSocket.OPEN) {
+
             receiverSocket.send(JSON.stringify({
-                from: ws.user,
-                to,
-                message: data.message,
+                from: messageData?.from,
+                to: messageData?.to,
+                text: data.message,
+                isOwn: false,
+                timestamp: new Date(messageData?.createdAt).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                }),
                 matchId,
                 subType,
-                isOwn: ws.user,
+                status: messageData.status === 1 ? 'read' : messageData.status === 0 ? 'sent' : 'delivered',
             }));
         }
 
         // You can also optionally send an echo back to the sender if you want the message to appear instantly in the sender’s chat view:
 
-        // js
-        // Copy
-        // Edit
-        // ws.send(JSON.stringify({
-        //     from: ws.user,
-        //     message: data.message,
-        //     matchId,
-        //     subType,
-        // }));
-
-
-        // Broadcast to all clients (optional)
-        // wss.clients.forEach(client => {
-        //     if (client !== ws && client.readyState === WebSocket.OPEN) {
-        //         client.send(JSON.stringify(data));
-        //     }
-        // });
+        ws.send(JSON.stringify({
+            from: messageData?.from,
+            to: messageData?.to,
+            text: data.message,
+            isOwn: true,
+            timestamp: new Date(messageData?.createdAt).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+            }),
+            matchId,
+            subType,
+            status: messageData.status === 1 ? 'read' : messageData.status === 0 ? 'sent' : 'delivered',
+        }));
 
         return true
     } catch (err) {

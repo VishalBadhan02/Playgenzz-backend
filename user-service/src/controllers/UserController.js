@@ -14,6 +14,7 @@ const Config = require("../config");
 const Conversation = require("../models/conversationSchema");
 const { storeConversationModal, getConversationModal } = require("../services/redisServices");
 const { getParticipantDisplayData } = require("../utils/getParticipantDisplayData");
+const { formatedChatData } = require("../utils/formatedChatData");
 
 
 
@@ -314,10 +315,13 @@ const getUserFriends = async (req, res) => {
 const getChat = async (req, res) => {
     try {
         const { conversationId } = req.params
-        // console.log(req.params)
+
         const chat = await messageService.getMessage(conversationId)
 
-        return res.status(202).json(reply.success("Message fetched Succesfully", chat));
+        const formatedChats = await formatedChatData(chat, req.user._id)
+
+
+        return res.status(202).json(reply.success("Message fetched Succesfully", formatedChats));
     } catch (error) {
         console.error('Error fetching messages:', error);
         return res.status(500).json({ message: 'Error fetching messages' });

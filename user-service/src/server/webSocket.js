@@ -11,7 +11,7 @@ mongoose.connect(Config.DATABASE.URL).then(() => console.log('✅ WebSocket Serv
 const server = http.createServer();
 
 const wss = new WebSocket.Server({ server });
-
+const userConnections = new Map();
 
 
 wss.on('connection', (ws, req) => {
@@ -33,14 +33,18 @@ wss.on('connection', (ws, req) => {
 
         ws.user = decoded._id; // Attach user data to WebSocket instance
 
+        userConnections.set(ws.user, ws);
+
+
+
         ws.on('message', async (message) => {
             try {
                 const data = JSON.parse(message);
                 if (data.type === "USER") {
-                    await messageControl(ws, data, wss);
+                    await messageControl(ws, data, wss, userConnections);
                 }
 
-               
+
 
             } catch (error) {
                 console.error("⚠️ Error processing WebSocket message:", error.message);
@@ -53,9 +57,10 @@ wss.on('connection', (ws, req) => {
         return;
     }
 
-    
+
     ws.on('close', () => {
         console.log('❌ Client Disconnected');
+        userConnections.delete(ws.user);
     });
 });
 
