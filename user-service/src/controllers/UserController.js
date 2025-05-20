@@ -257,7 +257,7 @@ const getUserFriends = async (req, res) => {
                     participants: participants,
                     type: 'one-on-one',
                 })
-                console.log(existingConvo)
+                // console.log(existingConvo)
                 await storeConversationModal(existingConvo?._id, existingConvo)
             }
             const lastMsg = await messageService.getLastMessageForConversation(id);

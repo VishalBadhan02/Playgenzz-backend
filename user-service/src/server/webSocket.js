@@ -40,12 +40,7 @@ wss.on('connection', (ws, req) => {
                     await messageControl(ws, data, wss);
                 }
 
-                // Broadcast to all clients (optional)
-                wss.clients.forEach(client => {
-                    if (client !== ws && client.readyState === WebSocket.OPEN) {
-                        client.send(JSON.stringify(data));
-                    }
-                });
+               
 
             } catch (error) {
                 console.error("⚠️ Error processing WebSocket message:", error.message);
@@ -58,6 +53,7 @@ wss.on('connection', (ws, req) => {
         return;
     }
 
+    
     ws.on('close', () => {
         console.log('❌ Client Disconnected');
     });

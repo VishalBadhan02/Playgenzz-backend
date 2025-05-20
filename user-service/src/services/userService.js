@@ -171,7 +171,7 @@ class UserService {
     // conversation.service.js
     async conversationModal(senderId, recipientId, participants, subType) {
         try {
-            let participantDoc = await Conversation.findOneAndUpdate(
+            let participantDoc = await Conversation.findOne(
                 {
                     participants: {
                         $all: [
@@ -188,6 +188,7 @@ class UserService {
                 })
                 await deleteConversationModal(participantDoc?._id)
             }
+
             return participantDoc;
         } catch (error) {
             throw error;

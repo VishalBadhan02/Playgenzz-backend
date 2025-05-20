@@ -7,7 +7,8 @@ const messageControl = async (ws, datat, wss) => {
     try {
         const { matchId, data, subType, to } = datat;
         let status = 0;
-
+        const userConnections = new Map();
+        userConnections.set(ws.user, ws);
 
         if (!ws.user || !data.message) {
             console.error("Missing required fields");
@@ -40,7 +41,42 @@ const messageControl = async (ws, datat, wss) => {
         };
 
         const messageData = await userService.messageModal(modalData);
-        return messageData
+
+        // Only send to the receiver if they are connected
+        const receiverSocket = userConnections.get(to);
+
+        if (receiverSocket && receiverSocket.readyState === WebSocket.OPEN) {
+            receiverSocket.send(JSON.stringify({
+                from: ws.user,
+                to,
+                message: data.message,
+                matchId,
+                subType,
+                isOwn: ws.user,
+            }));
+        }
+
+        // You can also optionally send an echo back to the sender if you want the message to appear instantly in the sender’s chat view:
+
+        // js
+        // Copy
+        // Edit
+        // ws.send(JSON.stringify({
+        //     from: ws.user,
+        //     message: data.message,
+        //     matchId,
+        //     subType,
+        // }));
+
+
+        // Broadcast to all clients (optional)
+        // wss.clients.forEach(client => {
+        //     if (client !== ws && client.readyState === WebSocket.OPEN) {
+        //         client.send(JSON.stringify(data));
+        //     }
+        // });
+
+        return true
     } catch (err) {
         console.log({ msg: "error in backend" }, err);
     }
