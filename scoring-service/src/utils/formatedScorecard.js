@@ -60,7 +60,7 @@ const formatedMatches = (
         sportSpecificDetails: new Map(
             sportType === 'cricket'
                 ? [
-                    ['tossWinner', 'pending'],
+                    ['toss', null],
                     ['currentInning', 1],
                     ['totalOvers', total_over],
                     ['currentOver', 0],
@@ -141,7 +141,8 @@ const formateScorecardData = (scorecard) => {
         },
         venue: 'National Cricket Ground',
         date: new Date(Date.now() + 7200000).toISOString(),
-        status: 'live'
+        status: 'live',
+        toss: sportSpecificDetailsObj?.toss || null,
     }
 
     const mockCricketScorecard = {
@@ -176,10 +177,10 @@ const formateScorecardData = (scorecard) => {
             [cricketTeam2.id]: createBowlingCards(cricketTeam2)
         },
         currentBatsmen: {
-            striker: battingCards1[2],
-            nonStriker: battingCards1[3]
+            striker: sportSpecificDetailsObj?.striker?.userName || null,
+            nonStriker: sportSpecificDetailsObj?.nonStriker?.userName || null
         },
-        currentBowler: createBowlingCards(cricketTeam2)[2],
+        currentBowler: sportSpecificDetailsObj?.currentBowler?.userName || null,
         recentOvers: createRecentOvers(),
         partnership: {
             runs: 45,

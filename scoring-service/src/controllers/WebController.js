@@ -339,7 +339,7 @@ async function matchSetup(matchData) {
         });
 
         const formatedDataforUpdate = {
-            tossWinner: toss.winner.id,
+            toss: { winner: toss.winner.id, winnerName: toss.winner.name, decision: toss.decision },
             inningChoice: toss.decision,
             striker: setPlaying(playerSettigns.selectedStriker, userMap),
             nonStriker: setPlaying(playerSettigns.selectedNonStriker, userMap),

@@ -90,7 +90,6 @@ const ScoreCard = async (req, res) => {
         // Initialize the scorecard with the new schema structure
         const formatedScoreard = formatedMatches(matchId, match, enrichedTeamA, teamA, sportType, tournamentId, teamB, enrichedTeamB, currentTime, total_over, players, scheduledMatch?.teamAName, scheduledMatch?.teamBName);
 
-        // console.log(formatedScoreard)
 
         // storing the scorecard in the database
         const scoreCard = await scorecardService.setScorecard(formatedScoreard)
@@ -210,7 +209,7 @@ const handleScore = async (req, res) => {
         const currentUser = req.user.userName;
 
         // Find the existing scorecard
-        const scoreCard = await scorecardService.getScorecard({matchId});
+        const scoreCard = await scorecardService.getScorecard({ matchId });
         if (!scoreCard) {
             return res.status(404).json(reply.failure("Scorecard not found"));
         }
