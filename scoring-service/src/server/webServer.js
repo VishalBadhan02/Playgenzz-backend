@@ -13,12 +13,14 @@ mongoose.connect(Config.DATABASE.URL || "mongodb://localhost:27017/user-db").the
 const server = http.createServer();
 
 const wss = new WebSocket.Server({ server });
+const userConnections = new Map();
 
 
 
 wss.on('connection', (ws, req) => {
     console.log('⛳️ New WebSocket Client Connected');
 
+    // Extract token from headers
     const token = req.headers['sec-websocket-protocol'];
 
     if (!token) {
@@ -28,14 +30,15 @@ wss.on('connection', (ws, req) => {
     }
 
     try {
+        // Verify token
         const decoded = jwt.verify(token, Config.JWTSECRETKEY || "vishal123");
         // console.log("🔑 Authenticated user:", decoded);
 
-        ws.user = decoded._id;
-        ws.on('message', handleWebRouting);
+        ws.user = decoded._id; // Attach user data to WebSocket instance
 
-        // Broadcast to all clients (optional)
+        userConnections.set(ws.user, ws);
 
+        ws.on('message', (message) => handleWebRouting(message, userConnections, ws));
 
     } catch (error) {
         console.log("❌ Invalid token:", error.message);
@@ -45,6 +48,7 @@ wss.on('connection', (ws, req) => {
 
     ws.on('close', () => {
         console.log('❌ Client Disconnected');
+        userConnections.delete(ws.user);
     });
 });
 
