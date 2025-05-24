@@ -1,5 +1,5 @@
 const Redis = require("ioredis");
-const Config = require("../../../team-service/src/config");
+const Config = require("../config/index.js");
 
 const redis = new Redis({
     host: Config.REDIS_HOST,
