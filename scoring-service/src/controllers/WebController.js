@@ -1,6 +1,6 @@
 const scorecardService = require("../services/scorecardService");
 const { formateScorecardData } = require("../utils/formatedScorecard");
-const { playerStatsUpdate, matchStatsUpdate, updateLivePlayerStats, rotateStrike } = require("../utils/scorecardUpdates");
+const { playerStatsUpdate, matchStatsUpdate, updateLivePlayerStats, rotateStrike, generateDelta } = require("../utils/scorecardUpdates");
 const { setPlaying } = require("../utils/setPlaying");
 
 async function ScoreUpdate(matchData, userConnections, ws) {
@@ -13,12 +13,18 @@ async function ScoreUpdate(matchData, userConnections, ws) {
         const scorecard = await scorecardService.getScorecard({ matchId });
 
         //becasue sportSpecificDetails is in the map formate convert it to object
-        const sportSpecificDetailsObj = Object.fromEntries(scorecard.sportSpecificDetails);
 
         if (!scorecard) {
             console.error('Scorecard not found for matchId:', matchId);
             return false;
         }
+
+        // Use .toObject() to get a plain JS object
+        const rawScorecard = scorecard.toObject({ depopulate: true });
+        const beforeUpdate = await formateScorecardData(structuredClone(rawScorecard));
+
+        const sportSpecificDetailsObj = Object.fromEntries(scorecard.sportSpecificDetails);
+
 
         const strikerId = sportSpecificDetailsObj.striker?.playerId;
         const nonStrikerId = sportSpecificDetailsObj.nonStriker?.playerId;
@@ -42,9 +48,10 @@ async function ScoreUpdate(matchData, userConnections, ws) {
         // const isOverEnd = !data.isExtra && scorecardOversShouldEnd(sportSpecificDetailsObj);
         // You define logic
 
-        const inningData = innings === 1 ? scorecard.firstInnings : scorecard.secondInnings;
+        const inningData = innings === 1 ? sportSpecificDetailsObj.firstInnings : sportSpecificDetailsObj.secondInnings;
 
-        const balls = inningData.statistics?.get('balls') || 0;
+        const balls = inningData?.statistics?.get('balls') || 0;
+
         const isOverEnd = !isExtra && balls % 6 === 0;
 
         // --- Rotate strike if needed ---
@@ -55,8 +62,14 @@ async function ScoreUpdate(matchData, userConnections, ws) {
 
         // save the updated scorecard
         await scorecard.save();
+        const afterUpdate = await formateScorecardData(scorecard)
 
-        return true
+        const delta = generateDelta(beforeUpdate, afterUpdate);
+
+        // console.log("sjdn", sjdn)
+        ws.send(JSON.stringify({
+            scorecard: delta,
+        }));
 
     } catch (error) {
         console.error('Error updating score:', error);

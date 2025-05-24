@@ -111,9 +111,17 @@ const formatedMatches = (
 }
 
 const formateScorecardData = (scorecard) => {
-    const data = scorecard?._doc
+    const data = scorecard?._doc || scorecard;
+
+    if (!data) return null;
 
     const sportSpecificDetailsObj = Object.fromEntries(data.sportSpecificDetails);
+
+    const innings = sportSpecificDetailsObj.currentInning || 1;
+
+    const inningData = innings === 1 ? sportSpecificDetailsObj.firstInnings : sportSpecificDetailsObj.secondInnings;
+
+    const scoreStats = Object.fromEntries(inningData?.statistics instanceof Map ? inningData.statistics : []);
 
     const cricketTeam1 = {
         id: data?.teams?.teamA?.teamId || "1234",
@@ -121,6 +129,7 @@ const formateScorecardData = (scorecard) => {
         logo: '/placeholder.svg',
         players: createPlayers(data?.teams?.teamA?.players)
     }
+
     const cricketTeam2 = {
         id: data?.teams?.teamB?.teamId,
         name: data?.teams?.teamB?.name,
@@ -153,9 +162,9 @@ const formateScorecardData = (scorecard) => {
         score: {
             batting: {
                 team: cricketTeam1,
-                runs: 85,
-                wickets: 1,
-                overs: 8.3,
+                runs: scoreStats?.runs || 0,
+                wickets: scoreStats?.wickets || 0,
+                overs: scoreStats?.overs || 0,
                 extras: {
                     wide: 3,
                     noBall: 1,

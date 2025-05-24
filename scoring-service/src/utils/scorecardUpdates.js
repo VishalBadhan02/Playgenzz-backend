@@ -151,10 +151,25 @@ const rotateStrike = (sportSpecificDetails, stats, isOverEnd = false) => {
 
 
 
+function generateDelta(before, after, prefix = "") {
+    const delta = {};
+    for (const key in after) {
+        const fullPath = prefix ? `${prefix}.${key}` : key;
+        if (typeof after[key] === "object" && after[key] !== null && !(after[key] instanceof Array)) {
+            Object.assign(delta, generateDelta(before[key] || {}, after[key], fullPath));
+        } else if (JSON.stringify(after[key]) !== JSON.stringify(before?.[key])) {
+            delta[fullPath] = after[key];
+        }
+    }
+    return delta;
+}
+
+
 
 module.exports = {
     playerStatsUpdate,
     matchStatsUpdate,
     updateLivePlayerStats,
-    rotateStrike
+    rotateStrike,
+    generateDelta
 }
