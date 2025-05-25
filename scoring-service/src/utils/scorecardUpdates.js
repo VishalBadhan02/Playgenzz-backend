@@ -38,11 +38,49 @@ const playerStatsUpdate = (scorecard, playerId, stats, isBowler = false) => {
 };
 
 
+// const matchStatsUpdate = (scorecard, stats, innings) => {
+//     const { runs, isExtra, extraType } = stats;
+
+//     const inningData = innings === 1 ? scorecard.firstInnings : scorecard.secondInnings;
+
+
+//     // Ensure statistics is a Map
+//     if (!(inningData.statistics instanceof Map)) {
+//         inningData.statistics = new Map(Object.entries(inningData.statistics || {}));
+//     }
+
+//     // Helper function to update match statistics
+//     const updateMatchStat = (key, value) => {
+//         if (!inningData.statistics.has(key)) {
+//             inningData.statistics.set(key, 0);
+//         }
+//         // Increment the statistic
+//         const prev = inningData.statistics.get(key) || 0;
+//         inningData.statistics.set(key, prev + value);
+//     };
+
+//     // Update total runs
+//     updateMatchStat('runs', runs);
+
+//     // Update balls only if not extra
+//     if (!isExtra) {
+//         updateMatchStat('balls', 1);
+//     }
+
+//     // Optional: track extras by type
+//     if (isExtra) {
+//         updateMatchStat('extras', runs);
+//         updateMatchStat(`extras.${extraType}`, runs); // e.g., extras.wide = 1
+//     }
+
+//     return scorecard;
+// };
+
+// Helper function to initialize and increment stats
 const matchStatsUpdate = (scorecard, stats, innings) => {
-    const { runs, isExtra, extraType } = stats;
+    const { runs, isExtra, extraType, isWicket = false } = stats;
 
     const inningData = innings === 1 ? scorecard.firstInnings : scorecard.secondInnings;
-
 
     // Ensure statistics is a Map
     if (!(inningData.statistics instanceof Map)) {
@@ -54,7 +92,6 @@ const matchStatsUpdate = (scorecard, stats, innings) => {
         if (!inningData.statistics.has(key)) {
             inningData.statistics.set(key, 0);
         }
-        // Increment the statistic
         const prev = inningData.statistics.get(key) || 0;
         inningData.statistics.set(key, prev + value);
     };
@@ -67,16 +104,31 @@ const matchStatsUpdate = (scorecard, stats, innings) => {
         updateMatchStat('balls', 1);
     }
 
+    // Update wickets if there's a wicket
+    if (isWicket) {
+        updateMatchStat('wickets', 1);
+    }
+
     // Optional: track extras by type
     if (isExtra) {
         updateMatchStat('extras', runs);
         updateMatchStat(`extras.${extraType}`, runs); // e.g., extras.wide = 1
     }
 
+    // Calculate overs
+    const balls = inningData.statistics.get('balls') || 0;
+    const overs = Math.floor(balls / 6) + (balls % 6) / 10;
+    inningData.statistics.set('overs', overs);
+
+    // Calculate run rate
+    const totalRuns = inningData.statistics.get('runs') || 0;
+    const runRate = overs > 0 ? parseFloat((totalRuns / overs).toFixed(2)) : 0;
+    inningData.statistics.set('runRate', runRate);
+
     return scorecard;
 };
 
-// Helper function to initialize and increment stats
+
 function updateStat(player, statType, statValue) {
     if (!player.statistics.has(statType)) {
         player.statistics.set(statType, 0);

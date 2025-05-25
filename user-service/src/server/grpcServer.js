@@ -5,7 +5,7 @@ const protoLoader = require('@grpc/proto-loader');
 const mongoose = require('mongoose');
 const { createUser, getUser, checkUniquenes, getUsersByIds, handleFriendModalUpdate } = require('../controllers/GrpcController');
 const Config = require('../config');
-const PROTO_PATH = path.resolve(__dirname, '../../../protos/user.proto');
+const PROTO_PATH = path.resolve(__dirname, '../../../protos/user.proto');    
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true,

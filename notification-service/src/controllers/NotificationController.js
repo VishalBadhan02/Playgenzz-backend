@@ -3,9 +3,9 @@ const Lang = require("../language/en");
 const grpcClientService = require('../services/grpcClientService');
 const notificationService = require('../services/notificationService');
 const { storeNotifications, getNotifications, deleteNotifications } = require('../services/redisServices');
-const { dataGathering } = require('../utils /dataGatheringFromServices');
-const { enrichNotifications } = require('../utils /enrichNotifications');
-const { groupNotificationsByType } = require('../utils /groupNotificationsBytype');
+const { dataGathering } = require('../utils/dataGatheringFromServices');
+const { enrichNotifications } = require('../utils/enrichNotifications');
+const { groupNotificationsByType } = require('../utils/groupNotificationsBytype');
 
 
 const getFriendRequest = async (req, res) => {

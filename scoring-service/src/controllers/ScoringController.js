@@ -162,8 +162,7 @@ const getScore = async (req, res) => {
         }
 
         const transformedData = await formateScorecardData(transformedScore)
-
-
+        // console.log("transformedData", transformedData)
         return res.status(200).json(reply.success(Lang.SCORE_FETCHED, transformedData));
 
     } catch (error) {
