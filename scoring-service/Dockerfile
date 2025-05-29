@@ -14,10 +14,10 @@ WORKDIR /app
 COPY protos ./protos
 
 # 6️⃣ Copy scoring service source code
-COPY scoring/. ./scoring/
+COPY scoring-service/. ./scoring-service/
 
 # 7️⃣ Move into scoring directory
-WORKDIR /app/scoring
+WORKDIR /app/scoring-service
 
 # 8️⃣ Install dependencies
 RUN pnpm install --frozen-lockfile

@@ -1,20 +1,32 @@
 # 1️⃣ Use official Node.js image
 FROM node:23-slim
 
-# 2️⃣ Set working directory
+# 2️⃣ Install OpenSSL (needed for Prisma or other secure tools)
+RUN apt-get update && apt-get install -y openssl
+
+# 3️⃣ Enable Corepack (to use pnpm)
+RUN corepack enable
+
+# 4️⃣ Set working directory
 WORKDIR /app
 
-# 3️⃣ Copy package.json and pnpm-lock.yaml
-COPY package.json pnpm-lock.yaml ./
+# 5️⃣ Copy shared protos
+COPY protos ./protos
 
-# 4️⃣ Install dependencies
-RUN npm install -g pnpm && pnpm install
+# 6️⃣ Copy tournament service code
+COPY tournament-service/. ./tournament-service/
 
-# 5️⃣ Copy all source code
-COPY . .
+# 7️⃣ Set working directory for this service
+WORKDIR /app/tournament-service
 
-# 6️⃣ Expose service port (change if needed)
-EXPOSE 5005
+# 8️⃣ Install dependencies
+RUN pnpm install --frozen-lockfile
 
-# 7️⃣ Start the service
+# 9️⃣ (Optional) Generate Prisma client if needed
+# RUN pnpm prisma generate
+
+# 🔟 Expose the service port
+EXPOSE 5007
+
+# 🚀 Start the service
 CMD ["pnpm", "start"]

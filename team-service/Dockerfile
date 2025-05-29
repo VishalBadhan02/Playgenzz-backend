@@ -1,20 +1,32 @@
 # 1️⃣ Use official Node.js image
 FROM node:23-slim
 
-# 2️⃣ Set working directory
+# 2️⃣ Install OpenSSL (required for Prisma or secure operations)
+RUN apt-get update && apt-get install -y openssl
+
+# 3️⃣ Enable Corepack (to use pnpm)
+RUN corepack enable
+
+# 4️⃣ Set base working directory
 WORKDIR /app
 
-# 3️⃣ Copy package.json and pnpm-lock.yaml
-COPY package.json pnpm-lock.yaml ./
+# 5️⃣ Copy shared protos directory
+COPY protos ./protos
 
-# 4️⃣ Install dependencies
-RUN npm install -g pnpm && pnpm install
+# 6️⃣ Copy the team-service service source code
+COPY team-service/. ./team-service/
 
-# 5️⃣ Copy all source code
-COPY . .
+# 7️⃣ Set working directory to team-service service
+WORKDIR /app/team-service
 
-# 6️⃣ Expose service port (change if needed)
-EXPOSE 5004
+# 8️⃣ Install dependencies
+RUN pnpm install --frozen-lockfile
 
-# 7️⃣ Start the service
+# 9️⃣ (Optional) Generate Prisma Client
+# RUN pnpm prisma generate
+
+# 🔟 Expose service port
+EXPOSE 5005
+
+# 🚀 Start the service
 CMD ["pnpm", "start"]

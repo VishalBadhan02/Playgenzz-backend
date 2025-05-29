@@ -50,7 +50,7 @@ services:
       - USER_PORT=5007
       - VENUE_PORT=5008
     volumes:
-      - ./protos:/app/protos # Add protos volume
+      - /protos:/app/protos # Add protos volume
     networks:
       - api-gateway-network
       # - auth-network
@@ -77,12 +77,15 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+    env_file:
+      - ./auth-service/.env
     environment:
       - DATABASE_URL=postgresql://auth-user:auth-password@auth-db:5432/auth-db
-      - REDIS_URL=redis://redis:6379
+      # - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis
       - KAFKA_BROKERS=kafka:9092
     volumes:
-      - ./protos:/app/protos
+      - /protos:/app/protos
     networks:
       - auth-network
       - api-gateway-network
@@ -94,7 +97,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-auth-password}
       POSTGRES_DB: auth-db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - auth-data:/var/lib/postgresql/data
     healthcheck:
@@ -123,7 +126,7 @@ services:
       - KAFKA_BROKERS=kafka:9092
       - REDIS_URL=redis://redis:6379
     volumes:
-      - ./protos:/app/protos
+      - /protos:/app/protos
     networks:
       - api-gateway-network
       - notification-network
@@ -146,11 +149,12 @@ services:
       - KAFKA_BROKERS=kafka:9092
       - REDIS_URL=redis://redis:6379
     volumes:
-      - ./protos:/app/protos
+      - /protos:/app/protos
     networks:
       - api-gateway-network
       - scoring-network
-    healthcheck:                       # ✅ Added healthcheck
+    healthcheck:
+      # ✅ Added healthcheck
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/scoring-db --quiet
       interval: 5s
       timeout: 5s
@@ -174,7 +178,7 @@ services:
       - KAFKA_BROKERS=kafka:9092
       - REDIS_URL=redis://redis:6379
     volumes:
-      - ./protos:/app/protos
+      - /protos:/app/protos
     networks:
       - api-gateway-network
       - team-network
@@ -197,7 +201,7 @@ services:
       - KAFKA_BROKERS=kafka:9092
       - REDIS_URL=redis://redis:6379
     volumes:
-      - ./protos:/app/protos
+      - /protos:/app/protos
     networks:
       - api-gateway-network
       - tournament-network
@@ -217,7 +221,7 @@ services:
       - MONGODB_URL=mongodb://mongodb:27017/user-db
       - KAFKA_BROKERS=kafka:9092
     volumes:
-      - ./protos:/app/protos
+      - /protos:/app/protos
     networks:
       - user-network
       - api-gateway-network
@@ -237,7 +241,7 @@ services:
       - MONGODB_URL=mongodb://mongodb:27017/venue-db
       - KAFKA_BROKERS=kafka:9092
     volumes:
-      - ./protos:/app/protos
+      - /protos:/app/protos
     networks:
       - venue-network
       - api-gateway-network
@@ -298,7 +302,7 @@ services:
       zookeeper:
         condition: service_healthy
     ports:
-      - "9092:9092"
+      - "9093:9092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
