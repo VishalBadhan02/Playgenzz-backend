@@ -21,7 +21,9 @@ const Config = {
     "REDIS_PORT": process.env.REDIS_PORT,
     "REDIS_HOST": process.env.REDIS_HOST,
     "REDIS_PROFILE_KEY": process.env.REDIS_PROFILE_KEY,
-    "CHALLENGE_MESSAGE": process.env.CHALLENGE_MESSAGE
+    "CHALLENGE_MESSAGE": process.env.CHALLENGE_MESSAGE,
+    "KAFKA_BROKERS": process.env.kafka_broker,
+    "KAFKA_CLIENT_ID": process.env.KAFKA_CLIENT_ID,
 }
 
 module.exports = Config
