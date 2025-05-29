@@ -49,8 +49,7 @@ services:
       - TOURNAMENT_PORT=5006
       - USER_PORT=5007
       - VENUE_PORT=5008
-    volumes:
-      - /protos:/app/protos # Add protos volume
+     # Add protos volume
     networks:
       - api-gateway-network
       # - auth-network
@@ -144,8 +143,7 @@ services:
       - MONGODB_URL=mongodb://mongodb:27017/scoring-db
       - KAFKA_BROKERS=kafka:9092
       - REDIS_URL=redis://redis:6379
-    volumes:
-      - /protos:/app/protos
+    
     networks:
       - api-gateway-network
       - scoring-network
@@ -173,8 +171,7 @@ services:
       - MONGODB_URL=mongodb://mongodb:27017/team-db
       - KAFKA_BROKERS=kafka:9092
       - REDIS_URL=redis://redis:6379
-    volumes:
-      - /protos:/app/protos
+    
     networks:
       - api-gateway-network
       - team-network
@@ -196,8 +193,7 @@ services:
       - MONGODB_URL=mongodb://mongodb:27017/tournament-db
       - KAFKA_BROKERS=kafka:9092
       - REDIS_URL=redis://redis:6379
-    volumes:
-      - /protos:/app/protos
+    
     networks:
       - api-gateway-network
       - tournament-network
@@ -216,8 +212,7 @@ services:
     environment:
       - MONGODB_URL=mongodb://mongodb:27017/user-db
       - KAFKA_BROKERS=kafka:9092
-    volumes:
-      - /protos:/app/protos
+    
     networks:
       - user-network
       - api-gateway-network
@@ -236,8 +231,7 @@ services:
     environment:
       - MONGODB_URL=mongodb://mongodb:27017/venue-db
       - KAFKA_BROKERS=kafka:9092
-    volumes:
-      - /protos:/app/protos
+    
     networks:
       - venue-network
       - api-gateway-network
