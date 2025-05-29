@@ -1,8 +1,9 @@
 const { Kafka } = require("kafkajs");
+const Config = require("../config");
 
 const kafka = new Kafka({
   clientId: "tournament-service", // Service name as clientId
-  brokers: ['localhost:9092'], // Kafka broker address
+  brokers: [Config.KAFKA_BROKERS], // Kafka broker address
 });
 
 const admin = kafka.admin();
