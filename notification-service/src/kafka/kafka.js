@@ -1,8 +1,9 @@
 const { Kafka } = require('kafkajs');
+const Config = require('../config');
 
 const kafka = new Kafka({
   clientId: 'notification-service',
-  brokers: ['0.0.0.0:9092'],
+  brokers: [Config.KAFKA_BROKERS],
   retry: {
     retries: 5,
     initialRetryTime: 1000, // ms
