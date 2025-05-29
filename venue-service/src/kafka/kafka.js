@@ -6,6 +6,4 @@ const kafka = new Kafka({
   brokers: [Config.KAFKA_BROKERS], // Kafka broker address
 });
 
-
-
 module.exports = kafka;
