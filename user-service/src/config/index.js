@@ -13,7 +13,9 @@ const Config = {
     "SECRETACCESSKEY": process.env.SECRETACCESSKEY,
     "ACESSKEYID": process.env.ACESSKEYID,
     "NOTIF_TYPE_REQUEST": process.env.NOTIF_TYPE_REQUEST,
-    "NOTIF_MESSAGE": process.env.NOTIF_MESSAGE
+    "NOTIF_MESSAGE": process.env.NOTIF_MESSAGE,
+    "KAFKA_BROKERS": process.env.kafka_broker,
+    "KAFKA_CLIENT_ID": process.env.KAFKA_CLIENT_ID,
 }
 
 module.exports = Config
