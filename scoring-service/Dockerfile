@@ -1,20 +1,32 @@
 # 1️⃣ Use official Node.js image
-FROM node:18
+FROM node:18-slim
 
-# 2️⃣ Set working directory
+# 2️⃣ Install OpenSSL if needed (e.g., Prisma or secure connections)
+RUN apt-get update && apt-get install -y openssl
+
+# 3️⃣ Enable Corepack for pnpm
+RUN corepack enable
+
+# 4️⃣ Set working directory
 WORKDIR /app
 
-# 3️⃣ Copy package.json and pnpm-lock.yaml
-COPY package.json pnpm-lock.yaml ./
+# 5️⃣ Copy shared protos folder
+COPY protos ./protos
 
-# 4️⃣ Install dependencies
-RUN npm install -g pnpm && pnpm install
+# 6️⃣ Copy scoring service source code
+COPY scoring/. ./scoring/
 
-# 5️⃣ Copy all source code
-COPY . .
+# 7️⃣ Move into scoring directory
+WORKDIR /app/scoring
 
-# 6️⃣ Expose service port (change if needed)
-EXPOSE 5000
+# 8️⃣ Install dependencies
+RUN pnpm install --frozen-lockfile
 
-# 7️⃣ Start the service
+# 9️⃣ (Optional) Generate Prisma Client if using Prisma
+# RUN pnpm prisma generate
+
+# 🔟 Expose port
+EXPOSE 5004
+
+# 🔁 Start the service
 CMD ["pnpm", "start"]
