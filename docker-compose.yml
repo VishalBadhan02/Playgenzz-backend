@@ -80,7 +80,6 @@ services:
       - ./auth-service/.env
     environment:
       - DATABASE_URL=postgresql://auth-user:auth-password@auth-db:5432/auth-db
-      # - REDIS_URL=redis://redis:6379
       - REDIS_URL=redis
       - KAFKA_BROKERS=kafka:9092
     networks:
@@ -120,8 +119,8 @@ services:
         condition: service_healthy
     environment:
       - MONGODB_URL=mongodb://mongodb:27017/notification-db
+      - REDIS_URL=redis
       - KAFKA_BROKERS=kafka:9092
-      - REDIS_URL=redis://redis:6379
     networks:
       - api-gateway-network
       - notification-network
@@ -141,8 +140,8 @@ services:
         condition: service_healthy
     environment:
       - MONGODB_URL=mongodb://mongodb:27017/scoring-db
+      - REDIS_URL=redis
       - KAFKA_BROKERS=kafka:9092
-      - REDIS_URL=redis://redis:6379
     networks:
       - api-gateway-network
       - scoring-network
@@ -168,12 +167,16 @@ services:
         condition: service_healthy
     environment:
       - MONGODB_URL=mongodb://mongodb:27017/team-db
+      - REDIS_URL=redis
       - KAFKA_BROKERS=kafka:9092
-      - REDIS_URL=redis://redis:6379
-
     networks:
       - api-gateway-network
       - team-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:PORT/health" ] # Change PORT as needed
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   tournament-service:
     build:
@@ -190,8 +193,8 @@ services:
         condition: service_healthy
     environment:
       - MONGODB_URL=mongodb://mongodb:27017/tournament-db
+      - REDIS_URL=redis
       - KAFKA_BROKERS=kafka:9092
-      - REDIS_URL=redis://redis:6379
     networks:
       - api-gateway-network
       - tournament-network
@@ -209,8 +212,8 @@ services:
         condition: service_healthy
     environment:
       - MONGODB_URL=mongodb://mongodb:27017/user-db
+      - REDIS_URL=redis
       - KAFKA_BROKERS=kafka:9092
-
     networks:
       - user-network
       - api-gateway-network
@@ -228,6 +231,7 @@ services:
         condition: service_healthy
     environment:
       - MONGODB_URL=mongodb://mongodb:27017/venue-db
+      - REDIS_URL=redis
       - KAFKA_BROKERS=kafka:9092
     networks:
       - venue-network

@@ -1,23 +1,27 @@
-# 1. Use the official Node.js image
+# Use official Node.js image
 FROM node:23-slim
 
-# 2. Set working directory in container
-WORKDIR /app
+# Install OpenSSL for Prisma
+RUN apt-get update && apt-get install -y openssl
 
-# 3. Enable Corepack (for using pnpm easily)
+# Enable corepack (for pnpm)
 RUN corepack enable
 
-# 4. Copy package.json and lock file (needed to install packages)
-COPY package.json ./
-COPY pnpm-lock.yaml ./
+# Set working directory
+WORKDIR /app
 
-# 5. Install packages without allowing changes (safe install)
+# Copy service code
+COPY api-gateway ./api-gateway
+
+# Move to auth-service directory
+WORKDIR /app/api-gateway
+
+# Install dependencies inside auth-service
 RUN pnpm install --frozen-lockfile
 
-# 6. Copy the rest of your code
-COPY . .
+# Expose port
+EXPOSE 5000
 
-# 7. Run the app when container starts
-CMD ["pnpm", "start"]
+# Run migrations and start server
+CMD ["sh", "-c", "pnpm start"]
 
-EXPOSE 5001

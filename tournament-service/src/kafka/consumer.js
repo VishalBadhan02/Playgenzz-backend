@@ -5,7 +5,7 @@ const consumer = kafka.consumer({ groupId: "tournament-group" });
 
 async function startConsumer() {
   await consumer.connect();
-  await consumer.subscribe({ topics: ['team_player_joined_tournament'], fromBeginning: true });
+  await consumer.subscribe({ topics: ['team_player_joined_tournament'], fromBeginning: false });
 
   await consumer.run({
     eachMessage: async ({ topic, partition, message }) => {
