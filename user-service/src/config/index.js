@@ -16,6 +16,8 @@ const Config = {
     "NOTIF_MESSAGE": process.env.NOTIF_MESSAGE,
     "KAFKA_BROKERS": process.env.kafka_broker,
     "KAFKA_CLIENT_ID": process.env.KAFKA_CLIENT_ID,
+    "REDIS_PORT": process.env.REDIS_PORT,
+    "REDIS_HOST": process.env.REDIS_HOST,
 }
 
 module.exports = Config
