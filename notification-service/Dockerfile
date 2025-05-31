@@ -29,4 +29,4 @@ RUN pnpm install --frozen-lockfile
 EXPOSE 7002
 
 # 🔁 Start service
-CMD ["pnpm", "start"]
+CMD ["pnpm", "dev"]

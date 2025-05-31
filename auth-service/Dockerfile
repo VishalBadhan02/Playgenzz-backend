@@ -29,4 +29,4 @@ RUN pnpm prisma generate
 EXPOSE 7001
 
 # Run migrations and start server
-CMD ["sh", "-c", "pnpm prisma migrate deploy && pnpm start"]
+CMD ["sh", "-c", "pnpm prisma migrate deploy && pnpm dev"]

@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 5000
 
 # 7️⃣ Start the service
-CMD ["pnpm", "start"]
+CMD ["pnpm", "dev"]
