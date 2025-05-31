@@ -6,31 +6,19 @@ services:
       #context: . # Changed from ./api-gateway to . for proto files access
       dockerfile: api-gateway/Dockerfile
     ports:
-      - "5000:5000"
+      - "7000:7000"
+    restart: unless-stopped  
     depends_on:
       mongodb:
         condition: service_healthy # Add health check
       kafka:
         condition: service_healthy
-      auth-service:
-        condition: service_healthy
-      user-service:
-        condition: service_healthy
-      team-service:
-        condition: service_healthy
-      notification-service:
-        condition: service_healthy
-      tournament-service:
-        condition: service_healthy
-      venue-service:
-        condition: service_healthy
-      scoring-service:
-        condition: service_healthy
+
     environment:
       - MONGODB_URL=mongodb://mongodb:27017/api-gateway-db
       - KAFKA_BROKERS=kafka:9092
       - HOST=0.0.0.0
-      - PORT=5000
+      - PORT=7000
       - NODE_ENV=development
       - JWT_SECRET=vishal123
       - SOCKET_PORT=5060 # need to be changed
@@ -42,13 +30,13 @@ services:
       - TOURNAMENT_SERVICE_HOST=tournament-service
       - VENUE_SERVICE_HOST=venue-service
       # Service Ports
-      - AUTH_PORT=5001
-      - NOTIFICATION_PORT=5002
-      - SCORING_PORT=5004
-      - TEAM_PORT=5005
-      - TOURNAMENT_PORT=5006
-      - USER_PORT=5007
-      - VENUE_PORT=5008
+      - AUTH_PORT=7001
+      - NOTIFICATION_PORT=7002
+      - SCORING_PORT=7004
+      - TEAM_PORT=7005
+      - TOURNAMENT_PORT=7006
+      - USER_PORT=7007
+      - VENUE_PORT=7008
     # Add protos volume
     networks:
       - api-gateway-network
@@ -59,7 +47,7 @@ services:
       # - user-network
       # - venue-network
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://0.0.0.0:5000/health || exit 1" ]
+      test: [ "CMD-SHELL", "curl -f http://0.0.0.0:7000/health || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -68,22 +56,22 @@ services:
       context: . # Changed for proto files access
       dockerfile: auth-service/Dockerfile
     ports:
-      - "5001:5001"
+      - "7001:7001"
     depends_on:
-      auth-db:
-        condition: service_healthy
+      # auth-db:
+      #   condition: service_healthy
       redis:
         condition: service_healthy
       kafka:
         condition: service_healthy
     env_file:
-      - ./auth-service/.env
+      - auth-service/.env
     environment:
-      - DATABASE_URL=postgresql://auth-user:auth-password@auth-db:5432/auth-db
+      - DATABASE_URL=postgresql://neondb_owner:npg_x1BUfplakEZ6@ep-orange-firefly-a8bpj5dl-pooler.eastus2.azure.neon.tech/neondb?sslmode=require
       - REDIS_URL=redis
       - KAFKA_BROKERS=kafka:9092
     networks:
-      - auth-network
+      
       - api-gateway-network
 
   auth-db:
@@ -109,7 +97,7 @@ services:
       context: .
       dockerfile: notification-service/Dockerfile
     ports:
-      - "5002:5002"
+      - "7002:7002"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -130,7 +118,7 @@ services:
       context: .
       dockerfile: scoring-service/Dockerfile
     ports:
-      - "5004:5004"
+      - "7004:7004"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -157,7 +145,7 @@ services:
       context: .
       dockerfile: team-service/Dockerfile
     ports:
-      - "5003:5003"
+      - "7003:7003"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -183,7 +171,7 @@ services:
       context: .
       dockerfile: tournament-service/Dockerfile
     ports:
-      - "5006:5006"
+      - "7006:7006"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -204,7 +192,7 @@ services:
       context: .
       dockerfile: user-service/Dockerfile
     ports:
-      - "5005:5005"
+      - "7005:7005"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -223,7 +211,7 @@ services:
       context: .
       dockerfile: venue-service/Dockerfile
     ports:
-      - "5008:5008"
+      - "7008:7008"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -266,6 +254,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
+      - api-gateway-network
       - auth-network
       - notification-network
       - team-network
