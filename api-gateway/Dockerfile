@@ -20,7 +20,7 @@ WORKDIR /app/api-gateway
 RUN pnpm install --frozen-lockfile
 
 # Expose port
-EXPOSE 5000
+EXPOSE 7000
 
 # Run migrations and start server
 CMD ["sh", "-c", "pnpm start"]

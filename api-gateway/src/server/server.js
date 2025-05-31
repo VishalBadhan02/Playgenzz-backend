@@ -69,6 +69,8 @@ app.use('/scoring', proxyWithLogging(Config.scoring));
 app.use('/team', proxyWithLogging(Config.team));
 app.use('/venue', proxyWithLogging(Config.venue));
 app.use('/notifications', proxyWithLogging(Config.notification));
+//  testing for docker compose
+app.get('/health', (req, res) => res.status(200).send('OK'));
 
 // Start servers
 app.listen(Config.PORT, Config.HOST, () => {

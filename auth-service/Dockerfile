@@ -26,7 +26,7 @@ RUN pnpm install --frozen-lockfile
 RUN pnpm prisma generate
 
 # Expose port
-EXPOSE 5001
+EXPOSE 7001
 
 # Run migrations and start server
 CMD ["sh", "-c", "pnpm prisma migrate deploy && pnpm start"]
