@@ -323,17 +323,6 @@ volumes:
   auth-data:
   mongodb-data:
 
-
-
-
-
-
-
-
-
-
-
-
 networks:
   api-gateway-network:
     driver: bridge

@@ -3,7 +3,10 @@ require('dotenv').config();
 const Config = {
     "HOST": process.env.HOST,
     "PORT": process.env.PORT,
+    "GRPC_PORT": process.env.GRPC_PORT,
+    "GRPC_HOST": process.env.GRPC_HOST,
     "SOCKET_PORT": process.env.WEB_SOCKET_PORT,
+    "SOCKET_HOST": process.env.WEB_SOCKET_HOST,
     "USER_GRPC_PORT": process.env.USER_GRPC_PORT,
     "USER_GRPC_HOST": process.env.USER_GRPC_HOST,
     "TOURNAMENT_GRPC_PORT": process.env.TOURNAMENT_GRPC_PORT,
