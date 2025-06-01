@@ -1,2 +1,2 @@
-require("./server/webServer.js")
 require("./server/server.js")
+require("./server/webServer.js")

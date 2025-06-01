@@ -20,7 +20,7 @@ COPY notification-service/. ./notification-service/
 WORKDIR /app/notification-service
 
 # 8️⃣ Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ Generate Prisma client (optional, if using Prisma)
 # RUN pnpm prisma generate
@@ -29,4 +29,4 @@ RUN pnpm install --frozen-lockfile
 EXPOSE 7002
 
 # 🔁 Start service
-CMD ["pnpm", "dev"]
+CMD ["pnpm", "start"]

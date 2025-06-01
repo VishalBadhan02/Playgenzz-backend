@@ -64,6 +64,6 @@ wss.on('connection', (ws, req) => {
     });
 });
 
-server.listen(Config.SOCKET_PORT, () => {
-    console.log(`🚀 WebSocket Server running on port ${Config.SOCKET_PORT || 5060}`);
+server.listen(Config.WEB_SOCKET_PORT, Config.NOTIFICATION_GRPC_HOST, () => {
+    console.log(`🚀 User WebSocket Server running on port ${Config.WEB_SOCKET_PORT}`);
 });

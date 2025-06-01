@@ -20,7 +20,7 @@ COPY scoring-service/. ./scoring-service/
 WORKDIR /app/scoring-service
 
 # 8️⃣ Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ (Optional) Generate Prisma Client if using Prisma
 # RUN pnpm prisma generate
@@ -29,4 +29,4 @@ RUN pnpm install --frozen-lockfile
 EXPOSE 7004
 
 # 🔁 Start the service
-CMD ["pnpm", "dev"]
+CMD ["pnpm", "start"]

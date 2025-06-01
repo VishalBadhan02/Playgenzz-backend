@@ -23,6 +23,6 @@ mongoose.connect(Config.DATABASE.URL).then(() => console.log('✅ User Service c
 app.use('/user', verifyJWT, UserRouter);
 
 // Start Server
-app.listen(PORT, () => {
+app.listen(PORT, Config.HOST, () => {
   console.log(`🚀 User Service is running on port ${PORT}`);
 });

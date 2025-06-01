@@ -20,7 +20,7 @@ COPY auth-service ./auth-service
 WORKDIR /app/auth-service
 
 # Install dependencies inside auth-service
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Generate Prisma Client
 RUN pnpm prisma generate
@@ -29,4 +29,4 @@ RUN pnpm prisma generate
 EXPOSE 7001
 
 # Run migrations and start server
-CMD ["sh", "-c", "pnpm prisma migrate deploy && pnpm dev"]
+CMD ["sh", "-c", "pnpm prisma migrate deploy && pnpm start"]

@@ -5,7 +5,7 @@ const protoLoader = require('@grpc/proto-loader');
 const mongoose = require('mongoose');
 const { createUser, getUser, checkUniquenes, getUsersByIds, handleFriendModalUpdate } = require('../controllers/GrpcController');
 const Config = require('../config');
-const PROTO_PATH = path.resolve(__dirname, '../../../protos/user.proto');    
+const PROTO_PATH = path.resolve(__dirname, '../../../protos/user.proto');
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true,
@@ -37,12 +37,15 @@ function main() {
     });
 
     const GRPC_PORT = Config.GRPC_PORT;
-    server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
+
+    server.bindAsync(`${Config.GRPC_HOST}:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
         if (err) {
-            console.error(`❌ Server binding failed: ${err.message}`);
+            console.log(`Starting gRPC serv er on port ${GRPC_PORT}...`);
+            console.log(`gRPC Host: ${Config.GRPC_HOST}`);
+            console.error(`❌ Server binding failed: ${err}`);
             return;
         }
-        console.log(`🚀 gRPC Server is running on port ${port}`);
+        console.log(`🚀 User gRPC Server is running on port ${port}`);
     });
 }
 

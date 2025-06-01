@@ -10,7 +10,8 @@ const verifyJWT = require('../middleware/JWT');
 const Config = require('../config');
 
 const app = express();
-const PORT = Config.PORT || 4006;
+const PORT = Config.PORT
+const HOST = Config.HOST
 
 // Middleware
 app.use(cors());
@@ -29,7 +30,7 @@ mongoose.connect(Config.DATABASE.URL, {
 app.use('/team', verifyJWT, TeamRouter);
 
 // Start Server
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
   console.log(`🚀 Team Service is running on port ${PORT}`);
-  startConsumer();
+  // startConsumer();
 });

@@ -2,7 +2,7 @@
 FROM node:23-slim
 
 # Install OpenSSL for Prisma
-RUN apt-get update && apt-get install -y openssl
+RUN apt-get update && apt-get install -y curl
 
 # Enable corepack (for pnpm)
 RUN corepack enable
@@ -17,7 +17,7 @@ COPY api-gateway ./api-gateway
 WORKDIR /app/api-gateway
 
 # Install dependencies inside auth-service
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Expose port
 EXPOSE 7000

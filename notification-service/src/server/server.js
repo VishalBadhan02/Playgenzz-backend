@@ -24,7 +24,7 @@ app.use('/notifications', verifyJWT, NotificationRouter);
 
 
 // Start Server
-app.listen(Config.PORT, () => {
+app.listen(Config.PORT, Config.HOST, () => {
   console.log(`🚀 Notification Service is running on port ${Config.PORT}`);
   startConsumer();
 });

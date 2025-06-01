@@ -7,8 +7,8 @@ services:
       dockerfile: api-gateway/Dockerfile
     ports:
       - "7000:7000"
-    volumes:
-      - ./api-gateway:/app/api-gateway
+    # volumes:
+    #   - ./api-gateway:/app/api-gateway
     restart: unless-stopped
     depends_on:
       mongodb:
@@ -59,8 +59,8 @@ services:
       dockerfile: auth-service/Dockerfile
     ports:
       - "7001:7001"
-    volumes:
-      - ./auth-service:/app/auth-service
+    # volumes:
+    #   - ./auth-service:/app/auth-service
     depends_on:
       # auth-db:
       #   condition: service_healthy
@@ -102,8 +102,8 @@ services:
       dockerfile: notification-service/Dockerfile
     ports:
       - "7002:7002"
-    volumes:
-      - ./notification-service:/app/notification-service
+    # volumes:
+    #   - ./notification-service:/app/notification-service
     depends_on:
       mongodb:
         condition: service_healthy
@@ -125,8 +125,8 @@ services:
       dockerfile: scoring-service/Dockerfile
     ports:
       - "7004:7004"
-    volumes:
-      - ./scoring-service:/app/scoring-service
+    # volumes:
+    #   - ./scoring-service:/app/scoring-service
     depends_on:
       mongodb:
         condition: service_healthy
@@ -154,8 +154,8 @@ services:
       dockerfile: team-service/Dockerfile
     ports:
       - "7003:7003"
-    volumes:
-      - ./team-service:/app/team-service
+    # volumes:
+    #   - ./team-service:/app/team-service
     depends_on:
       mongodb:
         condition: service_healthy
@@ -182,8 +182,8 @@ services:
       dockerfile: tournament-service/Dockerfile
     ports:
       - "7006:7006"
-    volumes:
-      - ./tournament-service:/app/tournament-service
+    # volumes:
+    #   - ./tournament-service:/app/tournament-service
     depends_on:
       mongodb:
         condition: service_healthy
@@ -205,8 +205,8 @@ services:
       dockerfile: user-service/Dockerfile
     ports:
       - "7005:7005"
-    volumes:
-      - ./user-service:/app/user-service
+    # volumes:
+    #   - ./user-service:/app/user-service
     depends_on:
       mongodb:
         condition: service_healthy
@@ -226,8 +226,8 @@ services:
       dockerfile: venue-service/Dockerfile
     ports:
       - "7008:7008"
-    volumes:
-      - ./venue-service:/app/venue-service
+    # volumes:
+    #   - ./venue-service:/app/venue-service
     depends_on:
       mongodb:
         condition: service_healthy

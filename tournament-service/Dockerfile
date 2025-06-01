@@ -20,7 +20,7 @@ COPY tournament-service/. ./tournament-service/
 WORKDIR /app/tournament-service
 
 # 8️⃣ Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ (Optional) Generate Prisma client if needed
 # RUN pnpm prisma generate
@@ -29,4 +29,4 @@ RUN pnpm install --frozen-lockfile
 EXPOSE 7006
 
 # 🚀 Start the service
-CMD ["pnpm", "dev"]
+CMD ["pnpm", "start"]

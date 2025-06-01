@@ -7,10 +7,12 @@ const startConsumer = require('../kafka/consumer');
 
 const TournamentRouter = require('../routes/tournament');
 const verifyJWT = require('../middleware/JWT');
+const Config = require('../config');
 
 
 const app = express();
-const PORT = process.env.PORT || 4003;
+const PORT = Config.PORT
+const HOST = Config.HOST
 
 // Middleware
 app.use(cors());
@@ -27,7 +29,7 @@ mongoose.connect(process.env.DATABASE_URL, {
 app.use('/tournament', verifyJWT, TournamentRouter);
 
 // Start Server
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
   console.log(`🚀 Tournament Service is running on port ${PORT}`);
-  startConsumer();
+  // startConsumer();
 });

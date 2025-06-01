@@ -6,7 +6,8 @@ const { PrismaClient } = require("@prisma/client");
 const AuthRouter = require("../routes/auth");
 
 const app = express();
-const PORT = process.env.PORT || 4001;
+const PORT = process.env.PORT;
+const HOST = process.env.HOST;
 
 // Middleware
 app.use(cors());
@@ -31,7 +32,7 @@ connectDB();
 app.use("/auth", AuthRouter);
 
 // Start Server
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
   console.log(`🚀 Auth Service is running on port ${PORT}`);
 });
 

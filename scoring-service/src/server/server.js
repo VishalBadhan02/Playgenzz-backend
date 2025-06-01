@@ -8,7 +8,8 @@ const Config = require('../config');
 const verifyJWT = require('../middleware/JWT');
 
 const app = express();
-const PORT = Config.PORT || 4009;
+const PORT = Config.PORT
+const HOST = Config.HOST
 
 // Middleware
 app.use(cors());
@@ -25,6 +26,6 @@ mongoose.connect(Config.DATABASE.URL, {
 app.use('/scoring', verifyJWT, ScoreRouter);
 
 // Start Server
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
   console.log(`🚀 Scoring Service is running on port ${PORT}`);
 });

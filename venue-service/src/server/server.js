@@ -8,14 +8,14 @@ const verifyJWT = require('../middleware/JWT');
 const Config = require('../config');
 
 const app = express();
-const PORT = Config.PORT || 4008;
+const PORT = Config.PORT || 7008;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-mongoose.connect(process.env.DATABASE_URL, {
+mongoose.connect(Config.DATABASE.URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(() => console.log('✅ Venue Service connected to MongoDB'))
@@ -25,6 +25,6 @@ mongoose.connect(process.env.DATABASE_URL, {
 app.use('/venue', verifyJWT, VenueRouter);
 
 // Start Server
-app.listen(PORT, () => {
+app.listen(PORT, Config.HOST, () => {
     console.log(`🚀 Venue Service is running on port ${PORT}`);
 });

@@ -35,6 +35,6 @@ server.addService(teamProto.TeamService.service, {
     ListMatches: listMatches
 });
 
-server.bindAsync(`${Config.GRPC_HOST}:${Config.GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), () => {
+server.bindAsync(`${Config.GRPC_HOST || "0.0.0.0"}:${Config.GRPC_PORT || 5004}`, grpc.ServerCredentials.createInsecure(), () => {
     console.log("🚀 Team-Service gRPC Server running on port 5006");
 });
