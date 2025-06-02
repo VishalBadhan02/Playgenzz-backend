@@ -6,7 +6,7 @@ services:
       #context: . # Changed from ./api-gateway to . for proto files access
       dockerfile: api-gateway/Dockerfile
     ports:
-      - "7000:7000"
+      - "8995:7000"
     # volumes:
     #   - ./api-gateway:/app/api-gateway
     restart: unless-stopped
@@ -49,7 +49,7 @@ services:
       # - user-network
       # - venue-network
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://0.0.0.0:7000/health || exit 1" ]
+      test: [ "CMD", "curl", "-f", " http://localhost:7000/health || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -244,7 +244,7 @@ services:
   mongodb:
     image: mongo:latest
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
       - mongodb-data:/data/db
     healthcheck:
@@ -322,6 +322,7 @@ services:
 volumes:
   auth-data:
   mongodb-data:
+
 
 networks:
   api-gateway-network:
