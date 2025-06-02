@@ -75,7 +75,6 @@ services:
       - REDIS_URL=redis
       - KAFKA_BROKERS=kafka:9092
     networks:
-
       - api-gateway-network
 
   auth-db:

@@ -1,7 +1,7 @@
 const grpc = require('@grpc/grpc-js');
 const UserModel = require('../models/user');
-const { teamClient } = require('../gRPCClient');
 const { FriendModel } = require('../models/useFriends');
+const { teamClient } = require('../grpc-clients/teamClient');
 
 async function createUser(call, callback) {
     const user = call.request;
