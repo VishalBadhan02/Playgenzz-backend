@@ -13,13 +13,14 @@ const ExistUser = async (userInput) => {
     const user = await prisma.user.findFirst({
         where: {
             OR: [
-                { email: userInput },
-                { phoneNumber: userInput }
+                { email: userInput.email },
+                { phoneNumber: userInput.phoneNumber },
+                { name: userInput.userName },
             ]
         }
     });
 
-    return (user) ? { status: false, user } : { status: true };
+    return user;
 }
 
 

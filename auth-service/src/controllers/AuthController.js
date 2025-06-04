@@ -7,27 +7,40 @@ const SendMail = require('../services/mail')
 const Bcrypt = require("bcryptjs")
 const saltRounds = 16;
 const prisma = require('../prisma/prisma');
-const { getUser } = require('../client');
-const { UniqueUserName } = require("../client");
 
 const { getRefreshToken, storeRefreshToken } = require("../services/redisTokenService");
+
 
 const login = async (req, res) => {
     const { password, emailOrPhone } = req.body;
 
     try {
-        let data = emailOrPhone.includes("@")
-            ? { type: "email", message: lang.LOGIN_NOTFOUND }
-            : { type: "phone", message: lang.INCORRECT_NUMBER };
+        let data;
 
-        const Validation = await ExistUser(emailOrPhone);
+        if (emailOrPhone.includes('@')) {
+            data = { type: 'email', message: lang.LOGIN_NOTFOUND };
+        } else if (/^[6-9]\d{9}$/.test(emailOrPhone)) {
+            data = { type: 'phoneNumber', message: lang.INCORRECT_NUMBER };
+        } else {
+            data = { type: 'userName', message: lang.USERNAME_NOTFOUND || "Username not found" };
+        }
 
-        if (Validation.status) {
-            console.log("Validation failed");
+        let userInput = {};
+        if (emailOrPhone.includes("@")) {
+            userInput.email = emailOrPhone;
+        } else if (/^[6-9]\d{9}$/.test(emailOrPhone)) {
+            userInput.phoneNumber = emailOrPhone;
+        } else {
+            userInput.userName = emailOrPhone;
+        }
+        const Validation = await ExistUser(userInput);
+
+
+        if (!Validation) {
             return res.status(404).json(reply.failure(data));
         }
 
-        const user = Validation?.user;
+        const user = Validation;
 
         const isMatch = await Bcrypt.compare(password, user.password);
 
@@ -66,39 +79,7 @@ const login = async (req, res) => {
 };
 
 
-// const login = async (req, res) => {
-//     const { password, emailOrPhone } = req.body;
-//     try {
-//         let data = emailOrPhone.includes("@") ? { type: "email", message: lang.LOGIN_NOTFOUND } : { type: "phone", message: lang.INCORRECT_NUMBER }
 
-//         const Validation = await ExistUser(emailOrPhone)
-
-
-//         if (Validation.status) {
-//             console.log("Validation failed")
-//             return res.status(404).json(reply.failure(data))
-//         }
-
-//         const user = Validation?.user
-
-//         const isMatch = await Bcrypt.compare(password, user.password);
-
-//         if (!isMatch) {
-//             return res.status(404).json(reply.failure({ type: "password", message: lang.PASSWORD_NOTFOUND }))
-//         }
-
-//         const token = generateToken(user);
-
-//         storeRefreshToken(user.id, token);
-//         if (!token) {
-//             return res.status(500).json(reply.failure(lang.PASSWORD_NOTFOUND))
-//         }
-//         return res.status(200).json(reply.success(Lang.LOGIN_SUCCESS, { token: token, type: req.body.type }))
-//     }
-//     catch (err) {
-//         return res.status(500).json(reply.failure(err.message));
-//     }
-// }
 
 const Register = async (req, res) => {
     //Extract user data safely
@@ -109,27 +90,26 @@ const Register = async (req, res) => {
         return res.status(400).json(reply.error(lang.MISSING_FIELDS));
     }
 
-    const emialCheck = await ExistUser(email)
-    const numberCheck = await ExistUser(phoneNumber)
-    const UniqueUser = await UniqueUserName(userName)
-
-    if (!UniqueUser.success) {
-        return res.status(502).json(reply.failure("Error connecting with user gRPC"));
+    const validationCheckData = {
+        email,
+        phoneNumber,
+        userName
     }
 
+    const existingUser = await ExistUser(validationCheckData)
 
-    if (!emialCheck) {
-        return res.status(409).json(reply.failure({ type: "email", message: lang.EMAIL_CHECK }));
-    } else if (!numberCheck) {
-        return res.status(409).json(reply.failure({ type: "phone", message: lang.PHONE_CHECK }));
-    } else if (!UniqueUser.response.isUnique) {
-        return res.status(409).json(reply.failure({ type: "userName", message: lang.USER_NAME_EXIST }));
+    // console.log("Existing User", existingUser)
+
+    if (existingUser) {
+        const field =
+            existingUser.name === userName ? 'userName' :
+                existingUser.email === email ? 'email' :
+                    'phone';
+
+        return res.status(409).json(reply.failure({ type: field, message: `${field} already exists` }));
     }
 
-    console.log(UniqueUser.response.isUnique)
-
-
-    // // ✅ Hash password securely
+    // // ✅ Hash password securely     
     const hashedPassword = await Bcrypt.hash(password, saltRounds);
 
     try {
@@ -193,7 +173,7 @@ const handleOTpverification = async (req, res) => {
 
         const isverified = await verifyOTP(req.user._id, otp);
 
-        console.log(isverified)
+        // console.log(isverified)
 
         if (!isverified) {
             return res.json(reply.failure(lang.OTP_FAILED))
@@ -201,7 +181,7 @@ const handleOTpverification = async (req, res) => {
 
         const registerUse = await registerUser(req.user._id);
 
-        console.log("token here", registerUse)
+        // console.log("token here", registerUse)
 
         if (!registerUse.success) {
             return res.json(reply.failure(lang.REGISTER_FAILED))

@@ -1,8 +1,9 @@
 const Lang = {
     "SUCCESS": "Success",
     "REGISTER_FAILED": "Failed to register user",
-    "LOGIN_NOTFOUND": "Email not exist",
-    "INCORRECT_NUMBER": "Mobile not exist",
+    "LOGIN_NOTFOUND": " Wrong Email ",
+    "INCORRECT_NUMBER": "Wrong Phone number",
+    "USERNAME_NOTFOUND": "Wrong Username",
     "PASSWORD_NOTFOUND": "Incorrect password",
     "USER_STATUS_FAIL": "Not an active user",
     "USER_NOT_EXIST": "User not exist",
