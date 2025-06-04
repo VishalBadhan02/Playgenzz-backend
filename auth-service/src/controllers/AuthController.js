@@ -10,7 +10,6 @@ const prisma = require('../prisma/prisma');
 
 const { getRefreshToken, storeRefreshToken } = require("../services/redisTokenService");
 
-
 const login = async (req, res) => {
     const { password, emailOrPhone } = req.body;
 
