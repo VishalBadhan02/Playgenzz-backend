@@ -157,7 +157,7 @@ const Register = async (req, res) => {
 
 const handleOTpverification = async (req, res) => {
     try {
-        const { otp } = req.body;
+        const { otp, newUser } = req.body;
 
         if (!req.user._id) {
             return res.status(200).json(reply.failure("id not found"))
@@ -171,15 +171,19 @@ const handleOTpverification = async (req, res) => {
             return res.json(reply.failure(lang.OTP_FAILED))
         }
 
-        const registerUse = await registerUser(req.user._id);
-
+        let token
+        // If newUser is true, register the userif   
+        if (newUser) {
+            const registerUse = await registerUser(req.user._id);
+            if (!registerUse.success) {
+                return res.json(reply.failure(lang.REGISTER_FAILED))
+            }
+            token = registerUse.token;
+        }
         // console.log("token here", registerUse)
 
-        if (!registerUse.success) {
-            return res.json(reply.failure(lang.REGISTER_FAILED))
-        }
 
-        return res.json(reply.success(lang.OTP_VERIFY, { token: registerUse.token }))
+        return res.json(reply.success(lang.OTP_VERIFY, { token }))
     } catch (error) {
         console.log("Error occuring in the handleOTpverification", error.message)
         return res.status(500).json(reply.failure(error.message));
