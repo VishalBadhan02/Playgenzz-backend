@@ -77,9 +77,6 @@ const login = async (req, res) => {
     }
 };
 
-
-
-
 const Register = async (req, res) => {
     //Extract user data safely
     const { firstName, lastName, userName, email, phoneNumber, password, address, userType } = req.body;
@@ -158,10 +155,6 @@ const Register = async (req, res) => {
     }
 }
 
-
-
-
-
 const handleOTpverification = async (req, res) => {
     try {
         const { otp } = req.body;
@@ -195,47 +188,53 @@ const handleOTpverification = async (req, res) => {
 
 }
 
-
-
 const handleforgot = async (req, res) => {
     try {
-        const { emailOrPhone } = req.body;
+        const { email } = req.body;
 
-        let data = emailOrPhone.includes("@") ? { type: "email", message: lang.LOGIN_NOTFOUND } : { type: "phone", message: lang.INCORRECT_NUMBER }
+        console.log("Email or Phone Number", req.body)
 
-        const Validation = await ExistUser(emailOrPhone)
+        if (email.includes('@')) {
+            data = { type: 'email', message: lang.LOGIN_NOTFOUND };
+        } else if (/^[6-9]\d{9}$/.test(email)) {
+            data = { type: 'phoneNumber', message: lang.INCORRECT_NUMBER };
+        } else {
+            data = { type: 'userName', message: lang.USERNAME_NOTFOUND || "Username not found" };
+        }
+
+        let userInput = {};
+        if (email.includes("@")) {
+            userInput.email = email;
+        } else if (/^[6-9]\d{9}$/.test(email)) {
+            userInput.phoneNumber = email;
+        } else {
+            userInput.userName = email;
+        }
+        const Validation = await ExistUser(userInput);
 
         if (!Validation) {
             return res.status(404).json(reply.failure(data))
         }
 
-        const module = await generateOTP(Validation.user.email, Validation.user.phoneNumber, Validation.user.id,);
+        const module = await generateOTP(Validation.email, Validation.phoneNumber, Validation.id);
 
         if (!module) {
             return res.status(500).json(reply.failure(lang.OTP_FAILED));
         }
+
+        console.log("module.otp", module.otp)
+        const token = await generateToken({ id: Validation.id, email: Validation.email, userType: Validation.userType });
+
+
         // await SendMail(user.email, "opt", "your otp is " + module);
-        return res.status(204).json(reply.success(lang.OTP_SEND))
+        return res.status(202).json(reply.success(lang.OTP_SEND, token))
     } catch (error) {
         console.log("Error occuring in forgot password", error.message)
-        return res.status(500).json(reply.failure(err.message));
-    }
-}
-
-const handleUpdatePassword = async () => {
-    try {
-        const user = await prisma.user.update({
-            where: {
-                id: id
-            }, set: {
-
-            }
-        })
-    } catch (error) {
-        console.log("Error occuring in updating password", error.message)
-        return res.status(500).json(reply.failure(err.message));
+        return res.status(500).json(reply.failure(error.message));
     }
 }
 
 
-module.exports = { login, Register, handleOTpverification, handleforgot, handleUpdatePassword }
+
+
+module.exports = { login, Register, handleOTpverification, handleforgot }

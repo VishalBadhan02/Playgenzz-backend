@@ -7,7 +7,7 @@ router.post("/login", AuthController.login);
 router.post("/register", AuthController.Register);
 router.post("/otpverify", verifyJWT, AuthController.handleOTpverification);
 
-router.put("/setpassword", AuthController.handleforgot);
+router.post("/handleForget", AuthController.handleforgot);
 
 
 

@@ -19,7 +19,6 @@ const ExistUser = async (userInput) => {
             ]
         }
     });
-
     return user;
 }
 
