@@ -48,12 +48,12 @@ const generateOTP = async (email, phone, userId) => {
     });
     if (!OTPModule) false;
 
-
+    // Store OTP in Redis for 5 minutes
     await storedOtpModal(userId, {
         code: hashedOTP,
         attempts: 0,
         id: OTPModule.id
-    });// Store OTP in Redis for 5 minutes
+    });
 
     return { otp: oneTimePassword, OTPModule }; // Returning plain OTP for sending via email/SMS
 };

@@ -9,6 +9,7 @@ const saltRounds = 16;
 const prisma = require('../prisma/prisma');
 
 const { getRefreshToken, storeRefreshToken } = require("../services/redisTokenService");
+const authService = require('../services/authService');
 
 const login = async (req, res) => {
     const { password, emailOrPhone } = req.body;
@@ -157,7 +158,7 @@ const Register = async (req, res) => {
 
 const handleOTpverification = async (req, res) => {
     try {
-        const { otp, newUser } = req.body;
+        const { otp, purpose, userId } = req.body;
 
         if (!req.user._id) {
             return res.status(200).json(reply.failure("id not found"))
@@ -165,20 +166,30 @@ const handleOTpverification = async (req, res) => {
 
         const isverified = await verifyOTP(req.user._id, otp);
 
+        console.log("isverified", isverified)
+
         // console.log(isverified)
 
         if (!isverified) {
-            return res.json(reply.failure(lang.OTP_FAILED))
+            return res.status(401).json(reply.failure(lang.OTP_FAILED))
         }
 
         let token
         // If newUser is true, register the userif   
-        if (newUser) {
+        if (purpose === 'newUser') {
             const registerUse = await registerUser(req.user._id);
             if (!registerUse.success) {
                 return res.json(reply.failure(lang.REGISTER_FAILED))
             }
             token = registerUse.token;
+        } else {
+            console.log("req.user._id", req.user._id)
+            const user = await authService.getUserById(req.user._id);
+            if (!user) {
+                return res.status(404).json(reply.failure(lang.USER_NOT_FOUND));
+            }
+            console.log("user", user);
+            // token = await generateToken({ id: user.id, email: user.email, userType: user.userType });
         }
         // console.log("token here", registerUse)
 
@@ -196,7 +207,9 @@ const handleforgot = async (req, res) => {
     try {
         const { email } = req.body;
 
-        console.log("Email or Phone Number", req.body)
+        if (!email) {
+            return res.status(400).json(reply.failure("Email, username or phone number is required."));
+        }
 
         if (email.includes('@')) {
             data = { type: 'email', message: lang.LOGIN_NOTFOUND };
@@ -226,12 +239,11 @@ const handleforgot = async (req, res) => {
             return res.status(500).json(reply.failure(lang.OTP_FAILED));
         }
 
-        console.log("module.otp", module.otp)
-        const token = await generateToken({ id: Validation.id, email: Validation.email, userType: Validation.userType });
 
+        const userId = Validation.id;
 
         // await SendMail(user.email, "opt", "your otp is " + module);
-        return res.status(202).json(reply.success(lang.OTP_SEND, token))
+        return res.status(202).json(reply.success(lang.OTP_SEND, { userId }))
     } catch (error) {
         console.log("Error occuring in forgot password", error.message)
         return res.status(500).json(reply.failure(error.message));
@@ -239,6 +251,38 @@ const handleforgot = async (req, res) => {
 }
 
 
+const handleResetPassword = async (req, res) => {
+    try {
+        const { userId, newPassword } = req.body;
+
+        if (!userId || !newPassword) {
+            return res.status(400).json(reply.failure("User ID and new password are required."));
+        }
+
+        const user = await authService.getUserById(userId);
+        if (!user) {
+            return res.status(404).json(reply.failure(lang.USER_NOT_FOUND));
+        }
+
+        const hashedPassword = await hashPassword(newPassword); // use bcrypt or similar
+        const updated = await authService.updateUserPassword(userId, hashedPassword);
+
+        if (!updated) {
+            return res.status(500).json(reply.failure("Password update failed."));
+        }
+
+        // Optional: log the user in after reset
+        const token = await generateToken({ id: user.id, email: user.email, userType: user.userType });
+
+        return res.status(200).json(reply.success("Password reset successful.", { token }));
+    } catch (error) {
+        console.log("Error in resetting password:", error.message);
+        return res.status(500).json(reply.failure(error.message));
+    }
+};
 
 
-module.exports = { login, Register, handleOTpverification, handleforgot }
+
+
+
+module.exports = { login, Register, handleOTpverification, handleforgot, handleResetPassword }
