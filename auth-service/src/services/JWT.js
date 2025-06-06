@@ -6,9 +6,9 @@ const Config = {
 
 const generateToken = (user) => {
     const payload = {
-        _id: user.id || user._id,
-        email: user.email,
-        userType: user.userType,
+        _id: user?.id || user?._id,
+        email: user?.email,
+        userType: user?.userType,
         userName: user?.userName || user?.name,
         createdAt: new Date(),
         expireAt: new Date(Date.now() + 10 * 60 * 1000), // Token expires in 10 minutes

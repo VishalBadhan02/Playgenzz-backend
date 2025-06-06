@@ -166,35 +166,27 @@ const handleOTpverification = async (req, res) => {
 
         const isverified = await verifyOTP(req.user._id, otp);
 
-        console.log("isverified", isverified)
-
-        // console.log(isverified)
 
         if (!isverified) {
             return res.status(401).json(reply.failure(lang.OTP_FAILED))
         }
 
-        let token
         // If newUser is true, register the userif   
-        if (purpose === 'newUser') {
+        if (purpose === 'registration') {
             const registerUse = await registerUser(req.user._id);
             if (!registerUse.success) {
                 return res.json(reply.failure(lang.REGISTER_FAILED))
             }
-            token = registerUse.token;
-        } else {
-            console.log("req.user._id", req.user._id)
-            const user = await authService.getUserById(req.user._id);
-            if (!user) {
-                return res.status(404).json(reply.failure(lang.USER_NOT_FOUND));
-            }
-            console.log("user", user);
-            // token = await generateToken({ id: user.id, email: user.email, userType: user.userType });
+
+            return res.status(200).json(reply.success(lang.OTP_VERIFY, { token: registerUse.token }));
         }
-        // console.log("token here", registerUse)
+        if (purpose === 'password-reset') {
+
+            return res.status(200).json(reply.success(lang.OTP_VERIFY, { canResetPassword: true, token: userId }));
+        }
 
 
-        return res.json(reply.success(lang.OTP_VERIFY, { token }))
+        return res.json(reply.failure(lang.OTP_FAILED));
     } catch (error) {
         console.log("Error occuring in the handleOTpverification", error.message)
         return res.status(500).json(reply.failure(error.message));
@@ -238,12 +230,14 @@ const handleforgot = async (req, res) => {
         if (!module) {
             return res.status(500).json(reply.failure(lang.OTP_FAILED));
         }
-
+        console.log("OTP generated for forgot password:", module.otp);
 
         const userId = Validation.id;
 
+        const token = await generateToken({ id: userId, email: Validation.email, userType: Validation.userType });
+
         // await SendMail(user.email, "opt", "your otp is " + module);
-        return res.status(202).json(reply.success(lang.OTP_SEND, { userId }))
+        return res.status(202).json(reply.success(lang.OTP_SEND, token))
     } catch (error) {
         console.log("Error occuring in forgot password", error.message)
         return res.status(500).json(reply.failure(error.message));
@@ -281,19 +275,13 @@ const handleResetPassword = async (req, res) => {
     }
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+const hashPassword = async (password) => {
+    try {
+        const hashedPassword = await Bcrypt.hash(password, saltRounds);
+        return hashedPassword;
+    } catch (error) {
+        console.error("Error hashing password:", error);
+        throw new Error("Password hashing failed");
+    }
+};
 module.exports = { login, Register, handleOTpverification, handleforgot, handleResetPassword }
