@@ -129,7 +129,7 @@ const registerUser = async (id) => {
         }
 
         // ✅ Generate JWT token
-        const token = await generateToken(userService.response.user);
+        const token = generateToken({ ...userService.response.user, authToken: true });
 
         if (!token) {
             return { success: false, message: "Failed to generate token" };

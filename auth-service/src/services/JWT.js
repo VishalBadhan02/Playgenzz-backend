@@ -10,6 +10,7 @@ const generateToken = (user) => {
         email: user?.email,
         userType: user?.userType,
         userName: user?.userName || user?.name,
+        authToken: user?.authToken || false,
         createdAt: new Date(),
         expireAt: new Date(Date.now() + 10 * 60 * 1000), // Token expires in 10 minutes
     };

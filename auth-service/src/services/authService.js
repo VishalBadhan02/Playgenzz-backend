@@ -4,7 +4,6 @@ class AuthService {
     constructor() { }
 
     async getUserById(id) {
-        console.log("Fetching user by ID:", id);
         const user = await prisma.user.findUnique({ where: { id } });
         if (!user) {
             throw new Error("User not found");

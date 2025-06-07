@@ -158,7 +158,7 @@ const Register = async (req, res) => {
 
 const handleOTpverification = async (req, res) => {
     try {
-        const { otp, purpose, userId } = req.body;
+        const { otp, purpose } = req.body;
 
         if (!req.user._id) {
             return res.status(200).json(reply.failure("id not found"))
@@ -181,8 +181,8 @@ const handleOTpverification = async (req, res) => {
             return res.status(200).json(reply.success(lang.OTP_VERIFY, { token: registerUse.token }));
         }
         if (purpose === 'password-reset') {
-
-            return res.status(200).json(reply.success(lang.OTP_VERIFY, { canResetPassword: true, token: userId }));
+            const token = generateToken({ id: req.user._id, email: req.user.email });
+            return res.status(200).json(reply.success(lang.OTP_VERIFY, { canResetPassword: true, token: token }));
         }
 
 
@@ -247,26 +247,29 @@ const handleforgot = async (req, res) => {
 
 const handleResetPassword = async (req, res) => {
     try {
-        const { userId, newPassword } = req.body;
+        const { password } = req.body;
 
-        if (!userId || !newPassword) {
+        const userId = req.user._id; // Assuming user ID is stored in the JWT token
+        if (!userId || !password) {
             return res.status(400).json(reply.failure("User ID and new password are required."));
         }
 
         const user = await authService.getUserById(userId);
+
         if (!user) {
             return res.status(404).json(reply.failure(lang.USER_NOT_FOUND));
         }
 
-        const hashedPassword = await hashPassword(newPassword); // use bcrypt or similar
-        const updated = await authService.updateUserPassword(userId, hashedPassword);
+        const hashedPassword = await hashPassword(password); // use bcrypt or similar
+        const updated = await authService.updateUser(userId, { password: hashedPassword });
+
 
         if (!updated) {
             return res.status(500).json(reply.failure("Password update failed."));
         }
 
         // Optional: log the user in after reset
-        const token = await generateToken({ id: user.id, email: user.email, userType: user.userType });
+        const token = generateToken({ id: user.id, email: user.email, userType: user.userType });
 
         return res.status(200).json(reply.success("Password reset successful.", { token }));
     } catch (error) {
