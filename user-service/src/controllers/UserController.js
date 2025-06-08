@@ -15,6 +15,7 @@ const Conversation = require("../models/conversationSchema");
 const { storeConversationModal, getConversationModal, storeProfileData, getProfileData, deleteProfileData } = require("../services/redisServices");
 const { getParticipantDisplayData } = require("../utils/getParticipantDisplayData");
 const { formatedChatData } = require("../utils/formatedChatData");
+const grpcService = require("../services/grpcService");
 
 
 
@@ -141,6 +142,17 @@ const UpdateProfile = async (req, res) => {
         if (!updatedUser) {
             return res.status(404).json(reply.failure(Lang.USER_NOT_FOUND));
         }
+
+        const grpcData = {
+            id: req.user._id,
+            name: userName,
+            email,
+            phoneNumber
+        }
+
+        const grpcres = await grpcService.UpdateAuthService(grpcData)
+
+        console.log(grpcres)
 
         deleteProfileData(req.user._id)
 
@@ -308,7 +320,7 @@ const getUserFriends = async (req, res) => {
 
 
         deleteProfileData(req.user._id)
-        
+
         return res.status(202).json(reply.success(Lang.SUCCESS, {
             userFriends,
             userTeams,
@@ -320,7 +332,6 @@ const getUserFriends = async (req, res) => {
         return res.status(500).json({ error: err.message || "Server Error" });
     }
 };
-
 
 
 const getChat = async (req, res) => {

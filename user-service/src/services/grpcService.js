@@ -6,6 +6,7 @@ class grpcService {
 
     // Get the last message in a conversation
     async UpdateAuthService(data) {
+        console.log("🚀 Calling UpdateAuthService with data:", data); // Add this
         try {
             const response = await new Promise((resolve, reject) => {
                 authClient.UpdateUserInfo(data, (error, response) => {
@@ -18,7 +19,8 @@ class grpcService {
             });
             return response;
         } catch (error) {
-            return error
+            console.error("❌ Error in UpdateAuthService:", error);
+            return error;
         }
     }
     async getTeamByUser(userId) {

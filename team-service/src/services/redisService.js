@@ -63,6 +63,10 @@ async function deleteOtp(userId) {
     await redis.del(`otp:${userId}`); // Delete the OTP for the user
 }
 
+const deleteProfileData = async (cacheKey) => {
+    await redis.del(`profileData:${cacheKey}`);
+}
+
 module.exports = {
     storeTeamManagement,
     getTeamManagement,
@@ -72,6 +76,7 @@ module.exports = {
     storedOtpModal,
     getOtp,
     deleteOtp,
-    deleteTeamManagement
+    deleteTeamManagement,
+    deleteProfileData
 };
 
