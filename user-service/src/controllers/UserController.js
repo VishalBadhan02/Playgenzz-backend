@@ -102,9 +102,10 @@ const searchUsers = async (req, res) => {
 
 const UpdateProfile = async (req, res) => {
     try {
-        const { userName, email, phoneNumber, address } = req.body;
-        const updateData = { userName, email, phoneNumber, address };
+        const { userName, email, phoneNumber, address, firstName, lastName  } = req.body;
+        const updateData = { userName, email, phoneNumber, address, firstName, lastName };
 
+        console.log(req.body)
         if (req.file) {
             updateData.profilePicture = req.file.location; // S3 URL
         }
@@ -129,6 +130,8 @@ const UpdateProfile = async (req, res) => {
 
         // ✅ Update User Profile
         const updatedUser = await userService.updateProfile(req.user._id, updateData);
+
+        console.log(updatedUser)
 
         if (!updatedUser) {
             return res.status(404).json(reply.failure(Lang.USER_NOT_FOUND));
