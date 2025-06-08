@@ -1,13 +1,12 @@
 const reply = require('../helper/reply');
 const lang = require('../language/en');
-const { generateToken } = require('../services/JWT');
+const { generateToken } = require('../middlewares/JWT');
 const Lang = require('../language/en');
-const { generateOTP, verifyOTP, registerUser, ExistUser } = require('../helper/index')
-const SendMail = require('../services/mail')
+const { generateOTP, verifyOTP, registerUser, ExistUser, handleExistingTempUser } = require('../helper/index')
+const SendMail = require('../providers/mail')
 const Bcrypt = require("bcryptjs")
 const saltRounds = 16;
 const prisma = require('../prisma/prisma');
-
 const { getRefreshToken, storeRefreshToken } = require("../services/redisTokenService");
 const authService = require('../services/authService');
 
@@ -93,6 +92,9 @@ const Register = async (req, res) => {
         userName
     }
 
+
+
+
     const existingUser = await ExistUser(validationCheckData)
 
     // console.log("Existing User", existingUser)
@@ -104,6 +106,14 @@ const Register = async (req, res) => {
                     'phone';
 
         return res.status(409).json(reply.failure({ type: field, message: `${field} already exists` }));
+    }
+
+    const existingTemp = await authService.existingTempUser(validationCheckData);
+
+    if (existingTemp) {
+        // If a temporary user already exists, handle it
+        const shouldAbort = await handleExistingTempUser(existingTemp, userName, email, phoneNumber, res);
+        if (shouldAbort) return; // handleExistingTempUser already sent response
     }
 
     // // ✅ Hash password securely     
@@ -166,9 +176,9 @@ const handleOTpverification = async (req, res) => {
 
         const isverified = await verifyOTP(req.user._id, otp);
 
-
-        if (!isverified) {
-            return res.status(401).json(reply.failure(lang.OTP_FAILED))
+        console.log("OTP verification result:", isverified);
+        if (!isverified.success) {
+            return res.status(200).json(reply.failure(isverified.message))
         }
 
         // If newUser is true, register the userif   
@@ -188,7 +198,7 @@ const handleOTpverification = async (req, res) => {
 
         return res.json(reply.failure(lang.OTP_FAILED));
     } catch (error) {
-        console.log("Error occuring in the handleOTpverification", error.message)
+        console.log("Error occuring in the handleOTpverification", error)
         return res.status(500).json(reply.failure(error.message));
 
     }

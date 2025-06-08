@@ -1,5 +1,5 @@
 
-const redis = require("./redisClient");
+const redis = require("../redis/redisClient");
 
 async function storeRefreshToken(userId, token) {
     await redis.set(`refresh:${userId}`, token, 'EX', 60 * 60 * 24 * 30); // 30 days
