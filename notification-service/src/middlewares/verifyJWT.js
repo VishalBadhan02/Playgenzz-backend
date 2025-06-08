@@ -13,6 +13,10 @@ const verifyJWT = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
+        if (!decoded.authToken) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
         req.user = decoded; // Attach decoded user info to request
 
         next(); // Allow request to proceed

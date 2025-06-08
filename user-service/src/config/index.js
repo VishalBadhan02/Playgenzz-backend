@@ -17,6 +17,8 @@ const Config = {
 
 
     // gRPC configuration
+    "AUTH_GRPC_PORT": process.env.AUTH_GRPC_PORT,
+    "AUTH_GRPC_HOST": process.env.AUTH_GRPC_HOST,
     "USER_GRPC_PORT": process.env.USER_GRPC_PORT,
     "USER_GRPC_HOST": process.env.USER_GRPC_HOST,
     "TEAM_GRPC_PORT": process.env.TEAM_GRPC_PORT,

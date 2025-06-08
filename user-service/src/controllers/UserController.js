@@ -54,7 +54,7 @@ const getProfile = async (req, res) => {
         const checkCurrentPage = await userService.userFriendForCurrentPage(req.user._id, userId)
 
 
-        user.userTeams = teams.teams
+        user.userTeams = teams?.teams
         user.friends = friends
         user.friend = checkCurrentPage
 

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package auth;
+
+service AuthService {
+  // This RPC is called by user-service to update user info in auth-service
+  rpc UpdateUserInfo(UpdateUserRequest) returns (UpdateUserResponse);
+}
+
+// Request message with updated user info
+message UpdateUserRequest {
+  string id = 1;           // User ID
+  string name = 2;         // Updated name
+  string email = 3;        // (Optional) Updated email
+  string phoneNumber = 4;  // (Optional) Updated phone number
+}
+
+// Response message indicating update result
+message UpdateUserResponse {
+  bool success = 1;
+  string message = 2;
+}
