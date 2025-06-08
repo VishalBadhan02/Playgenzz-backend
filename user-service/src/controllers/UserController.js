@@ -307,7 +307,8 @@ const getUserFriends = async (req, res) => {
         const userChats = await getParticipantsWithDetails(userContacts, user_id);
 
 
-
+        deleteProfileData(req.user._id)
+        
         return res.status(202).json(reply.success(Lang.SUCCESS, {
             userFriends,
             userTeams,
