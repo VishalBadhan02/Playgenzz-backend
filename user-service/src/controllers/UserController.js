@@ -12,7 +12,7 @@ const { getParticipantsWithDetails } = require("../utils/groupParticipents");
 const messageService = require("../services/messageService");
 const Config = require("../config");
 const Conversation = require("../models/conversationSchema");
-const { storeConversationModal, getConversationModal, storeProfileData, getProfileData } = require("../services/redisServices");
+const { storeConversationModal, getConversationModal, storeProfileData, getProfileData, deleteProfileData } = require("../services/redisServices");
 const { getParticipantDisplayData } = require("../utils/getParticipantDisplayData");
 const { formatedChatData } = require("../utils/formatedChatData");
 
@@ -137,11 +137,12 @@ const UpdateProfile = async (req, res) => {
         // ✅ Update User Profile
         const updatedUser = await userService.updateProfile(req.user._id, updateData);
 
-        console.log(updatedUser)
 
         if (!updatedUser) {
             return res.status(404).json(reply.failure(Lang.USER_NOT_FOUND));
         }
+
+        deleteProfileData(req.user._id)
 
         return res.status(200).json(reply.success(Lang.USER_UPDATED, { user: updatedUser }));
     } catch (err) {
