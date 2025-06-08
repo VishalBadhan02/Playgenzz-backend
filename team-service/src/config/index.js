@@ -5,7 +5,7 @@ const Config = {
     "HOST": process.env.HOST,
     "PORT": process.env.PORT,
     "GRPC_PORT": process.env.GRPC_PORT,
-    "GRPC_HOST": process.env.GRPC_PORT,
+    "GRPC_HOST": process.env.GRPC_HOST,
     "WEB_SOCKET_PORT": process.env.WEB_SOCKET_PORT,
     "WEB_SOCKET_HOST": process.env.WEB_SOCKET_HOST,
     "ACESSKEYID": process.env.ACESSKEYID,
