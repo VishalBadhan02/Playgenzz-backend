@@ -12,7 +12,7 @@ const { getParticipantsWithDetails } = require("../utils/groupParticipents");
 const messageService = require("../services/messageService");
 const Config = require("../config");
 const Conversation = require("../models/conversationSchema");
-const { storeConversationModal, getConversationModal } = require("../services/redisServices");
+const { storeConversationModal, getConversationModal, storeProfileData, getProfileData } = require("../services/redisServices");
 const { getParticipantDisplayData } = require("../utils/getParticipantDisplayData");
 const { formatedChatData } = require("../utils/formatedChatData");
 
@@ -28,9 +28,13 @@ const getProfile = async (req, res) => {
         userId = req.user?._id;
     }
 
-
     try {
-        // const user = await UserModel.findOne({ _id: userId });
+
+        const cacheData = getProfileData(userId)
+        if (cacheData) {
+            return res.status(200).json(reply.success(Lang.USER_PROFILE, cacheData));
+        }
+
         const user = await userService.findUser(userId);
 
         if (!user) {
@@ -57,6 +61,8 @@ const getProfile = async (req, res) => {
         user.userTeams = teams?.teams
         user.friends = friends
         user.friend = checkCurrentPage
+
+        storeProfileData(userId, user)
 
         return res.status(200).json(reply.success(Lang.USER_PROFILE, user));
     } catch (err) {
@@ -102,7 +108,7 @@ const searchUsers = async (req, res) => {
 
 const UpdateProfile = async (req, res) => {
     try {
-        const { userName, email, phoneNumber, address, firstName, lastName  } = req.body;
+        const { userName, email, phoneNumber, address, firstName, lastName } = req.body;
         const updateData = { userName, email, phoneNumber, address, firstName, lastName };
 
         console.log(req.body)

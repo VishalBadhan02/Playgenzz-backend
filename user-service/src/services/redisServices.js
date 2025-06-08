@@ -36,6 +36,21 @@ const getConversationModal = async (cacheKey) => {
 const deleteConversationModal = async (cacheKey) => {
     await redis.del(`ConversationModal:${cacheKey}`);
 }
+
+const storeProfileData = async (cacheKey, profileData) => {
+    await redis.set(`profileData:${cacheKey}`, JSON.stringify(profileData), 'EX', 60 * 60 * 24);
+}
+
+const getProfileData = async (cacheKey) => {
+    const key = `profileData:${cacheKey}`;
+    const data = await redis.get(key);
+    return data ? JSON.parse(data) : null;
+}
+
+const deleteProfileData = async (cacheKey) => {
+    await redis.del(`profileData:${cacheKey}`);
+}
+
 module.exports = {
     storeConversation,
     getConversation,
@@ -43,5 +58,8 @@ module.exports = {
     storeAccessToken,
     storeConversationModal,
     getConversationModal,
-    deleteConversationModal
+    deleteConversationModal,
+    storeProfileData,
+    getProfileData,
+    deleteProfileData
 };
