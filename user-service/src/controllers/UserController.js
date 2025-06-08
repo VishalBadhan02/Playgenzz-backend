@@ -232,7 +232,7 @@ const handleApproval = async (req, res) => {
 
         // notification send to the other user
         await sendMessage("update-request", { entityId: modal._id, type: "request accepted", status: 0 })
-
+        deleteProfileData(req.user._id)
         return res.json(reply.success("Approved"))
     } catch (err) {
         return res.json(err)
