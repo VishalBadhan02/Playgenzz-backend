@@ -21,56 +21,99 @@ const grpcService = require("../services/grpcService");
 
 
 
+
+//     let userId;
+//     if (req.params.id) {
+//         userId = req.params.id;
+//     } else {
+//         userId = req.user?._id;
+//     }
+//     try {
+//         const cacheData = await getProfileData(userId)
+//         if (cacheData) {
+//             return res.status(200).json(reply.success(Lang.USER_PROFILE, cacheData));
+//         }
+
+//         const user = await userService.findUser(userId);
+
+//         if (!user) {
+//             return res.status(409).json(reply.failure(Lang.USER_NOT_FOUND));
+//         }
+
+//         const teams = await getTeamByUser(userId)
+//             .then((teamData) => {
+//                 return teamData;
+//                 // Process the team data as needed
+//             })
+//             .catch((error) => {
+//                 console.error('Failed to retrieve team data:', error);
+//                 // Handle the error appropriately
+//             });
+
+//         // fetch user friends from friends modal
+//         const friends = await setFriends(userId)
+
+//         //this check wheathee current user is user frient or not on profile page
+//         const checkCurrentPage = await userService.userFriendForCurrentPage(req.user._id, userId)
+
+
+//         user.userTeams = teams?.teams
+//         user.friends = friends
+//         user.friend = checkCurrentPage
+
+//         // await storeProfileData(userId, user)
+
+//         return res.status(200).json(reply.success(Lang.USER_PROFILE, user));
+//     } catch (err) {
+//         console.log("Error in getProfile", err)
+//         return res.status(500).json(reply.failure(err.message));
+//     }
+// }
+
 const getProfile = async (req, res) => {
-    let userId;
-    if (req.params.id) {
-        userId = req.params.id;
-    } else {
-        userId = req.user?._id;
-    }
+    const sessionUserId = req.user?._id;
+    const profileUserId = req.params.id || sessionUserId;
 
     try {
-
-        const cacheData = getProfileData(userId)
-        if (cacheData) {
-            return res.status(200).json(reply.success(Lang.USER_PROFILE, cacheData));
-        }
-
-        const user = await userService.findUser(userId);
+        let user = await getProfileData(profileUserId);
 
         if (!user) {
-            return res.status(409).json(reply.failure(Lang.USER_NOT_FOUND));
+            user = await userService.findUser(profileUserId);
+            if (!user) {
+                return res.status(409).json(reply.failure(Lang.USER_NOT_FOUND));
+            }
+            await storeProfileData(profileUserId, user);
         }
 
-        const teams = await getTeamByUser(userId)
-            .then((teamData) => {
-                return teamData;
-                // Process the team data as needed
-            })
-            .catch((error) => {
-                console.error('Failed to retrieve team data:', error);
-                // Handle the error appropriately
-            });
+        // Clone to avoid mutating Redis object
+        user = { ...user };
 
-        // fetch user friends from friends modal
-        const friends = await setFriends(userId)
+        const teams = await getTeamByUser(profileUserId).catch((error) => {
+            console.error("Failed to retrieve team data:", error);
+        });
 
-        //this check wheathee current user is user frient or not on profile page
-        const checkCurrentPage = await userService.userFriendForCurrentPage(req.user._id, userId)
+        user.userTeams = teams?.teams || [];
 
+        if (sessionUserId.toString() === profileUserId.toString()) {
+            const friends = await setFriends(sessionUserId);
+            user.friends = friends;
+            user.friendCount = friends?.length || 0;
+        } else {
+            const isFriend = await userService.userFriendForCurrentPage(sessionUserId, profileUserId);
+            user.friend = isFriend;
 
-        user.userTeams = teams?.teams
-        user.friends = friends
-        user.friend = checkCurrentPage
-
-        storeProfileData(userId, user)
+            // Also include friend count if needed on other profiles
+            const allFriends = await setFriends(profileUserId);
+            user.friendCount = allFriends?.length || 0;
+        }   
 
         return res.status(200).json(reply.success(Lang.USER_PROFILE, user));
     } catch (err) {
-        console.log("Error in getProfile", err)
+        console.log("Error in getProfile", err);
         return res.status(500).json(reply.failure(err.message));
     }
 };
+
 
 const searchUsers = async (req, res) => {
     try {
@@ -154,7 +197,7 @@ const UpdateProfile = async (req, res) => {
 
         console.log(grpcres)
 
-        deleteProfileData(req.user._id)
+        await deleteProfileData(req.user._id)
 
         return res.status(200).json(reply.success(Lang.USER_UPDATED, { user: updatedUser }));
     } catch (err) {
@@ -203,7 +246,8 @@ const handleRequest = async (req, res) => {
                 name: user?.userName
             }
         }
-
+        await deleteProfileData(req.user._id)
+        await deleteProfileData(request)
         await sendMessage("friend-request", notificationData)
         return res.json(reply.success())
     } catch (err) {
@@ -224,6 +268,8 @@ const handleDelete = async (req, res) => {
 
         }
 
+        await deleteProfileData(friendRequest?.user_id)
+        await deleteProfileData(friendRequest?.request)
         await sendMessage("delete-request", { entityId: friendRequest?._id })
         //notification send to the other user
         // await sendMessage("update-request", { entityId: modal._id, type: "unFriend" })
@@ -244,7 +290,7 @@ const handleApproval = async (req, res) => {
 
         // notification send to the other user
         await sendMessage("update-request", { entityId: modal._id, type: "request accepted", status: 0 })
-        deleteProfileData(req.user._id)
+        await deleteProfileData(req.user._id)
         return res.json(reply.success("Approved"))
     } catch (err) {
         return res.json(err)
@@ -319,7 +365,7 @@ const getUserFriends = async (req, res) => {
         const userChats = await getParticipantsWithDetails(userContacts, user_id);
 
 
-        deleteProfileData(req.user._id)
+        await deleteProfileData(req.user._id)
 
         return res.status(202).json(reply.success(Lang.SUCCESS, {
             userFriends,

@@ -38,7 +38,7 @@ const deleteConversationModal = async (cacheKey) => {
 }
 
 const storeProfileData = async (cacheKey, profileData) => {
-    await redis.set(`profileData:${cacheKey}`, JSON.stringify(profileData), 'EX', 60 * 60 * 24);
+    await redis.set(`profileData:${cacheKey}`, JSON.stringify(profileData), 'EX', 600);
 }
 
 const getProfileData = async (cacheKey) => {

@@ -5,7 +5,7 @@ const cors = require('cors');
 
 const NotificationRouter = require('../routes/notification');
 const verifyJWT = require('../middlewares/verifyJWT');
-const startConsumer = require('../kafka/consumer');
+// const startConsumer = require('../kafka/consumer');
 const Config = require('../config');
 
 const app = express();
@@ -26,5 +26,5 @@ app.use('/notifications', verifyJWT, NotificationRouter);
 // Start Server
 app.listen(Config.PORT, Config.HOST, () => {
   console.log(`🚀 Notification Service is running on port ${Config.PORT}`);
-  startConsumer();
+  // startConsumer();
 });

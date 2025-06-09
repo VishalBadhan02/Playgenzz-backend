@@ -24,6 +24,5 @@ const checkConnection = async () => {
   }
 };
 
-checkConnection();
 
 module.exports = { kafka };

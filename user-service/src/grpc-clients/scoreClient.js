@@ -11,7 +11,7 @@ const packageDefinition = protoLoader.loadSync(SCORE_PROTO_PATH);
 const scoreProto = grpc.loadPackageDefinition(packageDefinition).user;
 
 // Create the gRPC client for the user service
-const scoreClient = new scoreProto.UserService(
+const scoreClient = new scoreProto.ScoreService(
     `${Config.SCORING_GRPC_HOST}:${Config.SCORING_GRPC_PORT}`, // Address of the user service
     grpc.credentials.createInsecure()
 );

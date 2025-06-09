@@ -11,7 +11,7 @@ const packageDefinition = protoLoader.loadSync(AUTH_PROTO_PATH);
 const authProto = grpc.loadPackageDefinition(packageDefinition).auth;
 
 // Create the gRPC client for the user service
-const authClient = new authProto.UserService(
+const authClient = new authProto.AuthService(
     `${Config.AUTH_GRPC_HOST}:${Config.AUTH_GRPC_PORT}`, // Address of the user service
     grpc.credentials.createInsecure()
 );

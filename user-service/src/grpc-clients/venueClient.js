@@ -11,7 +11,7 @@ const packageDefinition = protoLoader.loadSync(VENUE_PROTO_PATH);
 const venueProto = grpc.loadPackageDefinition(packageDefinition).user;
 
 // Create the gRPC client for the user service
-const venueClient = new venueProto.UserService(
+const venueClient = new venueProto.VenueService(
     `${Config.VENUE_GRPC_HOST}:${Config.VENUE_GRPC_PORT}`, // Address of the user service
     grpc.credentials.createInsecure()
 );

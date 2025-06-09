@@ -56,14 +56,13 @@ const login = async (req, res) => {
 
         if (existingRefreshToken) {
             // Optionally, you can verify if the token is still valid (if using JWT)
-            console.log("Existing refresh token found.");
             refreshToken = existingRefreshToken;
-
+        
             // 🔁 Optional: Replace old token with new one
-            // refreshToken = generateToken(user); // Uncomment this if you want to always issue a new token
-            // await storeRefreshToken(user.id, refreshToken);
+            refreshToken = generateToken({ ...user, authToken: true }); // Uncomment this if you want to always issue a new token
+            await storeRefreshToken(user.id, refreshToken);
         } else {
-            refreshToken = generateToken(user); // JWT or any method
+            refreshToken = generateToken({ ...user, authToken: true }); // JWT or any method
             storeRefreshToken(user.id, refreshToken);
         }
 
