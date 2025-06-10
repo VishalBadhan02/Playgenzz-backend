@@ -1,32 +1,38 @@
-# Use official Node.js image
+# Use official Node.js base image
 FROM node:23-slim
 
-# Install OpenSSL for Prisma
-RUN apt-get update && apt-get install -y openssl
+# Install OpenSSL for Prisma (used in migration and client generation)
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
-# Enable corepack (for pnpm)
+# Enable corepack to use pnpm
 RUN corepack enable
 
-# Set working directory
+# Set root working directory
 WORKDIR /app
 
-# Copy common protos
+# Optional, conditional build logic
+ARG INCLUDE_PROTOS=true
+
+# Copy shared protos directory
 COPY protos ./protos
 
-# Copy service code
-COPY auth-service ./auth-service
-
-# Move to auth-service directory
+# Create service working directory
 WORKDIR /app/auth-service
 
-# Install dependencies inside auth-service
+# Copy only package manager files first to leverage Docker cache
+COPY auth-service/package.json auth-service/pnpm-lock.yaml ./
+
+# Install dependencies
 RUN pnpm install --no-frozen-lockfile
 
-# Generate Prisma Client
+# Copy the rest of the service code after installing dependencies
+COPY auth-service .
+
+# Generate Prisma client
 RUN pnpm prisma generate
 
-# Expose port
+# Expose the service port
 EXPOSE 7001
 
-# Run migrations and start server
-CMD ["sh", "-c", "pnpm prisma migrate deploy && pnpm start"]
+# Run migrations and then start the server
+CMD ["sh", "-c", "pnpm prisma migrate deploy && pnpm dev"]

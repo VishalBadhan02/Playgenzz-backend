@@ -2,31 +2,43 @@
 FROM node:23-slim
 
 # 2️⃣ Install OpenSSL (if using Prisma or require secure connections)
-RUN apt-get update && apt-get install -y openssl
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # 3️⃣ Enable Corepack (for pnpm)
 RUN corepack enable
 
-# 4️⃣ Set working directory
+# 4️⃣ Set root working directory
 WORKDIR /app
+
+# Optional: ARG for conditional copy if needed
+ARG INCLUDE_PROTOS=true
+
+# Copy protos during build if INCLUDE_PROTOS is true
+# RUN if [ "$INCLUDE_PROTOS" = "true" ]; then \
+#       echo "Copying protos..."; \
+#       mkdir -p ./protos; \
+#     fi
 
 # 5️⃣ Copy shared protos folder
 COPY protos ./protos
 
-# 6️⃣ Copy service source code
-COPY notification-service/. ./notification-service/
-
-# 7️⃣ Set working directory inside the service
+# 6️⃣ Set working directory inside the service
 WORKDIR /app/notification-service
+
+# 7️⃣ Copy only package manager files first for caching
+COPY notification-service/package.json notification-service/pnpm-lock.yaml ./
 
 # 8️⃣ Install dependencies
 RUN pnpm install --no-frozen-lockfile
 
-# 9️⃣ Generate Prisma client (optional, if using Prisma)
+# 9️⃣ Copy rest of the service code after installing dependencies
+COPY notification-service ./
+
+# 🔟 (Optional) Generate Prisma client if needed
 # RUN pnpm prisma generate
 
-# 🔟 Expose port
+# 1️⃣1️⃣ Expose port
 EXPOSE 7002
 
-# 🔁 Start service
-CMD ["pnpm", "start"]
+# 1️⃣2️⃣ Start service
+CMD ["pnpm", "dev"]

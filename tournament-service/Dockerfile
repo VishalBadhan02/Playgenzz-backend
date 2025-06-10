@@ -2,7 +2,7 @@
 FROM node:23-slim
 
 # 2️⃣ Install OpenSSL (needed for Prisma or other secure tools)
-RUN apt-get update && apt-get install -y openssl
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 # 3️⃣ Enable Corepack (to use pnpm)
 RUN corepack enable
@@ -10,23 +10,29 @@ RUN corepack enable
 # 4️⃣ Set working directory
 WORKDIR /app
 
+# Optional, conditional build logic
+ARG INCLUDE_PROTOS=true
+
 # 5️⃣ Copy shared protos
 COPY protos ./protos
 
-# 6️⃣ Copy tournament service code
-COPY tournament-service/. ./tournament-service/
-
-# 7️⃣ Set working directory for this service
+# 6️⃣ Set working directory for this service
 WORKDIR /app/tournament-service
+
+# 7️⃣ Copy only package manager files first to leverage Docker cache
+COPY tournament-service/package.json tournament-service/pnpm-lock.yaml ./
 
 # 8️⃣ Install dependencies
 RUN pnpm install --no-frozen-lockfile
 
-# 9️⃣ (Optional) Generate Prisma client if needed
+# 9️⃣ Copy the rest of the service source code
+COPY tournament-service ./
+
+# 🔟 (Optional) Generate Prisma client if needed
 # RUN pnpm prisma generate
 
-# 🔟 Expose the service port
+# 1️⃣1️⃣ Expose the service port
 EXPOSE 7006
 
 # 🚀 Start the service
-CMD ["pnpm", "start"]
+CMD ["pnpm", "dev"]
