@@ -1,10 +1,10 @@
 # 1️⃣ Use official Node.js base image
 FROM node:23-slim
 
-# 2️⃣ Install OpenSSL (and clean up apt caches)
-RUN apt-get update \
- && apt-get install -y openssl \
- && rm -rf /var/lib/apt/lists/*
+
+# 2️⃣ Install OpenSSL (required for Prisma or secure operations)
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/* && npm install -g pnpm
+
 
 # 3️⃣ Enable Corepack (to get pnpm)
 RUN corepack enable
