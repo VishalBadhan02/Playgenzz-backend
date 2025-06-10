@@ -37,21 +37,22 @@ services:
     networks:
       - api-gateway-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7000/health || exit 1"]
+      test: [ "CMD", "curl", "-f", "http://localhost:7000/health || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
 
   auth-service:
     build:
-      context: .
+      context: ./
       dockerfile: auth-service/Dockerfile
       args:
         INCLUDE_PROTOS: "false"
     ports:
       - "7001:7001"
     volumes:
-      - ./protos:/app/protos
+      - .auth-service:/app/auth-service
+      #     - ./protos:/app/protos
     command: pnpm dev
     depends_on:
       redis:
@@ -78,7 +79,7 @@ services:
     volumes:
       - auth-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U auth-user"]
+      test: [ "CMD-SHELL", "pg_isready -U auth-user" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -87,12 +88,13 @@ services:
 
   notification-service:
     build:
-      context: .
+      context: ./
       dockerfile: notification-service/Dockerfile
     ports:
       - "7002:7002"
     volumes:
-      - ./protos:/app/protos
+      - .notification-service:/app/notification-service
+      #     - ./protos:/app/protos
     command: pnpm dev
     depends_on:
       mongodb:
@@ -111,12 +113,13 @@ services:
 
   scoring-service:
     build:
-      context: .
+      context: ./
       dockerfile: scoring-service/Dockerfile
     ports:
       - "7004:7004"
     volumes:
-      - ./protos:/app/protos
+      - .scoring-service:/app/scoring-service
+      #     - ./protos:/app/protos
     command: pnpm dev
     depends_on:
       mongodb:
@@ -140,12 +143,13 @@ services:
 
   team-service:
     build:
-      context: .
+      context: ./
       dockerfile: team-service/Dockerfile
     ports:
       - "7005:7005"
     volumes:
-      - ./protos:/app/protos
+      - ./team-service:/app/team-service
+      #     - ./protos:/app/protos
     command: pnpm dev
     depends_on:
       mongodb:
@@ -162,19 +166,20 @@ services:
       - api-gateway-network
       - team-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7005/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:7005/health" ]
       interval: 30s
       timeout: 10s
       retries: 5
 
   tournament-service:
     build:
-      context: .
+      context: ./
       dockerfile: tournament-service/Dockerfile
     ports:
       - "7006:7006"
     volumes:
-      - ./protos:/app/protos
+      - ./tournament-service:/app/tournament-service
+      #     - ./protos:/app/protos
     command: pnpm dev
     depends_on:
       mongodb:
@@ -193,12 +198,13 @@ services:
 
   user-service:
     build:
-      context: .
+      context: ./
       dockerfile: user-service/Dockerfile
     ports:
       - "7007:7007"
     volumes:
-      - ./protos:/app/protos
+      - ./user-service:/app/user-service
+      #     - ./protos:/app/protos
     command: pnpm dev
     depends_on:
       mongodb:
@@ -215,12 +221,13 @@ services:
 
   venue-service:
     build:
-      context: .
+      context: ./
       dockerfile: venue-service/Dockerfile
     ports:
       - "7008:7008"
     volumes:
-      - ./protos:/app/protos
+      - ./venue-service:/app/venue-service
+      #     - ./protos:/app/protos
     command: pnpm dev
     depends_on:
       mongodb:
@@ -259,7 +266,7 @@ services:
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -317,6 +324,7 @@ services:
 volumes:
   auth-data:
   mongodb-data:
+
 
 networks:
   api-gateway-network:

@@ -2,7 +2,7 @@
 FROM node:23-slim
 
 # Install OpenSSL for Prisma (used in migration and client generation)
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/* && npm install -g pnpm
 
 # Enable corepack to use pnpm
 RUN corepack enable
@@ -26,7 +26,7 @@ COPY auth-service/package.json auth-service/pnpm-lock.yaml ./
 RUN pnpm install --no-frozen-lockfile
 
 # Copy the rest of the service code after installing dependencies
-COPY auth-service .
+COPY auth-service ./
 
 # Generate Prisma client
 RUN pnpm prisma generate

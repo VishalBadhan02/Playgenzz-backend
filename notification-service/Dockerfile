@@ -2,7 +2,7 @@
 FROM node:23-slim
 
 # 2️⃣ Install OpenSSL (if using Prisma or require secure connections)
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/* && npm install -g pnpm
 
 # 3️⃣ Enable Corepack (for pnpm)
 RUN corepack enable
