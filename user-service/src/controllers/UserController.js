@@ -12,7 +12,7 @@ const { getParticipantsWithDetails } = require("../utils/groupParticipents");
 const messageService = require("../services/messageService");
 const Config = require("../config");
 const Conversation = require("../models/conversationSchema");
-const { storeConversationModal, getConversationModal, storeProfileData, getProfileData, deleteProfileData } = require("../services/redisServices");
+const { storeConversationModal, getConversationModal, storeProfileData, getProfileData, deleteProfileData, getTeamsFromCache, setTeamsInCache } = require("../services/redisServices");
 const { getParticipantDisplayData } = require("../utils/getParticipantDisplayData");
 const { formatedChatData } = require("../utils/formatedChatData");
 const grpcService = require("../services/grpcService");
@@ -88,12 +88,26 @@ const getProfile = async (req, res) => {
         // Clone to avoid mutating Redis object
         user = { ...user };
 
-        const teams = await getTeamByUser(profileUserId).catch((error) => {
-            console.error("Failed to retrieve team data:", error);
-        });
+        // redis caching is used to make the process fast and make less calls
+        let teams = await getTeamsFromCache(profileUserId);
+
+        if (!teams) {
+            // grpc call to  fetch the user registered teams and other teams
+            teams = await getTeamByUser(profileUserId).catch((error) => {
+                console.error("Failed to retrieve team data:", error);
+            });
+            // once the teams being fetched store it in the redis
+            await setTeamsInCache(profileUserId, teams);
+        }
+
 
         user.userTeams = teams?.teams || [];
+        user.otherTeams = teams?.otherTeamsWithDetails || [];
+        user.userTeamsCount = teams?.teams.length || "0";
+        user.otherTeamsCount = teams?.otherTeamsWithDetails.length || "0";
 
+
+        // fetching the user friends 
         if (sessionUserId.toString() === profileUserId.toString()) {
             const friends = await setFriends(sessionUserId);
             user.friends = friends;
@@ -105,7 +119,7 @@ const getProfile = async (req, res) => {
             // Also include friend count if needed on other profiles
             const allFriends = await setFriends(profileUserId);
             user.friendCount = allFriends?.length || 0;
-        }   
+        }
 
         return res.status(200).json(reply.success(Lang.USER_PROFILE, user));
     } catch (err) {
@@ -154,11 +168,13 @@ const UpdateProfile = async (req, res) => {
     try {
         const { userName, email, phoneNumber, address, firstName, lastName } = req.body;
         const updateData = { userName, email, phoneNumber, address, firstName, lastName };
-
         console.log(req.body)
+ 
         if (req.file) {
             updateData.profilePicture = req.file.location; // S3 URL
         }
+        console.log(req.file)
+        console.log(req.body)
 
 
         // ✅ Ensure user ID exists
@@ -195,7 +211,6 @@ const UpdateProfile = async (req, res) => {
 
         const grpcres = await grpcService.UpdateAuthService(grpcData)
 
-        console.log(grpcres)
 
         await deleteProfileData(req.user._id)
 

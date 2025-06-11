@@ -23,7 +23,7 @@ WORKDIR /app/auth-service
 COPY auth-service/package.json auth-service/pnpm-lock.yaml ./
 
 # Install dependencies
-RUN pnpm install --no-frozen-lockfile
+RUN pnpm install --no-frozen-lockfile && pnpm install nodemon
 
 # Copy the rest of the service code after installing dependencies
 COPY auth-service ./

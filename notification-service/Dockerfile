@@ -29,7 +29,7 @@ WORKDIR /app/notification-service
 COPY notification-service/package.json notification-service/pnpm-lock.yaml ./
 
 # 8️⃣ Install dependencies
-RUN pnpm install --no-frozen-lockfile
+RUN pnpm install --no-frozen-lockfile && pnpm install nodemon
 
 # 9️⃣ Copy rest of the service code after installing dependencies
 COPY notification-service ./

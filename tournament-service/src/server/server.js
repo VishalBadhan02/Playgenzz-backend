@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const startConsumer = require('../kafka/consumer');
+// const startConsumer = require('../kafka/consumer');
 
 
 const TournamentRouter = require('../routes/tournament');

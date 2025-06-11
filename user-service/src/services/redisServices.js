@@ -51,6 +51,22 @@ const deleteProfileData = async (cacheKey) => {
     await redis.del(`profileData:${cacheKey}`);
 }
 
+const getTeamsFromCache = async (userId) => {
+    const key = `user:teams:${userId}`;
+    const cached = await redis.get(key);
+    if (cached) return JSON.parse(cached);
+    return null;
+};
+
+const setTeamsInCache = async (userId, teams) => {
+    const key = `user:teams:${userId}`;
+    await redis.set(key, JSON.stringify(teams), 'EX', 3600); // 1 hour
+};
+
+const deleteTeamsInCache = async (userId) => {
+    await redis.del(`user:teams:${userId}`);
+}
+
 module.exports = {
     storeConversation,
     getConversation,
@@ -61,5 +77,8 @@ module.exports = {
     deleteConversationModal,
     storeProfileData,
     getProfileData,
-    deleteProfileData
+    deleteProfileData,
+    getTeamsFromCache,
+    setTeamsInCache,
+    deleteTeamsInCache
 };

@@ -23,7 +23,7 @@ WORKDIR /app/tournament-service
 COPY tournament-service/package.json tournament-service/pnpm-lock.yaml ./
 
 # 8️⃣ Install dependencies
-RUN pnpm install --no-frozen-lockfile
+RUN pnpm install --no-frozen-lockfile && pnpm install nodemon
 
 # 9️⃣ Copy the rest of the service source code
 COPY tournament-service ./
