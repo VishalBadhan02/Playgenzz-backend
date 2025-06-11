@@ -93,6 +93,9 @@ const getProfile = async (req, res) => {
         });
 
         user.userTeams = teams?.teams || [];
+        user.otherTeams = teams?.otherTeamsWithDetails || [];
+        user.userTeamsCount = teams?.teams?.length || "0"
+        user.otherTeamsCount = teams?.otherTeamsWithDetails?.length || "0"
 
         if (sessionUserId.toString() === profileUserId.toString()) {
             const friends = await setFriends(sessionUserId);
@@ -105,7 +108,7 @@ const getProfile = async (req, res) => {
             // Also include friend count if needed on other profiles
             const allFriends = await setFriends(profileUserId);
             user.friendCount = allFriends?.length || 0;
-        }   
+        }
 
         return res.status(200).json(reply.success(Lang.USER_PROFILE, user));
     } catch (err) {
