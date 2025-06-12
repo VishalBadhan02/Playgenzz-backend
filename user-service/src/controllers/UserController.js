@@ -13,7 +13,7 @@ const { storeConversationModal, getConversationModal, storeProfileData, getProfi
 const { getParticipantDisplayData } = require("../utils/getParticipantDisplayData");
 const { formatedChatData } = require("../utils/formatedChatData");
 const grpcService = require("../services/grpcService");
-const MediaSchema = require("../models/mediaSchema");
+const MediaModel = require("../models/mediaSchema");
 
 
 
@@ -410,7 +410,7 @@ const handleMediaUploads = async (req, res) => {
             type: file.mimetype.startsWith('video/') ? 'video' : 'image'
         }));
 
-        const newPost = new MediaSchema({
+        const newPost = new MediaModel({
             caption,
             media: mediaFiles,
             uploadedBy: req.user._id,
