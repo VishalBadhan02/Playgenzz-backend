@@ -19,7 +19,8 @@ const upload = require('../middlewares/multer');
 }
 
 {
-    router.post("/friendRequest", UserController.handleRequest)
+    router.post("/friendRequest", UserController.handleRequest);
+    router.post("/media-upload", upload.array('mediaFiles', 10), UserController.handleMediaUploads);
 }
 
 {

@@ -1,13 +1,10 @@
 const reply = require("../helper/reply");
 const Lang = require("../language/en")
-const UserModel = require("../models/user")
 const { getTeamByUser } = require("./GrpcController");
 const { setFriends } = require("../helper/getUserFriends");
 const userService = require("../services/userService");
 const { getFriendStatusMap, mapUserListWithFriends } = require("../utils/friends");
-const WebSocket = require('ws');
 const sendMessage = require("../kafka/producer");
-const { MessageModel } = require("../models/messageModal");
 const { getParticipantsWithDetails } = require("../utils/groupParticipents");
 const messageService = require("../services/messageService");
 const Config = require("../config");
@@ -16,6 +13,7 @@ const { storeConversationModal, getConversationModal, storeProfileData, getProfi
 const { getParticipantDisplayData } = require("../utils/getParticipantDisplayData");
 const { formatedChatData } = require("../utils/formatedChatData");
 const grpcService = require("../services/grpcService");
+const MediaModel = require("../models/mediaSchema");
 
 
 
@@ -399,6 +397,38 @@ const getChat = async (req, res) => {
     }
 };
 
+const handleMediaUploads = async (req, res) => {
+    try {
+        const { kind, itemId, caption } = req.body;
+
+        if (!['user', 'team', 'tournament'].includes(kind)) {
+            return res.status(400).json({ message: 'Invalid kind provided' });
+        }
+
+        const mediaFiles = req.files.map(file => ({
+            url: file.location,
+            type: file.mimetype.startsWith('video/') ? 'video' : 'image'
+        }));
+
+        const newPost = new MediaModel({
+            caption,
+            media: mediaFiles,
+            uploadedBy: req.user._id,
+            belongsTo: {
+                kind,
+                item: itemId
+            }
+        });
+
+        await newPost.save();
+
+        res.status(200).json({ message: 'Post created successfully', post: newPost });
+    } catch (error) {
+        console.error('Error creating post:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+}
+
 // const getPlayingFriends = async (req, res) => {
 //     try {
 //         const user_id = req.user._id;
@@ -455,7 +485,8 @@ module.exports = {
     handleDelete,
     handleApproval,
     getUserFriends,
-    getChat
+    getChat,
+    handleMediaUploads
     //     addFriend, getPlayers, getPlayingFriends, statusControl 
 
 
