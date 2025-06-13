@@ -68,23 +68,23 @@ services:
     networks:
       - api-gateway-network
 
-  auth-db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-auth-user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-auth-password}
-      POSTGRES_DB: auth-db
-    ports:
-      - "5433:5432"
-    volumes:
-      - auth-data:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U auth-user" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - auth-network
+  # auth-db:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-auth-user}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-auth-password}
+  #     POSTGRES_DB: auth-db
+  #   ports:
+  #     - "5433:5432"
+  #   volumes:
+  #     - auth-data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "pg_isready -U auth-user" ]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - auth-network
 
   notification-service:
     build:
@@ -281,7 +281,7 @@ services:
       - scoring-network
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:6.2.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -294,7 +294,7 @@ services:
       - kafka-network
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:6.2.0
     depends_on:
       zookeeper:
         condition: service_healthy

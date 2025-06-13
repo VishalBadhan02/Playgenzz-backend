@@ -12,7 +12,7 @@ const authService = require('../services/authService');
 
 const login = async (req, res) => {
     const { password, emailOrPhone } = req.body;
-
+    console.log(req.body)
     try {
         let data;
 
@@ -57,7 +57,7 @@ const login = async (req, res) => {
         if (existingRefreshToken) {
             // Optionally, you can verify if the token is still valid (if using JWT)
             refreshToken = existingRefreshToken;
-        
+
             // 🔁 Optional: Replace old token with new one
             refreshToken = generateToken({ ...user, authToken: true }); // Uncomment this if you want to always issue a new token
             await storeRefreshToken(user.id, refreshToken);

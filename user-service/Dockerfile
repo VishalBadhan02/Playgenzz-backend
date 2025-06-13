@@ -1,8 +1,8 @@
 # 1️⃣ Use official Node.js image
-FROM node:23-slim
+FROM node:18-slim
 
 # 2️⃣ Install OpenSSL (for Prisma if used)
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/* && npm install -g pnpm
+# RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/* && npm install -g pnpm
 
 # 3️⃣ Enable Corepack (to use pnpm)
 RUN corepack enable
@@ -26,7 +26,7 @@ COPY user-service/package.json user-service/pnpm-lock.yaml ./
 RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ Copy the rest of the user-service source code
-COPY user-service ./
+COPY user-service/. ./
 
 # 🔟 (Optional) Generate Prisma client if used
 # RUN pnpm prisma generate
