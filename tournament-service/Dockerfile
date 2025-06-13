@@ -14,13 +14,14 @@ WORKDIR /app
 ARG INCLUDE_PROTOS=true
 
 # 5️⃣ Copy shared protos
-COPY protos ./protos
+COPY protos/ ./protos
 
 # 6️⃣ Set working directory for this service
 WORKDIR /app/tournament-service
 
 # 7️⃣ Copy only package manager files first to leverage Docker cache
-COPY tournament-service/package.json tournament-service/pnpm-lock.yaml ./
+COPY tournament-service/package.json .
+COPY tournament-service/pnpm-lock.yaml .
 
 # 8️⃣ Install dependencies
 RUN pnpm install --no-frozen-lockfile

@@ -94,7 +94,7 @@ services:
       - "7002:7002"
     volumes:
       - ./notification-service:/app/notification-service
-    #     - ./protos:/app/protos
+      - /app/notification-service/node_modules
     command: pnpm dev
     depends_on:
       mongodb:
@@ -119,7 +119,7 @@ services:
       - "7004:7004"
     volumes:
       - ./scoring-service:/app/scoring-service
-    #     - ./protos:/app/protos
+      -  /app/scoring-service/node_modules
     command: pnpm dev
     depends_on:
       mongodb:
@@ -227,7 +227,7 @@ services:
       - "7008:7008"
     volumes:
       - ./venue-service:/app/venue-service
-    #     - ./protos:/app/protos
+      - /app/venue-service/node_modules
     command: pnpm dev
     depends_on:
       mongodb:
@@ -294,7 +294,7 @@ services:
       - kafka-network
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:6.2.0
     depends_on:
       zookeeper:
         condition: service_healthy

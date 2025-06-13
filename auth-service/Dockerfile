@@ -27,7 +27,7 @@ COPY auth-service/package.json auth-service/pnpm-lock.yaml ./
 RUN pnpm install --no-frozen-lockfile
 
 # Copy the rest of the service code after installing dependencies
-# COPY auth-service/ ./
+COPY auth-service/ ./
 
 # Generate Prisma client
 RUN pnpm prisma generate

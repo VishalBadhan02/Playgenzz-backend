@@ -20,7 +20,8 @@ COPY protos/ ./protos
 WORKDIR /app/venue-service
 
 # 7️⃣ Copy package manager files first for caching
-COPY venue-service/package.json venue-service/pnpm-lock.yaml ./
+COPY venue-service/package.json .
+COPY venue-service/pnpm-lock.yaml .
 
 # 8️⃣ Install dependencies
 RUN pnpm install --no-frozen-lockfile

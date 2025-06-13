@@ -11,7 +11,7 @@ RUN corepack enable
 WORKDIR /app
 
 # Copy service code
-COPY . ./api-gateway
+COPY api-gateway/ ./api-gateway
 
 # Move to auth-service directory
 WORKDIR /app/api-gateway
