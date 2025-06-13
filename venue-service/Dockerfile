@@ -14,7 +14,7 @@ WORKDIR /app
 ARG INCLUDE_PROTOS=true
 
 # 5️⃣ Copy shared protos
-COPY protos ./protos
+COPY protos/ ./protos
 
 # 6️⃣ Set working directory for venue-service
 WORKDIR /app/venue-service
@@ -26,7 +26,7 @@ COPY venue-service/package.json venue-service/pnpm-lock.yaml ./
 RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ Copy the rest of the source code
-COPY venue-service ./
+# COPY venue-service/ ./
 
 # 🔟 (Optional) Generate Prisma client if used
 # RUN pnpm prisma generate

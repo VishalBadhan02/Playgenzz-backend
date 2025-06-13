@@ -14,7 +14,7 @@ WORKDIR /app
 ARG INCLUDE_PROTOS=true
 
 # 5️⃣ Copy shared protos folder
-COPY protos ./protos
+COPY protos/ ./protos
 
 # 6️⃣ Set working directory inside the scoring service
 WORKDIR /app/scoring-service
@@ -26,7 +26,7 @@ COPY scoring-service/package.json scoring-service/pnpm-lock.yaml ./
 RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ Copy rest of the service source code
-COPY scoring-service ./
+# COPY scoring-service/ ./
 
 # 🔟 (Optional) Generate Prisma Client if using Prisma
 # RUN pnpm prisma generate

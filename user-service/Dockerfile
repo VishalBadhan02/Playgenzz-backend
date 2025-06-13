@@ -14,7 +14,7 @@ WORKDIR /app
 ARG INCLUDE_PROTOS=true
 
 # 5️⃣ Copy shared protos
-COPY protos ./protos
+COPY protos/ ./protos
 
 # 6️⃣ Set working directory for user-service
 WORKDIR /app/user-service
@@ -26,7 +26,7 @@ COPY user-service/package.json user-service/pnpm-lock.yaml ./
 RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ Copy the rest of the user-service source code
-COPY user-service ./
+# COPY user-service/ ./
 
 # 🔟 (Optional) Generate Prisma client if used
 # RUN pnpm prisma generate
