@@ -26,7 +26,7 @@ COPY tournament-service/pnpm-lock.yaml .
 RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ Copy the rest of the service source code
-COPY tournament-service ./
+# COPY tournament-service/ ./
 
 # 🔟 (Optional) Generate Prisma client if needed
 # RUN pnpm prisma generate

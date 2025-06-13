@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  api-gateway-service:
+  api-gateway:
     build:
       context: ./
       dockerfile: api-gateway/Dockerfile
@@ -51,9 +51,8 @@ services:
     ports:
       - "7001:7001"
     volumes:
-      - .auth-service:/app/auth-service
-      #     - ./protos:/app/protos
-    command: pnpm dev
+      - ./auth-service:/app/auth-service
+      -  /app/auth-service/node_modules
     depends_on:
       redis:
         condition: service_healthy
@@ -68,23 +67,23 @@ services:
     networks:
       - api-gateway-network
 
-  auth-db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-auth-user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-auth-password}
-      POSTGRES_DB: auth-db
-    ports:
-      - "5433:5432"
-    volumes:
-      - auth-data:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U auth-user" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - auth-network
+  # auth-db:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-auth-user}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-auth-password}
+  #     POSTGRES_DB: auth-db
+  #   ports:
+  #     - "5433:5432"
+  #   volumes:
+  #     - auth-data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "pg_isready -U auth-user" ]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - auth-network
 
   notification-service:
     build:
@@ -93,9 +92,8 @@ services:
     ports:
       - "7002:7002"
     volumes:
-      - .notification-service:/app/notification-service
-      #     - ./protos:/app/protos
-    command: pnpm dev
+      - ./notification-service:/app/notification-service
+      - /app/notification-service/node_modules
     depends_on:
       mongodb:
         condition: service_healthy
@@ -118,8 +116,8 @@ services:
     ports:
       - "7004:7004"
     volumes:
-      - .scoring-service:/app/scoring-service
-      #     - ./protos:/app/protos
+      - ./scoring-service:/app/scoring-service
+      -  /app/scoring-service/node_modules
     command: pnpm dev
     depends_on:
       mongodb:
@@ -149,7 +147,7 @@ services:
       - "7005:7005"
     volumes:
       - ./team-service:/app/team-service
-      #     - ./protos:/app/protos
+      -  /app/team-service/node_modules
     command: pnpm dev
     depends_on:
       mongodb:
@@ -204,7 +202,8 @@ services:
       - "7007:7007"
     volumes:
       - ./user-service:/app/user-service
-      #     - ./protos:/app/protos
+      -  /app/user-service/node_modules
+    #     - ./protos:/app/protos
     command: pnpm dev
     depends_on:
       mongodb:
@@ -227,8 +226,7 @@ services:
       - "7008:7008"
     volumes:
       - ./venue-service:/app/venue-service
-      #     - ./protos:/app/protos
-    command: pnpm dev
+      -  /app/venue-service/node_modules
     depends_on:
       mongodb:
         condition: service_healthy
@@ -295,6 +293,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:6.2.0
+    image: confluentinc/cp-kafka:6.2.0
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -328,6 +327,7 @@ services:
 volumes:
   auth-data:
   mongodb-data:
+  venue_node_modules:
 
 
 networks:

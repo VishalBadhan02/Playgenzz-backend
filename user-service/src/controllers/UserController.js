@@ -86,10 +86,11 @@ const getProfile = async (req, res) => {
         // Clone to avoid mutating Redis object
         user = { ...user };
 
-        const teams = await getTeamByUser(profileUserId).catch((error) => {
-            console.error("Failed to retrieve team data:", error);
-        });
 
+        // const teams = await getTeamByUser(profileUserId).catch((error) => {
+        //     console.error("Failed to retrieve team data:", error);
+        // });
+        const teams = [];
         user.userTeams = teams?.teams || [];
         user.otherTeams = teams?.otherTeamsWithDetails || [];
         user.userTeamsCount = teams?.teams?.length || "0"
@@ -156,7 +157,7 @@ const UpdateProfile = async (req, res) => {
         const { userName, email, phoneNumber, address, firstName, lastName } = req.body;
         const updateData = { userName, email, phoneNumber, address, firstName, lastName };
 
-        console.log(req.body)
+        // console.log(req.body)
         if (req.file) {
             updateData.profilePicture = req.file.location; // S3 URL
         }

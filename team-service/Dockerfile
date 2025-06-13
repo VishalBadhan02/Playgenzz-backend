@@ -13,7 +13,7 @@ RUN corepack enable
 WORKDIR /app
 
 # 5️⃣ Copy shared protos into the image
-COPY protos ./protos
+COPY protos/ ./protos
 
 # 6️⃣ Switch into your service folder
 WORKDIR /app/team-service
@@ -25,7 +25,7 @@ COPY team-service/package.json team-service/pnpm-lock.yaml ./
 RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ Copy the rest of your service code
-COPY team-service/. ./
+# COPY team-service/. ./
 
 # 🔟 (Optional) Generate Prisma client if you’re using Prisma
 # RUN pnpm prisma generate

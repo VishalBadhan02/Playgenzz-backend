@@ -20,7 +20,7 @@ ARG INCLUDE_PROTOS=true
 #     fi
 
 # 5️⃣ Copy shared protos folder
-COPY protos ./protos
+COPY protos/ ./protos
 
 # 6️⃣ Set working directory inside the service
 WORKDIR /app/notification-service
@@ -32,7 +32,7 @@ COPY notification-service/package.json notification-service/pnpm-lock.yaml ./
 RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ Copy rest of the service code after installing dependencies
-COPY notification-service ./
+# COPY notification-service/ ./
 
 # 🔟 (Optional) Generate Prisma client if needed
 # RUN pnpm prisma generate
