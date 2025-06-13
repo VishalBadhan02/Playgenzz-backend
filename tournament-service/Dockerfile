@@ -7,20 +7,20 @@ RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/* 
 # 3️⃣ Enable Corepack (to use pnpm)
 RUN corepack enable
 
-# 4️⃣ Set working directory
 WORKDIR /app
 
 # Optional, conditional build logic
 ARG INCLUDE_PROTOS=true
 
 # 5️⃣ Copy shared protos
-COPY protos ./protos
+COPY protos/ ./protos
 
-# 6️⃣ Set working directory for this service
 WORKDIR /app/tournament-service
 
+
 # 7️⃣ Copy only package manager files first to leverage Docker cache
-COPY tournament-service/package.json tournament-service/pnpm-lock.yaml ./
+COPY tournament-service/package.json .
+COPY tournament-service/pnpm-lock.yaml .
 
 # 8️⃣ Install dependencies
 RUN pnpm install --no-frozen-lockfile

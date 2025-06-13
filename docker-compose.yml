@@ -3,7 +3,7 @@ version: '3.8'
 services:
   api-gateway-service:
     build:
-      context: .
+      context: ./
       dockerfile: api-gateway/Dockerfile
     ports:
       - "8995:7000"
@@ -179,8 +179,8 @@ services:
       - "7006:7006"
     volumes:
       - ./tournament-service:/app/tournament-service
-      #     - ./protos:/app/protos
-    command: pnpm dev
+      - /app/tournament-service/node_modules 
+    command: pnpm dev 
     depends_on:
       mongodb:
         condition: service_healthy
@@ -281,7 +281,7 @@ services:
       - scoring-network
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:6.2.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -294,7 +294,7 @@ services:
       - kafka-network
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:6.2.0
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -308,10 +308,14 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
     healthcheck:
-      test: nc -z localhost 9092 || exit 1
-      interval: 5s
-      timeout: 5s
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 30s
+      timeout: 10s
       retries: 5
+    
+    
+    
+    
     networks:
       - kafka-network
       - auth-network
