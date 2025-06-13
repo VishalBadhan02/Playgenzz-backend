@@ -2,8 +2,6 @@
 FROM node:23-slim
 
 
-<<<<<<< HEAD
-=======
 # Enable corepack (for pnpm)
 RUN corepack enable
 
@@ -11,8 +9,7 @@ RUN corepack enable
 WORKDIR /app
 
 # Copy service code
-COPY api-gateway/ ./api-gateway
->>>>>>> 2a46a3191699c6e778d1a544862e4f9d40902c87
+COPY api-gateway/ .
 
 # Move to auth-service directory
 WORKDIR /app/api-gateway
