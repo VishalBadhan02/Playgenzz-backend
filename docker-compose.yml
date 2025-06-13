@@ -202,7 +202,7 @@ services:
       - "7007:7007"
     volumes:
       - ./user-service:/app/user-service
-      -  /app/user-service/node_modules
+      -  /app/tournament-service/node_modules
     #     - ./protos:/app/protos
     command: pnpm dev
     depends_on:
