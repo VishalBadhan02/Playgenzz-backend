@@ -202,7 +202,7 @@ services:
       - "7007:7007"
     volumes:
       - ./user-service:/app/user-service
-      -  /app/tournament-service/node_modules
+      -  /app/user-service/node_modules
     #     - ./protos:/app/protos
     command: pnpm dev
     depends_on:
@@ -292,7 +292,6 @@ services:
       - kafka-network
 
   kafka:
-    image: confluentinc/cp-kafka:6.2.0
     image: confluentinc/cp-kafka:6.2.0
     depends_on:
       zookeeper:

@@ -152,54 +152,90 @@ const searchUsers = async (req, res) => {
     }
 };
 
+
 const UpdateProfile = async (req, res) => {
     try {
         const { userName, email, phoneNumber, address, firstName, lastName } = req.body;
-        const updateData = { userName, email, phoneNumber, address, firstName, lastName };
+        const updateData = {};
 
-        // console.log(req.body)
-        if (req.file) {
+        if (req.file && req.file.location) {
             updateData.profilePicture = req.file.location; // S3 URL
+            const updateProfileOnly = await userService.updateProfile(req.user._id, updateData);
+            // Clear cached profile data if needed
+            await deleteProfileData(req.user._id);
+
+            return res.status(200).json(reply.success(Lang.USER_UPDATED))
         }
 
+        // Only add fields to updateData if they exist in the request
+        if (userName) updateData.userName = userName;
+        if (email) updateData.email = email;
+        if (phoneNumber) updateData.phoneNumber = phoneNumber;
+        if (address) updateData.address = address;
+        if (firstName) updateData.firstName = firstName;
+        if (lastName) updateData.lastName = lastName;
 
-        // ✅ Ensure user ID exists
         if (!req.user || !req.user._id) {
             return res.status(401).json(reply.failure(Lang.UNAUTHORIZED));
         }
 
-        // ✅ Validate Input (Optional but Recommended)
-        if (!userName && !email && !phoneNumber && !address) {
+        // Check if there are any fields to update
+        if (Object.keys(updateData).length === 0) {
             return res.status(400).json(reply.failure("No valid fields to update"));
         }
 
-        const uniqueUserName = await userService.UniqueUserName(req.user._id, userName)
-
-        if (!uniqueUserName) {
-            return res.status(400).json(reply.failure({ type: "userName", message: Lang.USER_NAME_EXIST }));
+        // Check if username is unique, if userName is being updated
+        if (userName) {
+            const uniqueUserName = await userService.UniqueUserName(req.user._id, userName);
+            if (!uniqueUserName) {
+                return res.status(400).json(reply.failure({ type: "userName", message: Lang.USER_NAME_EXIST }));
+            }
         }
 
+        // Prepare data for Auth service update
+        const grpcData = {
+            id: req.user._id,
+            name: userName || undefined,
+            email: email || undefined,
+            phoneNumber: phoneNumber || undefined,
+        };
 
-        // ✅ Update User Profile
-        const updatedUser = await userService.updateProfile(req.user._id, updateData);
+        const grpcres = await grpcService.UpdateAuthService(grpcData);
+        if (!grpcres.success) {
+            return res.status(500).json(reply.failure("Auth service update failed"));
+        }
 
+        // Now update local DB, handle rollback if it fails
+        let updatedUser;
+        try {
+            updatedUser = await userService.updateProfile(req.user._id, updateData);
+        } catch (err) {
+            // Rollback Auth service update
+            try {
+                const reverse = await userService.findUser(req.user._id);
+                if (reverse) {
+                    const previousAuthData = {
+                        id: req.user._id,
+                        name: reverse.userName,
+                        email: reverse.email,
+                        phoneNumber: reverse.phoneNumber
+                    };
+                    await grpcService.UpdateAuthService(previousAuthData);
+                }
+            } catch (rollbackErr) {
+                console.error("Rollback failed:", rollbackErr);
+            }
+
+            console.error("DB update failed after Auth update. Manual fix needed.", err);
+            return res.status(500).json(reply.failure("Local update failed after Auth update. System in inconsistent state."));
+        }
 
         if (!updatedUser) {
             return res.status(404).json(reply.failure(Lang.USER_NOT_FOUND));
         }
 
-        const grpcData = {
-            id: req.user._id,
-            name: userName,
-            email,
-            phoneNumber
-        }
-
-        const grpcres = await grpcService.UpdateAuthService(grpcData)
-
-        console.log(grpcres)
-
-        await deleteProfileData(req.user._id)
+        // Clear cached profile data if needed
+        await deleteProfileData(req.user._id);
 
         return res.status(200).json(reply.success(Lang.USER_UPDATED, { user: updatedUser }));
     } catch (err) {
@@ -207,6 +243,8 @@ const UpdateProfile = async (req, res) => {
         return res.status(500).json(reply.failure("Internal Server Error"));
     }
 };
+
+
 
 const handleRequest = async (req, res) => {
     try {
