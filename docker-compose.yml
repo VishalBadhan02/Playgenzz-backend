@@ -293,7 +293,6 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:6.2.0
-    image: confluentinc/cp-kafka:6.2.0
     depends_on:
       zookeeper:
         condition: service_healthy
