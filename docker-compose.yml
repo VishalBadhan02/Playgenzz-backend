@@ -114,7 +114,7 @@ services:
       context: ./
       dockerfile: scoring-service/Dockerfile
     ports:
-      - "7004:7004"
+      - "7003:7003"
     volumes:
       - ./scoring-service:/app/scoring-service
       -  /app/scoring-service/node_modules

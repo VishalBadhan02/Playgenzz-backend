@@ -32,7 +32,7 @@ RUN pnpm install --no-frozen-lockfile
 # RUN pnpm prisma generate
 
 # 1️⃣1️⃣ Expose port
-EXPOSE 7004
+EXPOSE 7003
 
 # 1️⃣2️⃣ Start the service
 CMD ["pnpm", "dev"]
