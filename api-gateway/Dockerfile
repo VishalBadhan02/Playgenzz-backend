@@ -2,6 +2,7 @@
 FROM node:23-slim
 
 
+
 # Enable corepack (for pnpm)
 RUN corepack enable
 
