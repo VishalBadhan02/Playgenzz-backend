@@ -1,5 +1,5 @@
 const moment = require("moment");
-const prisma = require("../prisma/prisma");
+const prisma = require("../../prisma/prisma");
 const bcrypt = require("bcryptjs");
 const { generateToken } = require("../middlewares/JWT");
 const client = require("../client");

@@ -24,12 +24,13 @@ COPY api-gateway/pnpm-lock.yaml .
 # Install dependencies inside auth-service
 RUN pnpm install --no-frozen-lockfile
 # Copy service code
-COPY api-gateway/ .
+COPY api-gateway/src ./src
+COPY api-gateway/.env ./.env
 
 
 # Expose port
 EXPOSE 7000
 
 # Run migrations and start server
-CMD ["sh", "-c", "pnpm start"]
+CMD ["sh", "-c", "pnpm dev"]
 

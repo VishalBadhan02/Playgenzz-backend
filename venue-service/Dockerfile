@@ -27,7 +27,8 @@ COPY venue-service/pnpm-lock.yaml .
 RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ Copy the rest of the source code
-# COPY venue-service/ ./
+COPY venue-service/src ./src
+COPY venue-service/.env ./env
 
 # 🔟 (Optional) Generate Prisma client if used
 # RUN pnpm prisma generate

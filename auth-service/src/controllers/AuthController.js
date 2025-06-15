@@ -6,7 +6,7 @@ const { generateOTP, verifyOTP, registerUser, ExistUser, handleExistingTempUser 
 const SendMail = require('../providers/mail')
 const Bcrypt = require("bcryptjs")
 const saltRounds = 16;
-const prisma = require('../prisma/prisma');
+const prisma = require('../../prisma/prisma');
 const { getRefreshToken, storeRefreshToken } = require("../services/redisTokenService");
 const authService = require('../services/authService');
 
@@ -57,7 +57,7 @@ const login = async (req, res) => {
         if (existingRefreshToken) {
             // Optionally, you can verify if the token is still valid (if using JWT)
             refreshToken = existingRefreshToken;
-        
+
             // 🔁 Optional: Replace old token with new one
             refreshToken = generateToken({ ...user, authToken: true }); // Uncomment this if you want to always issue a new token
             await storeRefreshToken(user.id, refreshToken);

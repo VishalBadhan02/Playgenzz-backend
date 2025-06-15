@@ -26,7 +26,8 @@ COPY user-service/package.json user-service/pnpm-lock.yaml ./
 RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ Copy the rest of the user-service source code
-# COPY user-service/ ./
+COPY user-service/src ./src
+COPY user-service/.env ./env
 
 # 🔟 (Optional) Generate Prisma client if used
 # RUN pnpm prisma generate

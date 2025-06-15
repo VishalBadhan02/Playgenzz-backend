@@ -14,6 +14,7 @@ const { getParticipantDisplayData } = require("../utils/getParticipantDisplayDat
 const { formatedChatData } = require("../utils/formatedChatData");
 const grpcService = require("../services/grpcService");
 const MediaModel = require("../models/mediaSchema");
+const { updateProfileSchema } = require("../validations/profileValidation");
 
 
 
@@ -153,94 +154,118 @@ const searchUsers = async (req, res) => {
 };
 
 
+// Update Profile Controller
 const UpdateProfile = async (req, res) => {
     try {
-        const { userName, email, phoneNumber, address, firstName, lastName } = req.body;
-        const updateData = {};
-
-        if (req.file && req.file.location) {
-            updateData.profilePicture = req.file.location; // S3 URL
-            const updateProfileOnly = await userService.updateProfile(req.user._id, updateData);
-            // Clear cached profile data if needed
-            await deleteProfileData(req.user._id);
-
-            return res.status(200).json(reply.success(Lang.USER_UPDATED))
-        }
-
-        // Only add fields to updateData if they exist in the request
-        if (userName) updateData.userName = userName;
-        if (email) updateData.email = email;
-        if (phoneNumber) updateData.phoneNumber = phoneNumber;
-        if (address) updateData.address = address;
-        if (firstName) updateData.firstName = firstName;
-        if (lastName) updateData.lastName = lastName;
-
         if (!req.user || !req.user._id) {
-            return res.status(401).json(reply.failure(Lang.UNAUTHORIZED));
+            return res.status(401).json(reply.failure({
+                type: "authorization",
+                message: Lang.UNAUTHORIZED
+            }));
         }
 
-        // Check if there are any fields to update
+        // Special Case: Handle profile picture update separately
+        if (req.file && req.file.location) {
+            const updateData = { profilePicture: req.file.location };
+
+            await userService.updateProfile(req.user._id, updateData);
+            await deleteProfileData(req.user._id); // clear cache
+
+            return res.status(200).json(reply.success(Lang.USER_UPDATED));
+        }
+
+        // Validate input data
+        const parsed = updateProfileSchema.safeParse(req.body);
+        if (!parsed.success) {
+            return res.status(400).json(reply.failure({
+                type: "validation",
+                message: parsed.error.errors.map(err => err.message)
+            }));
+        }
+
+        const updateData = parsed.data;
+
+        // If no valid fields provided
         if (Object.keys(updateData).length === 0) {
-            return res.status(400).json(reply.failure("No valid fields to update"));
+            return res.status(400).json(reply.failure({
+                type: "validation",
+                message: "No valid fields to update"
+            }));
         }
 
-        // Check if username is unique, if userName is being updated
-        if (userName) {
-            const uniqueUserName = await userService.UniqueUserName(req.user._id, userName);
+        // Uniqueness check for userName
+        if (updateData.userName) {
+            const uniqueUserName = await userService.UniqueUserName(req.user._id, updateData.userName);
             if (!uniqueUserName) {
-                return res.status(400).json(reply.failure({ type: "userName", message: Lang.USER_NAME_EXIST }));
+                return res.status(400).json(reply.failure({
+                    type: "userName",
+                    message: Lang.USER_NAME_EXIST
+                }));
             }
         }
 
-        // Prepare data for Auth service update
+        // Prepare gRPC data
         const grpcData = {
             id: req.user._id,
-            name: userName || undefined,
-            email: email || undefined,
-            phoneNumber: phoneNumber || undefined,
+            name: updateData.userName,
+            email: updateData.email,
+            phoneNumber: updateData.phoneNumber,
         };
 
+        // Call Auth Service first
         const grpcres = await grpcService.UpdateAuthService(grpcData);
         if (!grpcres.success) {
-            return res.status(500).json(reply.failure("Auth service update failed"));
+            return res.status(500).json(reply.failure({
+                type: "authService",
+                message: "Auth service update failed"
+            }));
         }
 
-        // Now update local DB, handle rollback if it fails
+        // Update local DB
         let updatedUser;
         try {
             updatedUser = await userService.updateProfile(req.user._id, updateData);
         } catch (err) {
-            // Rollback Auth service update
+            console.error("DB update failed after Auth update. Initiating rollback...", { error: err });
+
             try {
-                const reverse = await userService.findUser(req.user._id);
-                if (reverse) {
-                    const previousAuthData = {
+                const previousUser = await userService.findUser(req.user._id);
+                if (previousUser) {
+                    const rollbackData = {
                         id: req.user._id,
-                        name: reverse.userName,
-                        email: reverse.email,
-                        phoneNumber: reverse.phoneNumber
+                        name: previousUser.userName,
+                        email: previousUser.email,
+                        phoneNumber: previousUser.phoneNumber,
                     };
-                    await grpcService.UpdateAuthService(previousAuthData);
+                    await grpcService.UpdateAuthService(rollbackData);
                 }
             } catch (rollbackErr) {
-                console.error("Rollback failed:", rollbackErr);
+                console.error("Rollback failed", { rollbackError: rollbackErr });
             }
 
-            console.error("DB update failed after Auth update. Manual fix needed.", err);
-            return res.status(500).json(reply.failure("Local update failed after Auth update. System in inconsistent state."));
+            return res.status(500).json(reply.failure({
+                type: "localDB",
+                message: "Local DB update failed after Auth update. System state may be inconsistent."
+            }));
         }
 
         if (!updatedUser) {
-            return res.status(404).json(reply.failure(Lang.USER_NOT_FOUND));
+            return res.status(404).json(reply.failure({
+                type: "notFound",
+                message: Lang.USER_NOT_FOUND
+            }));
         }
 
-        // Clear cached profile data if needed
-        await deleteProfileData(req.user._id);
+        await deleteProfileData(req.user._id); // clear cache
 
         return res.status(200).json(reply.success(Lang.USER_UPDATED, { user: updatedUser }));
+
     } catch (err) {
-        console.error("Error updating profile:", err);
-        return res.status(500).json(reply.failure("Internal Server Error"));
+        console.error("Unexpected error occurred while updating profile:", err);
+        return res.status(500).json(reply.failure({
+            type: "server",
+            message: "Internal Server Error"
+        }));
     }
 };
 

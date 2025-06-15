@@ -26,7 +26,8 @@ COPY scoring-service/package.json scoring-service/pnpm-lock.yaml ./
 RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ Copy rest of the service source code
-# COPY scoring-service/ ./
+COPY scoring-service/src ./src
+COPY scoring-service/.env ./env
 
 # 🔟 (Optional) Generate Prisma Client if using Prisma
 # RUN pnpm prisma generate

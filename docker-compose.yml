@@ -13,27 +13,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
-    environment:
-      - MONGODB_URL=mongodb://mongodb:27017/api-gateway-db
-      - KAFKA_BROKERS=kafka:9092
-      - HOST=0.0.0.0
-      - PORT=7000
-      - NODE_ENV=development
-      - JWT_SECRET=vishal123
-      - SOCKET_PORT=5060
-      - AUTH_SERVICE_HOST=auth-service
-      - USER_SERVICE_HOST=user-service
-      - TEAM_SERVICE_HOST=team-service
-      - NOTIFICATION_SERVICE_HOST=notification-service
-      - TOURNAMENT_SERVICE_HOST=tournament-service
-      - VENUE_SERVICE_HOST=venue-service
-      - AUTH_PORT=7001
-      - NOTIFICATION_PORT=7002
-      - SCORING_PORT=7004
-      - TEAM_PORT=7005
-      - TOURNAMENT_PORT=7006
-      - USER_PORT=7007
-      - VENUE_PORT=7008
+    env_file:
+      - api-gateway/.env
     networks:
       - api-gateway-network
     healthcheck:
@@ -51,8 +32,8 @@ services:
     ports:
       - "7001:7001"
     volumes:
-      - ./auth-service:/app/auth-service
-      -  /app/auth-service/node_modules
+      - ./auth-service/src:/app/auth-service/src
+    # -  /app/auth-service/node_modules
     depends_on:
       redis:
         condition: service_healthy
@@ -60,10 +41,6 @@ services:
         condition: service_healthy
     env_file:
       - auth-service/.env
-    environment:
-      - DATABASE_URL=postgresql://neondb_owner:npg_x1BUfplakEZ6@ep-orange-firefly-a8bpj5dl-pooler.eastus2.azure.neon.tech/neondb?sslmode=require
-      - REDIS_URL=redis
-      - KAFKA_BROKERS=kafka:9092
     networks:
       - api-gateway-network
 
@@ -92,8 +69,8 @@ services:
     ports:
       - "7002:7002"
     volumes:
-      - ./notification-service:/app/notification-service
-      - /app/notification-service/node_modules
+      - ./notification-service/src:/app/notification-service/src
+    # - /app/notification-service/node_modules
     depends_on:
       mongodb:
         condition: service_healthy
@@ -101,10 +78,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    environment:
-      - MONGODB_URL=mongodb://mongodb:27017/notification-db
-      - REDIS_URL=redis
-      - KAFKA_BROKERS=kafka:9092
+    env_file:
+      - notification-service/.env
     networks:
       - api-gateway-network
       - notification-network
@@ -116,8 +91,8 @@ services:
     ports:
       - "7003:7003"
     volumes:
-      - ./scoring-service:/app/scoring-service
-      -  /app/scoring-service/node_modules
+      - ./scoring-service/src:/app/scoring-service/src
+    # -  /app/scoring-service/node_modules
     command: pnpm dev
     depends_on:
       mongodb:
@@ -126,10 +101,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    environment:
-      - MONGODB_URL=mongodb://mongodb:27017/scoring-db
-      - REDIS_URL=redis
-      - KAFKA_BROKERS=kafka:9092
+    env_file:
+      - scoring-service/.env
     networks:
       - api-gateway-network
       - scoring-network
@@ -146,8 +119,8 @@ services:
     ports:
       - "7005:7005"
     volumes:
-      - ./team-service:/app/team-service
-      -  /app/team-service/node_modules
+      - ./team-service/src:/app/team-service/src
+    # -  /app/team-service/node_modules
     command: pnpm dev
     depends_on:
       mongodb:
@@ -156,10 +129,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    environment:
-      - MONGODB_URL=mongodb://mongodb:27017/team-db
-      - REDIS_URL=redis
-      - KAFKA_BROKERS=kafka:9092
+    env_file:
+      - team-service/.env
     networks:
       - api-gateway-network
       - team-network
@@ -176,8 +147,8 @@ services:
     ports:
       - "7006:7006"
     volumes:
-      - ./tournament-service:/app/tournament-service
-      - /app/tournament-service/node_modules 
+      - ./tournament-service/src:/app/tournament-service/src
+    # - /app/tournament-service/node_modules 
     command: pnpm dev 
     depends_on:
       mongodb:
@@ -186,10 +157,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    environment:
-      - MONGODB_URL=mongodb://mongodb:27017/tournament-db
-      - REDIS_URL=redis
-      - KAFKA_BROKERS=kafka:9092
+    env_file:
+      - tournament-service/.env
     networks:
       - api-gateway-network
       - tournament-network
@@ -201,8 +170,8 @@ services:
     ports:
       - "7007:7007"
     volumes:
-      - ./user-service:/app/user-service
-      -  /app/user-service/node_modules
+      - ./user-service/src:/app/user-service/src
+    # -  /app/user-service/node_modules
     #     - ./protos:/app/protos
     command: pnpm dev
     depends_on:
@@ -210,10 +179,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
-    environment:
-      - MONGODB_URL=mongodb://mongodb:27017/user-db
-      - REDIS_URL=redis
-      - KAFKA_BROKERS=kafka:9092
+    env_file:
+      - user-service/.env
     networks:
       - api-gateway-network
       - user-network
@@ -225,17 +192,15 @@ services:
     ports:
       - "7008:7008"
     volumes:
-      - ./venue-service:/app/venue-service
-      -  /app/venue-service/node_modules
+      - ./venue-service/src:/app/venue-service/src
+    # -  /app/venue-service/node_modules
     depends_on:
       mongodb:
         condition: service_healthy
       kafka:
         condition: service_healthy
-    environment:
-      - MONGODB_URL=mongodb://mongodb:27017/venue-db
-      - REDIS_URL=redis
-      - KAFKA_BROKERS=kafka:9092
+    env_file:
+      - venue-service/.env
     networks:
       - api-gateway-network
       - venue-network

@@ -10,15 +10,6 @@ RUN corepack enable
 # 4️⃣ Set root working directory
 WORKDIR /app
 
-# Optional: ARG for conditional copy if needed
-ARG INCLUDE_PROTOS=true
-
-# Copy protos during build if INCLUDE_PROTOS is true
-# RUN if [ "$INCLUDE_PROTOS" = "true" ]; then \
-#       echo "Copying protos..."; \
-#       mkdir -p ./protos; \
-#     fi
-
 # 5️⃣ Copy shared protos folder
 COPY protos/ ./protos
 
@@ -32,7 +23,8 @@ COPY notification-service/package.json notification-service/pnpm-lock.yaml ./
 RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ Copy rest of the service code after installing dependencies
-# COPY notification-service/ ./
+COPY notification-service/src ./src
+COPY notification-service/.env ./env
 
 # 🔟 (Optional) Generate Prisma client if needed
 # RUN pnpm prisma generate

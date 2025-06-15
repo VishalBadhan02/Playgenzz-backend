@@ -25,7 +25,8 @@ COPY team-service/package.json team-service/pnpm-lock.yaml ./
 RUN pnpm install --no-frozen-lockfile
 
 # 9️⃣ Copy the rest of your service code
-# COPY team-service/. ./
+COPY team-service/src ./src
+COPY team-service/.env ./env
 
 # 🔟 (Optional) Generate Prisma client if you’re using Prisma
 # RUN pnpm prisma generate
