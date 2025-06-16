@@ -52,6 +52,10 @@ class UserService {
         return user
     }
 
+    async fetchUserCarrerStats(_id) {
+        return carrer = await UserStatstics.findOne({ _id })
+    }
+
     // check the unique name
     async UniqueUserName(_id, userName) {
         try {

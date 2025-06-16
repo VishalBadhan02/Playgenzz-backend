@@ -10,6 +10,11 @@ const updateProfileSchema = z.object({
     lastName: z.string().optional(),
 });
 
+const searchSchema = z.object({
+    q: z.string().max(50).optional()
+});
+
 module.exports ={
-    updateProfileSchema
+    updateProfileSchema,
+    searchSchema
 }

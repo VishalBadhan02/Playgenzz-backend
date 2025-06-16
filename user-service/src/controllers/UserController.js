@@ -14,61 +14,10 @@ const { getParticipantDisplayData } = require("../utils/getParticipantDisplayDat
 const { formatedChatData } = require("../utils/formatedChatData");
 const grpcService = require("../services/grpcService");
 const MediaModel = require("../models/mediaSchema");
-const { updateProfileSchema } = require("../validations/profileValidation");
+const { updateProfileSchema, searchSchema } = require("../validations/profileValidation");
+const { getSearchResults } = require("../utils/getSearchResults");
 
-
-
-
-
-
-//     let userId;
-//     if (req.params.id) {
-//         userId = req.params.id;
-//     } else {
-//         userId = req.user?._id;
-//     }
-//     try {
-//         const cacheData = await getProfileData(userId)
-//         if (cacheData) {
-//             return res.status(200).json(reply.success(Lang.USER_PROFILE, cacheData));
-//         }
-
-//         const user = await userService.findUser(userId);
-
-//         if (!user) {
-//             return res.status(409).json(reply.failure(Lang.USER_NOT_FOUND));
-//         }
-
-//         const teams = await getTeamByUser(userId)
-//             .then((teamData) => {
-//                 return teamData;
-//                 // Process the team data as needed
-//             })
-//             .catch((error) => {
-//                 console.error('Failed to retrieve team data:', error);
-//                 // Handle the error appropriately
-//             });
-
-//         // fetch user friends from friends modal
-//         const friends = await setFriends(userId)
-
-//         //this check wheathee current user is user frient or not on profile page
-//         const checkCurrentPage = await userService.userFriendForCurrentPage(req.user._id, userId)
-
-
-//         user.userTeams = teams?.teams
-//         user.friends = friends
-//         user.friend = checkCurrentPage
-
-//         // await storeProfileData(userId, user)
-
-//         return res.status(200).json(reply.success(Lang.USER_PROFILE, user));
-//     } catch (err) {
-//         console.log("Error in getProfile", err)
-//         return res.status(500).json(reply.failure(err.message));
-//     }
-// }
-
+// only need to add carrer schema in this api
 const getProfile = async (req, res) => {
     const sessionUserId = req.user?._id;
     const profileUserId = req.params.id || sessionUserId;
@@ -110,6 +59,8 @@ const getProfile = async (req, res) => {
             user.friendCount = allFriends?.length || 0;
         }
 
+        // here we need to fetch the user caarer stats and sent to the frontend
+
         return res.status(200).json(reply.success(Lang.USER_PROFILE, user));
     } catch (err) {
         console.log("Error in getProfile", err);
@@ -117,33 +68,46 @@ const getProfile = async (req, res) => {
     }
 };
 
-
+//this api is done 
 const searchUsers = async (req, res) => {
     try {
-        const session_id = req.user._id;
-        const searchTerm = req.query.q || '';
+        const sessionId = req.user._id;
 
-        if (!session_id) {
+
+        if (!sessionId) {
             return res.status(401).json(reply.failure("Unauthorized: User not authenticated"));
         }
 
-        // ✅ Fetch users excluding the session user
-        const users = await userService.findFriends(session_id, searchTerm);
+        //✅ Validate query param with Zod
+        const parsed = searchSchema.safeParse(req.query);
+        if (!parsed.success) {
+            return res.status(400).json(reply.failure("Invalid query parameter"));
+        }
 
-        // ✅ Fetch friend requests
-        const friendRequests = await userService.friendRequests(session_id);
+        const searchTerm = req.query.q || '';
 
-        // if (!users.length) {
-        //     return res.status(404).json(reply.failure("No users found"));
-        // }
 
-        // ✅ Process friend status using utility function
-        const friendStatusMap = getFriendStatusMap(friendRequests, session_id);
+        // ✅ Call service layer
+        const { userList, check } = await getSearchResults(sessionId, searchTerm);
 
-        // ✅ Process user list using utility function
-        const userList = mapUserListWithFriends(users, friendStatusMap);
 
-        const check = friendRequests.filter((request) => request.request === session_id);
+        // // ✅ Fetch users excluding the session user
+        // const users = await userService.findFriends(sessionId, searchTerm);
+
+        // // ✅ Fetch friend requests
+        // const friendRequests = await userService.friendRequests(sessionId);
+
+        // // if (!users.length) {
+        // //     return res.status(404).json(reply.failure("No users found"));
+        // // }
+
+        // // ✅ Process friend status using utility function
+        // const friendStatusMap = getFriendStatusMap(friendRequests, sessionId);
+
+        // // ✅ Process user list using utility function
+        // const userList = mapUserListWithFriends(users, friendStatusMap);
+
+        // const check = friendRequests.filter((request) => request.request === sessionId);
 
         return res.status(200).json(reply.success("Users fetched successfully", { users: userList, check }));
 
@@ -153,7 +117,7 @@ const searchUsers = async (req, res) => {
     }
 };
 
-// Update Profile Controller
+//this api is done
 const UpdateProfile = async (req, res) => {
     try {
         if (!req.user || !req.user._id) {
