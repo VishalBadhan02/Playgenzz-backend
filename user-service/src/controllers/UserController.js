@@ -70,7 +70,7 @@ const getProfile = async (req, res) => {
     }
 };
 
-//this api is done 
+//also need to fetch wheater user is already a friend or not
 const searchUsers = async (req, res) => {
     try {
         const sessionId = req.user._id;
@@ -293,7 +293,7 @@ const handleRequest = async (req, res) => {
     }
 }
 
-//t
+//this api is done
 const handleDelete = async (req, res) => {
     try {
         const { _id } = req.body;
