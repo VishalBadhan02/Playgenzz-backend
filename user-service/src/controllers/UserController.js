@@ -297,22 +297,22 @@ const handleDelete = async (req, res) => {
     try {
         const { _id } = req.body;
         // This service update the FriendModal means by updating this you will delete user from you friends list
-        const friendRequest = await userService.friendModelDelete(_id)
-
-        if (friendRequest.operation === "delete") {
-            await sendMessage("delete-request", { entityId: friendRequest?.friendRequest?._id, operation: "delete" })
-            return res.status(200).json(reply.success());
-
-        }
+        const friendRequest = await userService.friendModelDelete(_id);
 
         await Promise.allSettled([
             await deleteProfileData(friendRequest?.user_id),
             await deleteProfileData(friendRequest?.request)
         ])
 
+        // if user undo the request inbetween then 1 mint then 
+        if (friendRequest.operation === "delete") {
+            await sendMessage("delete-request", { entityId: friendRequest?.friendRequest?._id, operation: "delete" })
+            return res.status(200).json(reply.success());
+
+        }
+
+        // update the notification using same consumer in notification kafkacontroller the logic is writen if operation is delete the complete notification modal get deleted else it modal status get updated to 3 but not get deleted so no need to get confuded here
         await sendMessage("delete-request", { entityId: friendRequest?._id })
-        //notification send to the other user
-        // await sendMessage("update-request", { entityId: modal._id, type: "unFriend" })
 
         return res.json(reply.success())
     } catch (err) {

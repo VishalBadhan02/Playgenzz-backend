@@ -103,23 +103,17 @@ class UserService {
                 throw new Error("Friend request not found");
             }
 
-            // Calculate the time difference in milliseconds
-            const timeDifference = new Date() - friendRequest.createdAt;
+            friendRequest.status = 2;
+            friendRequest.commit = "undo";
+            await friendRequest.save();
 
-            // Check if the request was created within the last 1 minute (60000 ms)
-            if (timeDifference <= 60000) {
-                // Delete the friend request
-                friendRequest.status = 2;
-                friendRequest.commit = "undo";
-                await friendRequest.save();
+            const isUndoEarly = (new Date() - friendRequest.createdAt) <= 60000;
+
+            if (isUndoEarly) {
                 return { friendRequest, operation: "delete" };
-            } else {
-                // Update the friend request status to 'canceled' (assuming status 2 represents 'canceled')
-                friendRequest.status = 2;
-                friendRequest.commit = "undo";
-                await friendRequest.save();
-                return friendRequest;
             }
+
+            return friendRequest;
 
         } catch (error) {
             return error
