@@ -293,18 +293,20 @@ const handleRequest = async (req, res) => {
     }
 }
 
+//t
 const handleDelete = async (req, res) => {
     try {
         const { _id } = req.body;
         // This service update the FriendModal means by updating this you will delete user from you friends list
         const friendRequest = await userService.friendModelDelete(_id);
 
+        // we are deleting the cache when there is any change in friends there are stats which are changing 
         await Promise.allSettled([
             await deleteProfileData(friendRequest?.user_id),
             await deleteProfileData(friendRequest?.request)
         ])
 
-        // if user undo the request inbetween then 1 mint then 
+        // if user undo the request inbetween then 1 mint then notification modal will get deleted but not friendmodal which exist in user-service, and this for data analytics
         if (friendRequest.operation === "delete") {
             await sendMessage("delete-request", { entityId: friendRequest?.friendRequest?._id, operation: "delete" })
             return res.status(200).json(reply.success());
