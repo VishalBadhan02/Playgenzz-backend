@@ -1,6 +1,7 @@
 const { mongoose } = require("mongoose");
 
 const UserStatSchema = mongoose.Schema({
+    _id: String,
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "users",
@@ -15,4 +16,4 @@ const UserStatSchema = mongoose.Schema({
 
 const UserStatsModel = mongoose.model("statistics", UserStatSchema);
 
-module.exports = UserStatsModel;s
+module.exports = UserStatsModel;

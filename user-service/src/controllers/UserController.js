@@ -17,7 +17,7 @@ const MediaModel = require("../models/mediaSchema");
 const { updateProfileSchema, searchSchema } = require("../validations/profileValidation");
 const { getSearchResults } = require("../utils/getSearchResults");
 
-// only need to add carrer schema in this api
+//this api is done
 const getProfile = async (req, res) => {
     const sessionUserId = req.user?._id;
     const profileUserId = req.params.id || sessionUserId;
@@ -234,6 +234,7 @@ const UpdateProfile = async (req, res) => {
     }
 };
 
+//this api is done
 const handleRequest = async (req, res) => {
     try {
         const { request } = req.body;
@@ -242,21 +243,24 @@ const handleRequest = async (req, res) => {
             return res.status(400).json({ error: "Receiver ID is required" });
         }
 
+        const senderId = req.user._id;
+
         // Find sender user details
-        const user = await userService.findUser(req.user._id)
+        const user = await userService.findUser(senderId)
         if (!user) {
             return res.status(404).json({ error: "User not found" });
         }
 
         // Prepare friend request data
         const friendRequestData = {
-            user_id: req.user._id,
+            user_id: senderId,
             request: request,
             status: 0,
             commit: "add request",
             type: "request"
         }
 
+        // ✅ Create friend request
         const friendRequest = await userService.addFriend(friendRequestData)
         if (!friendRequest) {
             return res.status(500).json({ error: "Failed to create friend request" });
@@ -264,7 +268,7 @@ const handleRequest = async (req, res) => {
 
         const notificationData = {
             receiverId: request,           // Who receives this notification
-            actorId: req.user._id,               // Who triggered the action
+            actorId: senderId,               // Who triggered the action
             type: Config.NOTIF_TYPE_REQUEST,// Type of notification (friend_request)
             entityId: friendRequest._id,// ID of the related entity (match, team, tournament, etc.)
             message: Config.NOTIF_MESSAGE,  // Readable message
@@ -274,10 +278,16 @@ const handleRequest = async (req, res) => {
                 name: user?.userName
             }
         }
-        await deleteProfileData(req.user._id)
-        await deleteProfileData(request)
+
+        // ✅ Cache Invalidation (non-blocking)
+        await Promise.allSettled([
+            deleteProfileData(senderId),
+            deleteProfileData(request)
+        ]);
+
         await sendMessage("friend-request", notificationData)
-        return res.json(reply.success())
+
+        return res.status(200).json(reply.success());
     } catch (err) {
         res.json({ error: err.message });
     }

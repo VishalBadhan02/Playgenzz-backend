@@ -54,7 +54,8 @@ class UserService {
     }
 
     async fetchUserCarrerStats(_id) {
-        return carrer = await UserStatsModel.findOne({ _id })
+        const carrer = await UserStatsModel.findOne({ _id })
+        return carrer ? carrer : {}
     }
 
     // check the unique name
