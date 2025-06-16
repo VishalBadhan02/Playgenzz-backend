@@ -14,16 +14,23 @@ class UserService {
     }
 
     // Find Friends by Username Search
-    async findFriends(_id, searchTerm) {
-        const users = await UserModel.find({
-            _id: { $ne: _id },
-            userName: { $regex: `^${searchTerm}`, $options: "i" }
-        })
+    async findFriends(sessionId, searchTerm) {
+        const query = {
+            _id: { $ne: sessionId }
+        };
+
+        if (searchTerm) {
+            query.userName = { $regex: `^${searchTerm}`, $options: "i" };
+        }
+
+        const users = await UserModel.find(query)
             .select("_id userName team profilePicture")
-            .sort({ createdAt: -1 }) // most recent users first
-            .limit(7);
-        return users; // Always returns an array (empty if no users found)
+            .sort({ createdAt: -1 })
+            .limit(7); // You can replace 7 with limit param if you add pagination later
+
+        return users;
     }
+
 
     // handle friend request 
     async friendRequests(session_id) {
@@ -45,6 +52,7 @@ class UserService {
         return user
     }
 
+    // check the unique name
     async UniqueUserName(_id, userName) {
         try {
             const user = await UserModel.findOne({
