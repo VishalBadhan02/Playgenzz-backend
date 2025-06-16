@@ -300,19 +300,20 @@ const handleDelete = async (req, res) => {
         const friendRequest = await userService.friendModelDelete(_id)
 
         if (friendRequest.operation === "delete") {
-            console.log("here")
             await sendMessage("delete-request", { entityId: friendRequest?.friendRequest?._id, operation: "delete" })
-            return res.json(reply.success())
+            return res.status(200).json(reply.success());
 
         }
 
-        await deleteProfileData(friendRequest?.user_id)
-        await deleteProfileData(friendRequest?.request)
+        await Promise.allSettled([
+            await deleteProfileData(friendRequest?.user_id),
+            await deleteProfileData(friendRequest?.request)
+        ])
+
         await sendMessage("delete-request", { entityId: friendRequest?._id })
         //notification send to the other user
         // await sendMessage("update-request", { entityId: modal._id, type: "unFriend" })
 
-        // await NotificationModel.findOneAndDelete({ type_id: _id })
         return res.json(reply.success())
     } catch (err) {
         res.status(500).json({ error: err.message });
