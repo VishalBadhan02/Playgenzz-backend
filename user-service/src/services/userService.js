@@ -25,6 +25,7 @@ class UserService {
         return users; // Always returns an array (empty if no users found)
     }
 
+    // handle friend request 
     async friendRequests(session_id) {
         const friendRequests = await FriendModel.find({
             $or: [
@@ -36,6 +37,7 @@ class UserService {
         return friendRequests; // Always returns an array (empty if no users found)
     }
 
+    // service to update profile
     async updateProfile(_id, updateData) {
         const user = await UserModel.findOneAndUpdate({ _id }, { $set: updateData }, {
             new: true
