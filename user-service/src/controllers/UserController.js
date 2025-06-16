@@ -269,8 +269,6 @@ const UpdateProfile = async (req, res) => {
     }
 };
 
-
-
 const handleRequest = async (req, res) => {
     try {
         const { request } = req.body;
@@ -345,7 +343,6 @@ const handleDelete = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 }
-
 
 const handleApproval = async (req, res) => {
     try {
@@ -444,7 +441,6 @@ const getUserFriends = async (req, res) => {
     }
 };
 
-
 const getChat = async (req, res) => {
     try {
         const { conversationId } = req.params
@@ -517,11 +513,6 @@ const handleMediaUploads = async (req, res) => {
 //         return res.status(500).json({ error: err.message });
 //     }
 // };
-
-
-
-
-
 
 // const getPlayers = async (req, res) => {
 //     try {
