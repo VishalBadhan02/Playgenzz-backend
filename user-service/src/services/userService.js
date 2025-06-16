@@ -66,6 +66,7 @@ class UserService {
             return error
         }
     }
+
     async addFriend(friendData) {
         try {
             const request = new FriendModel({
@@ -108,6 +109,7 @@ class UserService {
             return error
         }
     }
+
     async friendModelUpdate(_id) {
         try {
             const accept = await FriendModel.findOneAndUpdate({ _id }, { $set: { status: 1, commit: "request accepted" } })
@@ -117,7 +119,6 @@ class UserService {
             return error
         }
     }
-
 
     async userFriends(user_id) {
         try {
@@ -195,7 +196,6 @@ class UserService {
         }
     }
 
-
     async getUserContacts(userID) {
         try {
             const conversations = await Conversation.find({
@@ -222,9 +222,6 @@ class UserService {
             throw error;
         }
     }
-
-
-
 }
 
 module.exports = new UserService();

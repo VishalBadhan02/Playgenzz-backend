@@ -153,7 +153,6 @@ const searchUsers = async (req, res) => {
     }
 };
 
-
 // Update Profile Controller
 const UpdateProfile = async (req, res) => {
     try {
