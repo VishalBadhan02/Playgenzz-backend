@@ -2,6 +2,7 @@ const Conversation = require("../models/conversationSchema");
 const { MessageModel } = require("../models/messageModal");
 const { FriendModel } = require("../models/useFriends");
 const UserModel = require("../models/user");
+const UserStatsModel = require("../models/userStats");
 const { deleteConversationModal } = require("./redisServices");
 
 class UserService {
@@ -53,7 +54,7 @@ class UserService {
     }
 
     async fetchUserCarrerStats(_id) {
-        return carrer = await UserStatstics.findOne({ _id })
+        return carrer = await UserStatsModel.findOne({ _id })
     }
 
     // check the unique name

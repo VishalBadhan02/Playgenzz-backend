@@ -59,7 +59,9 @@ const getProfile = async (req, res) => {
             user.friendCount = allFriends?.length || 0;
         }
 
-        // here we need to fetch the user caarer stats and sent to the frontend
+        // all the user stats including tournaments, victory getting fetched here
+        const carrer = await userService.fetchUserCarrerStats(sessionUserId)
+        user.carrer = carrer
 
         return res.status(200).json(reply.success(Lang.USER_PROFILE, user));
     } catch (err) {
