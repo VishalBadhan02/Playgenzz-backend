@@ -92,8 +92,6 @@ const Register = async (req, res) => {
     }
 
 
-
-
     const existingUser = await ExistUser(validationCheckData)
 
     // console.log("Existing User", existingUser)

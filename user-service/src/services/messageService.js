@@ -1,5 +1,6 @@
 const Conversation = require("../models/conversationSchema");
 const { MessageModel } = require("../models/messageModal");
+const { getCacheMessages, setCacheMessages } = require("./redisServices");
 
 class MessageService {
     constructor() { }
@@ -18,11 +19,17 @@ class MessageService {
     async getMessage(conversationId, page = 0, limit = 20) {
         try {
             const skipCount = page * limit;
-
+            // 1. Try fetching from Redis cache
+            const cachedMessages = await getCacheMessages(conversationId, page);
+            if (cachedMessages) {
+                return cachedMessages;
+            }
             const messages = await MessageModel.find({ conversationId: conversationId })
                 .sort({ updatedAt: 1 })  // Latest messages first
                 .skip(skipCount)
                 .limit(limit);
+
+            await setCacheMessages(conversationId, page, messages)
 
             return messages;
         } catch (error) {

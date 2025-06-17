@@ -1,5 +1,6 @@
+const { redis } = require("../clients/redisClient");
 const { MessageModel } = require("../models/messageModal");
-const { getConversation, storeConversation, deleteConversation, getConversationModal } = require("../services/redisServices");
+const { getConversation, storeConversation, deleteConversation, getConversationModal, deleteAllCachedMessages } = require("../services/redisServices");
 const userService = require("../services/userService");
 const WebSocket = require('ws');
 
@@ -10,7 +11,17 @@ const messageControl = async (ws, datat, wss, userConnections) => {
 
         if (!ws.user || !data.message) {
             console.error("Missing required fields");
-            return false;
+            return ws.send(JSON.stringify({ error: 'Invalid data' }));
+        }
+
+        // ✅ Rate limiting (Max 5 messages/sec per user)
+        const key = `user:${ws.user}:message-rate`;
+        const current = await redis.incr(key);
+        if (current === 1) {
+            await redis.expire(key, 1); // 1-second window
+        }
+        if (current > 5) {
+            return ws.send(JSON.stringify({ error: "You're sending messages too quickly!" }));
         }
 
         // Try getting conversationId from Redis
@@ -39,6 +50,9 @@ const messageControl = async (ws, datat, wss, userConnections) => {
         };
 
         const messageData = await userService.messageModal(modalData);
+
+        //delete all the cahched messages 
+        await deleteAllCachedMessages(conversationId);
 
         // Only send to the receiver if they are connected
         const receiverSocket = userConnections.get(to);

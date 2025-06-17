@@ -33,7 +33,6 @@ services:
       - "7001:7001"
     volumes:
       - ./auth-service/src:/app/auth-service/src
-    # -  /app/auth-service/node_modules
     depends_on:
       redis:
         condition: service_healthy
@@ -70,7 +69,6 @@ services:
       - "7002:7002"
     volumes:
       - ./notification-service/src:/app/notification-service/src
-    # - /app/notification-service/node_modules
     depends_on:
       mongodb:
         condition: service_healthy
@@ -92,7 +90,6 @@ services:
       - "7003:7003"
     volumes:
       - ./scoring-service/src:/app/scoring-service/src
-    # -  /app/scoring-service/node_modules
     command: pnpm dev
     depends_on:
       mongodb:
@@ -120,7 +117,6 @@ services:
       - "7005:7005"
     volumes:
       - ./team-service/src:/app/team-service/src
-    # -  /app/team-service/node_modules
     command: pnpm dev
     depends_on:
       mongodb:
@@ -148,7 +144,6 @@ services:
       - "7006:7006"
     volumes:
       - ./tournament-service/src:/app/tournament-service/src
-    # - /app/tournament-service/node_modules 
     command: pnpm dev 
     depends_on:
       mongodb:
@@ -171,8 +166,6 @@ services:
       - "7007:7007"
     volumes:
       - ./user-service/src:/app/user-service/src
-    # -  /app/user-service/node_modules
-    #     - ./protos:/app/protos
     command: pnpm dev
     depends_on:
       mongodb:
@@ -193,7 +186,6 @@ services:
       - "7008:7008"
     volumes:
       - ./venue-service/src:/app/venue-service/src
-    # -  /app/venue-service/node_modules
     depends_on:
       mongodb:
         condition: service_healthy

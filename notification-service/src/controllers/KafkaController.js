@@ -14,7 +14,8 @@ const handleFriendRequest = async (data) => {
         await deleteNotifications(`user:${data?.receiverId}:notifications`)
         return true
     } catch (error) {
-        return error
+        console.error("KafkaController Error in : handleFriendRequest ", error);
+        return false;
     }
 }
 
@@ -29,7 +30,8 @@ const handleDeleteRequest = async (data) => {
         await notificationService.updateNotification(data?.entityId, 3, Lang.CANCEL_REQUEST)
         return true
     } catch (error) {
-        return error
+        console.error("KafkaController Error in handleDeleteRequest :", error);
+        return false;
     }
 }
 
@@ -38,7 +40,8 @@ const handleApproveRequest = async (data) => {
         await notificationService.updateNotification(data?.entityId, 1, Lang.APPROVER_SIDE_USER_REQUEST)
         return true
     } catch (error) {
-
+        console.error("KafkaController Error in handleApproveRequest :", error);
+        return false;
     }
 }
 

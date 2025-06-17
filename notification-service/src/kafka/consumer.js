@@ -12,28 +12,33 @@ async function startConsumer() {
   await consumer.run({
     eachMessage: async ({ topic, partition, message }) => {
       hasRunStarted = true; // ✅ set flag
-
+      let success = false;
       try {
         const messageValue = message.value.toString();
         const data = JSON.parse(messageValue);
 
         switch (topic) {
           case 'friend-request':
-            await handleFriendRequest(data);
+            success = await handleFriendRequest(data);
             break;
           case 'delete-request':
-            await handleDeleteRequest(data);
+            success = await handleDeleteRequest(data);
             break;
           case 'approve-request':
-            await handleApproveRequest(data);
+            success = await handleApproveRequest(data);
             break;
           default:
             console.warn(`No handler for topic ${topic}`);
         }
 
-        await consumer.commitOffsets([
-          { topic, partition, offset: (Number(message.offset) + 1).toString() },
-        ]);
+        if (success) {
+          await consumer.commitOffsets([
+            { topic, partition, offset: (Number(message.offset) + 1).toString() },
+          ]);
+        } else {
+          console.warn("Kafka processing failed. Offset not committed.");
+          // Optional: push to retry queue or alert.
+        }
       } catch (error) {
         console.error(`Error processing message from topic ${topic}:`, error);
       }

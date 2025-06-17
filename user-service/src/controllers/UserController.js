@@ -321,7 +321,7 @@ const handleDelete = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 }
-
+//this api is done 
 const handleApproval = async (req, res) => {
     try {
         const { approvalData } = req.body
@@ -422,13 +422,14 @@ const getUserFriends = async (req, res) => {
 const getChat = async (req, res) => {
     try {
         const { conversationId } = req.params
+        const page = parseInt(req.query.page) || 0;
+        const limit = parseInt(req.query.limit) || 20;
 
-        const chat = await messageService.getMessage(conversationId)
+        const chat = await messageService.getMessage(conversationId, page, limit)
 
         const formatedChats = await formatedChatData(chat, req.user._id)
 
-
-        return res.status(202).json(reply.success("Message fetched Succesfully", formatedChats));
+        return res.status(200).json(reply.success("Message fetched Succesfully", formatedChats));
     } catch (error) {
         console.error('Error fetching messages:', error);
         return res.status(500).json({ message: 'Error fetching messages' });

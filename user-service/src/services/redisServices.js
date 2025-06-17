@@ -51,6 +51,44 @@ const deleteProfileData = async (cacheKey) => {
     await redis.del(`profileData:${cacheKey}`);
 }
 
+const setCacheMessages = async (conversationId, page, data) => {
+    const redisKey = `conversation:${conversationId}:messages:page:${page}`;
+    const pageSetKey = `conversation:${conversationId}:cachedPages`;
+
+    await redis.set(redisKey, JSON.stringify(data), 'EX', 600)
+    await redis.sadd(pageSetKey, page);
+}
+
+const getCacheMessages = async (conversationId, page) => {
+    const redisKey = `conversation:${conversationId}:messages:page:${page}`;
+    const message = await redis.get(redisKey)
+    return message ? JSON.parse(message) : null;
+}
+
+const deleteMessages = async (conversationId, page) => {
+    const redisKey = `conversation:${conversationId}:messages:page:${page}`;
+    const pageSetKey = `conversation:${conversationId}:cachedPages`;
+
+    await redis.del(redisKey);
+    await redis.srem(pageSetKey, page); // 👈 remove that page from tracking set
+}
+
+const deleteAllCachedMessages = async (conversationId) => {
+    const pageSetKey = `conversation:${conversationId}:cachedPages`;
+
+    const pages = await redis.smembers(pageSetKey); // 👈 get tracked pages
+
+    if (pages.length > 0) {
+        const deletePromises = pages.map((page) =>
+            redis.del(`conversation:${conversationId}:messages:page:${page}`)
+        );
+        await Promise.all(deletePromises);
+    }
+
+    await redis.del(pageSetKey); // 👈 delete the tracking set itself
+}
+
+
 module.exports = {
     storeConversation,
     getConversation,
@@ -61,5 +99,9 @@ module.exports = {
     deleteConversationModal,
     storeProfileData,
     getProfileData,
-    deleteProfileData
+    deleteProfileData,
+    setCacheMessages,
+    getCacheMessages,
+    deleteMessages,
+    deleteAllCachedMessages
 };

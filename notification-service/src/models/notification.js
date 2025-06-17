@@ -10,6 +10,9 @@ const NotificationSchema = mongoose.Schema({
     data: Object,
 }, { timestamps: true })
 
+// NotificationSchema.schema.index({ receiverId: 1, status: 1, createdAt: -1 });
+
+
 const NotificationModel = mongoose.model("notifications", NotificationSchema)
 
 module.exports = { NotificationModel }

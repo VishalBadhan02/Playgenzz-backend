@@ -1,5 +1,5 @@
 const formatedChatData = (chat, userId) => {
-    return data = chat?.map((msg) => ({
+    return chat?.map((msg) => ({
         id: msg._id,
         sender: msg.from,
         text: msg.message,
