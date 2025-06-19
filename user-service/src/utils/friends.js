@@ -60,4 +60,37 @@ const mapUserListWithFriends = (users, friendStatusMap) => {
     });
 };
 
-module.exports = { getFriendStatusMap, mapUserListWithFriends };
+
+// utils.js
+function mapFriend(friendsRecord, sessionId) {
+    const isSent = friendsRecord.user_id._id.toString() === sessionId.toString();
+    const friendUser = isSent ? friendsRecord.request : friendsRecord.user_id;
+
+    return {
+        friendshipId: friendsRecord._id,
+        friendId: friendUser._id,
+        userName: friendUser.userName,
+        profilePicture: friendUser.profilePicture,
+        status: friendsRecord.status,
+        direction: isSent ? 'sent' : 'received',
+    };
+}
+
+function mapParticipant(p, convoId, lastMessages, unreadCounts) {
+    const lastMsgDoc = lastMessages[convoId];
+    return {
+        _id: convoId,
+        userId: p.entityId,
+        type: p.entityType,
+        status: lastMsgDoc?.status,
+        lastMessage: lastMsgDoc?.message || null,
+        lastMessageTime: lastMsgDoc?.updatedAt || null,
+        unreadCount: unreadCounts[convoId] || 0,
+        name: p.name,
+        avatar: p.profilePicture,
+    };
+}
+
+
+
+module.exports = { getFriendStatusMap, mapUserListWithFriends, mapFriend, mapParticipant };
