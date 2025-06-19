@@ -6,13 +6,23 @@
  * @param {String} session_id - ID of the current user
  * @returns {Object} - Friend status mapping
  */
-const getFriendStatusMap = (friendRequests, session_id) => {
-    const friendStatusMap = {};
-    friendRequests.forEach((request) => {
-        const key = request.user_id === session_id ? request.request : request.user_id;
-        friendStatusMap[key] = request;
-    });
-    return friendStatusMap;
+const getFriendStatusMap = (friendRequests, sessionId) => {
+    const map = {};
+
+    for (const req of friendRequests) {
+        const isSent = req.user_id.toString() === sessionId.toString();
+
+        // key = ID of the *other* user
+        const key = isSent ? req.request.toString() : req.user_id.toString();
+
+        map[key] = {
+            modalId: req._id,
+            status: req.status, // 0 = pending, 1 = accepted
+            direction: isSent ? 'sent' : 'received',
+        };
+    }
+
+    return map;
 };
 
 /**
@@ -22,10 +32,32 @@ const getFriendStatusMap = (friendRequests, session_id) => {
  * @returns {Array} - Processed list of users
  */
 const mapUserListWithFriends = (users, friendStatusMap) => {
-    return users.map((user) => ({
-        ...user.toObject(),
-        friends: friendStatusMap[user._id] || null,
-    }));
+    return users.map(user => {
+        const statusEntry = friendStatusMap[user._id];
+        // console.log(statusEntry)
+
+        if (!statusEntry) {
+            return {
+                ...user,
+                status: 'none', // no request, not friends
+                requestId: null
+            };
+        }
+
+        if (statusEntry.status === 1) {
+            return {
+                ...user,
+                status: 'friends', // request accepted
+                requestId: statusEntry.modalId,
+            };
+        }
+
+        return {
+            ...user,
+            status: statusEntry.direction, // 'sent' or 'received'
+            requestId: statusEntry.modalId,
+        };
+    });
 };
 
 module.exports = { getFriendStatusMap, mapUserListWithFriends };

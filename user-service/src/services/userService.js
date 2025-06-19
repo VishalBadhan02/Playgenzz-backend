@@ -27,11 +27,10 @@ class UserService {
         const users = await UserModel.find(query)
             .select("_id userName team profilePicture")
             .sort({ createdAt: -1 })
-            .limit(7); // You can replace 7 with limit param if you add pagination later
-
+            .limit(7) // You can replace 7 with limit param if you add pagination later
+            .lean();
         return users;
     }
-
 
     // handle friend request 
     async friendRequests(session_id) {

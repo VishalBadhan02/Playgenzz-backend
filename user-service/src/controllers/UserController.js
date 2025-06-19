@@ -70,11 +70,10 @@ const getProfile = async (req, res) => {
     }
 };
 
-//also need to fetch wheater user is already a friend or not
+//this api is done
 const searchUsers = async (req, res) => {
     try {
         const sessionId = req.user._id;
-
 
         if (!sessionId) {
             return res.status(401).json(reply.failure("Unauthorized: User not authenticated"));
@@ -88,28 +87,8 @@ const searchUsers = async (req, res) => {
 
         const searchTerm = req.query.q || '';
 
-
         // ✅ Call service layer
         const { userList, check } = await getSearchResults(sessionId, searchTerm);
-
-
-        // // ✅ Fetch users excluding the session user
-        // const users = await userService.findFriends(sessionId, searchTerm);
-
-        // // ✅ Fetch friend requests
-        // const friendRequests = await userService.friendRequests(sessionId);
-
-        // // if (!users.length) {
-        // //     return res.status(404).json(reply.failure("No users found"));
-        // // }
-
-        // // ✅ Process friend status using utility function
-        // const friendStatusMap = getFriendStatusMap(friendRequests, sessionId);
-
-        // // ✅ Process user list using utility function
-        // const userList = mapUserListWithFriends(users, friendStatusMap);
-
-        // const check = friendRequests.filter((request) => request.request === sessionId);
 
         return res.status(200).json(reply.success("Users fetched successfully", { users: userList, check }));
 
@@ -243,6 +222,7 @@ const handleRequest = async (req, res) => {
             return res.status(400).json({ error: "Receiver ID is required" });
         }
 
+
         const senderId = req.user._id;
 
         // Find sender user details
@@ -321,6 +301,7 @@ const handleDelete = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 }
+
 //this api is done 
 const handleApproval = async (req, res) => {
     try {
@@ -419,6 +400,7 @@ const getUserFriends = async (req, res) => {
     }
 };
 
+//this api is done
 const getChat = async (req, res) => {
     try {
         const { conversationId } = req.params
@@ -436,6 +418,7 @@ const getChat = async (req, res) => {
     }
 };
 
+// dont know how to precide further
 const handleMediaUploads = async (req, res) => {
     try {
         const { kind, itemId, caption } = req.body;
@@ -468,48 +451,6 @@ const handleMediaUploads = async (req, res) => {
     }
 }
 
-// const getPlayingFriends = async (req, res) => {
-//     try {
-//         const user_id = req.user._id;
-//         const friends = await FriendModel.find({ user_id: user_id })
-//             .populate({ path: "request", select: ["userName", "phoneNumber", "team", "_id"] })
-//         const friend = await FriendModel.find({ request: user_id })
-//             .populate({ path: "user_id", select: ["userName", "phoneNumber", "team", "_id"] })
-
-//         for (let i = 0; i < friends.length; i++) {
-//             const data = await AddTeamMemberModel.findOne({ player_id: friends[i].request._id })
-//             friend[i].friends = (data) ? data : null
-//         }
-
-//         for (let i = 0; i < friend.length; i++) {
-//             const data = await AddTeamMemberModel.findOne({ player_id: friend[i].user_id._id })
-//             friend[i].friends = (data) ? data : null
-//         }
-
-//         return res.json({ friends, friend });
-
-//     } catch (err) {
-//         return res.status(500).json({ error: err.message });
-//     }
-// };
-
-// const getPlayers = async (req, res) => {
-//     try {
-//         if (req.params.type === "joinTeam") {
-//             const addedPlayer = await AddTeamMemberModel.find({ playerId: req.user._id })
-//             if (!addedPlayer) {
-//                 return res.json(reply.failure("Fetched Scuccesfuly"))
-//             }
-//             return res.json(reply.success("Fetched Scuccesfuly", addedPlayer))
-
-//         }
-//         const addedPlayer = await AddTeamMemberModel.find({ userId: req.user._id }).populate({ path: "playerId", select: ["userName", "_id"] })
-//         return res.json(reply.success("Fetched Scuccesfuly", addedPlayer))
-//     } catch (err) {
-//         return res.json(err)
-//     }
-// }
-
 
 module.exports = {
     getProfile,
@@ -521,8 +462,6 @@ module.exports = {
     getUserFriends,
     getChat,
     handleMediaUploads
-    //     addFriend, getPlayers, getPlayingFriends, statusControl 
-
 }
 
 

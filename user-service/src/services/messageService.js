@@ -15,6 +15,21 @@ class MessageService {
         }
     }
 
+    async getLastMessagesForConversations(convoIds) {
+        const docs = await MessageModel.find({
+            conversationId: { $in: convoIds }
+        })
+            .sort({ updatedAt: -1 })
+            .distinct('conversationId') // one per conversation
+            .exec();
+
+        // Or aggregate: $group by conversationId with $first
+        return docs.reduce((map, msg) => {
+            map[msg.conversationId.toString()] = msg;
+            return map;
+        }, {});
+    }
+
 
     async getMessage(conversationId, page = 0, limit = 20) {
         try {
@@ -37,6 +52,17 @@ class MessageService {
         }
     }
 
+    
+    async getUnreadCounts(convoIds, userId) {
+        const docs = await MessageModel.aggregate([
+            { $match: { conversationId: { $in: convoIds }, to: userId, read: false } },
+            { $group: { _id: '$conversationId', count: { $sum: 1 } } },
+        ]);
+        return docs.reduce((map, obj) => {
+            map[obj._id.toString()] = obj.count;
+            return map;
+        }, {});
+    }
 
     // Get count of unread messages in a conversation
     async getUnReadCount(conversationId) {
