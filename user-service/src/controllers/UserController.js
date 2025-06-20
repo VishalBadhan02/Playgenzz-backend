@@ -318,6 +318,7 @@ const handleApproval = async (req, res) => {
     }
 }
 
+//need to work again on this 
 const getUserFriends = async (req, res) => {
     try {
         const user_id = req.user._id;

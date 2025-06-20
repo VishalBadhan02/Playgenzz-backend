@@ -137,7 +137,6 @@ const getUsersByIds = async (call, callback) => {
     }
 }
 
-
 const handleFriendModalUpdate = async (call, callback) => {
     const _id = call.request._id;
     const action = call.request.action;

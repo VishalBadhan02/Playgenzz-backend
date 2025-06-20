@@ -15,6 +15,26 @@ const { getUpdateDataByType } = require('../utils/teamMember');
 const { createNotificationPayload } = require('../utils/notifications');
 const { formatedMatches } = require('../utils/formatedMatches');
 
+const createTeam = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { teamName, games } = req.body;
+
+        // Validate input
+        if (!teamName || games) {
+            return res.status(400).json({ error: "Invalid payload" });
+        }
+
+        const result = await teamServices.registerTeam(userId, teamName, games);
+        return res.status(201).json({ teamId: result.team._id });
+
+    } catch (err) {
+        const code = err.code || 500;
+        return res.status(code).json({ error: err.message });
+    }
+};
+
+
 const registerTeam = async (req, res) => {
     try {
         const formData = req.body;
@@ -189,8 +209,6 @@ const getTeamProfile = async (req, res) => {
     }
 };
 
-
-
 const handleMatchRequest = async (req, res) => {
     const { teamId, sport, userId, date, time, venue, notes, playersPerTeam } = req.body;
     let user = req.user._id;
@@ -250,7 +268,6 @@ const handleMatchRequest = async (req, res) => {
 
     }
 };
-
 
 const getTeamsForRequest = async (req, res) => {
     try {
@@ -403,11 +420,6 @@ const gamesAndFixtures = async (req, res) => {
 // };
 
 
-
-
-
-
-
 const handleTeamMember = async (req, res) => {
     try {
         const { teamId, type, _id } = req.body;
@@ -454,9 +466,6 @@ const handleTeamMember = async (req, res) => {
     }
 };
 
-
-
-
 const updateTeam = async (req, res) => {
     try {
         const { _id, ...formData } = req.body;
@@ -484,7 +493,6 @@ const updateTeam = async (req, res) => {
     }
 };
 
-
 const getMatches = async (req, res) => {
     try {
         const user = req.user._id;
@@ -505,7 +513,6 @@ const getMatches = async (req, res) => {
     }
 };
 
-
 const fetchScoreCards = async (req, res) => {
     try {
         // const scoreCards = await ScoreCardModel.find().sort({ createdAt: 1 })
@@ -515,7 +522,6 @@ const fetchScoreCards = async (req, res) => {
 
     }
 }
-
 
 const handleTeamRequest = async (req, res) => {
     try {
@@ -605,5 +611,8 @@ module.exports = {
     gamesAndFixtures,
     handleTeamMember,
     handleAddPlayer,
-    updateTeam, getMatches, fetchScoreCards, registerTeam
+    updateTeam,
+    getMatches,
+    fetchScoreCards,
+    registerTeam
 }
