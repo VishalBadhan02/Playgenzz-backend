@@ -14,46 +14,21 @@ const sendMessage = require('../kafka/producer');
 const { getUpdateDataByType } = require('../utils/teamMember');
 const { createNotificationPayload } = require('../utils/notifications');
 const { formatedMatches } = require('../utils/formatedMatches');
-
-const createTeam = async (req, res) => {
-    try {
-        const userId = req.user._id;
-        const { teamName, games } = req.body;
-
-        // Validate input
-        if (!teamName || games) {
-            return res.status(400).json({ error: "Invalid payload" });
-        }
-
-        const result = await teamServices.registerTeam(userId, teamName, games);
-        return res.status(201).json({ teamId: result.team._id });
-
-    } catch (err) {
-        const code = err.code || 500;
-        return res.status(code).json({ error: err.message });
-    }
-};
+const { checkUniquenes } = require('../utils/checkUniquenes');
 
 
 const registerTeam = async (req, res) => {
     try {
         const formData = req.body;
         const userId = req.user._id;
+        const { teamName, games } = formData;
 
-        //  checking whether the user already registered in the team with existing game
-        const existingteamcheck = await teamServices.checkGameExisting(userId, formData.games)
-
-
-        if (existingteamcheck) {
-            return res.status(402).json(reply.failure(Lang.TEAM_EXIST));
+        // Validate input
+        if (!teamName || games) {
+            return res.status(400).json({ error: "Invalid payload" });
         }
 
-        //check unique name of the team if not unique then return 
-        const unique = await teamServices.checkUniqueName(formData?.teamName)
-
-        if (!unique) {
-            return res.status(409).json(reply.failure(Lang.UNIQUE_TEAM_NAME));
-        }
+        await checkUniquenes(userId, teamName, games, res)
 
         //service to register team in database
         const team = await teamServices.handleTeamRegisteation(formData, req.user._id)
@@ -75,7 +50,7 @@ const registerTeam = async (req, res) => {
         return res.status(201).json(reply.success(Lang.REGISTER_SUCCESS, team._id))
 
     } catch (err) {
-        return res.status(402).json({ error: err.message });
+        return res.status(err.statusCode || 500).json({ error: err.message });
     }
 }
 

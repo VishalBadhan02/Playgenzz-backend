@@ -200,29 +200,7 @@ class TeamService {
         }
     }
 
-    async registerTeam(userId, teamName, games) {
-        if (await this.checkGameExisting(userId, games)) {
-            const err = new Error("User already has a team in one of the selected games");
-            err.code = 409;
-            throw err;
-        }
-
-        if (!await this.checkUniqueName(teamName)) {
-            const err = new Error("Team name already used");
-            err.code = 409;
-            throw err;
-        }
-
-        const team = await createTeam({ name: teamName, games, captain: userId });
-        if (!team) {
-            const err = new Error("Unable to create team");
-            err.code = 500;
-            throw err;
-        }
-
-        await addPlayer({ userId, teamId: team._id, role: "Captain" });
-        return { team };
-    }
+  
 
 }
 
