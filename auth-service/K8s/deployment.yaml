@@ -1,0 +1,53 @@
+apiVersion: apps/v1   #version of the API used to create the deployment
+kind: Deployment      # Deployment resource type
+metadata:             
+    name: auth-service
+    labels:   
+     app: auth-service
+     tier: backend
+     environment: production
+spec:                 #specification of the desired state
+  replicas: 1         #Number of pods copies
+  selector:           # tell deployment which Pods it manages(by labels)
+    matchLabels:
+      app: auth-service
+  template:            #Pod definition
+    metadata:
+      labels:          # labes for pods
+        app: auth-service
+        tier: backend
+        environment: staging
+    spec:
+      containers:
+        - name: auth-service
+          image: ustaadlokk/auth-service:latest # Use your real Docker Hub image/tag
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 7001
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 7001
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 7001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 2
+          envFrom:
+            - configMapRef:
+                name: app-config
+      restartPolicy: Always

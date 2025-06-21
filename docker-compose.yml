@@ -5,6 +5,7 @@ services:
     build:
       context: ./
       dockerfile: api-gateway/Dockerfile
+    image: ustaadlokk/api-gateway:latest
     ports:
       - "8995:7000"
     restart: unless-stopped
@@ -29,6 +30,7 @@ services:
       dockerfile: auth-service/Dockerfile
       args:
         INCLUDE_PROTOS: "false"
+    image: ustaadlokk/auth-service:latest    
     ports:
       - "7001:7001"
     volumes:
@@ -65,6 +67,7 @@ services:
     build:
       context: ./
       dockerfile: notification-service/Dockerfile
+    image: ustaadlokk/notification-service:latest
     ports:
       - "7002:7002"
     volumes:
@@ -86,6 +89,7 @@ services:
     build:
       context: ./
       dockerfile: scoring-service/Dockerfile
+    image: ustaadlokk/scoring-service:latest
     ports:
       - "7003:7003"
     volumes:
@@ -113,6 +117,7 @@ services:
     build:
       context: ./
       dockerfile: team-service/Dockerfile
+    image: ustaadlokk/team-service:latest
     ports:
       - "7005:7005"
     volumes:
@@ -140,6 +145,7 @@ services:
     build:
       context: ./
       dockerfile: tournament-service/Dockerfile
+    image: ustaadlokk/tournament-service:latest
     ports:
       - "7006:7006"
     volumes:
@@ -162,6 +168,7 @@ services:
     build:
       context: ./
       dockerfile: user-service/Dockerfile
+    image: ustaadlokk/user-service:latest
     ports:
       - "7007:7007"
     volumes:
@@ -182,6 +189,7 @@ services:
     build:
       context: ./
       dockerfile: venue-service/Dockerfile
+    image: ustaadlokk/venue-service:latest
     ports:
       - "7008:7008"
     volumes:
