@@ -16,7 +16,13 @@ const HOST = Config.HOST
 app.use(cors());
 app.use(express.json());
 
-console.log(process.env.DATABASE_URL)
+app.use((err, req, res, next) => {
+  console.error(err);
+  const status = err.statusCode || 500;
+  const msg = err.message || "Internal Server Error";
+  res.status(status).json({ error: msg });
+});
+
 
 // MongoDB Connection
 mongoose.connect(Config.DATABASE.URL, {

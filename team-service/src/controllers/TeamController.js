@@ -15,8 +15,9 @@ const { getUpdateDataByType } = require('../utils/teamMember');
 const { createNotificationPayload } = require('../utils/notifications');
 const { formatedMatches } = require('../utils/formatedMatches');
 const { checkUniquenes } = require('../utils/checkUniquenes');
+const { getTeamProfileData } = require('../helper/teamService');
 
-
+//this api is done
 const registerTeam = async (req, res) => {
     try {
         const formData = req.body;
@@ -34,26 +35,28 @@ const registerTeam = async (req, res) => {
         const team = await teamServices.handleTeamRegisteation(formData, req.user._id)
 
         if (!team) {
-            return res.status(402).json(reply.failure(team?.message));
+            return res.status(402).json(reply.failure(Lang.TEAM_NOT_REGISTERD));
         }
 
         // formating the data to pass in addPlayerInPlayerModal
-        const playerdata = await formatePlayerData(userId, userId, req.user?.userName, team._id, 1, "Captain")
+        const playerdata = formatePlayerData(userId, userId, req.user?.userName, team._id, 1, "Captain")
 
         // here user is assinged as a captain for the registered room 
         const player = await teamServices.addPlayerInPlayerModal(playerdata)
 
         if (!player) {
-            return res.status(402).json(reply.failure(team?.message));
+            return res.status(402).json(reply.failure(Lang.PLAYER_NOT_REGISTERD));
         }
 
         return res.status(201).json(reply.success(Lang.REGISTER_SUCCESS, team._id))
 
     } catch (err) {
+        console.log("Error occuring while registering the team in team-controller :", err)
         return res.status(err.statusCode || 500).json({ error: err.message });
     }
 }
 
+//this api is done
 const handleAddPlayer = async (req, res) => {
     try {
         const _id = req.user._id;
@@ -75,7 +78,9 @@ const handleAddPlayer = async (req, res) => {
         };
 
         const player = await teamServices.addPlayerInPlayerModal(addplayer)
-
+        if (!player) {
+            throw new Error("Failed to add player.");
+        }
 
         const notificationData = {
             receiverId: playerId,           // Who receives this notification
@@ -117,70 +122,58 @@ const getTeam = async (req, res) => {
     }
 }
 
-const manageScore = async (req, res) => {
-    try {
-        // const { e } = req.body
-        // if (e <= 6 || ["Wide", "No Ball", "Byes", "Leg Byes"].includes(e)) {
-        //     ScoreHandler.setRuns(req.body)
-        // }
-        // if (e === "Undo" || e === "Out") {
-        //     ScoreHandler.setUndoOut(req.body)
-        // }
-        // return res.json(reply.success())
-    } catch (error) {
-        return res.status(400).json("error managing score", error)
-    }
-}
-
+// api is done need to check the output in frontend
 const getTeamProfile = async (req, res) => {
-    const _id = req.params._id;
-    const cacheKey = `teamProfile:${_id}`;
-
     try {
+        const _id = req.params._id;
+        const cacheKey = `teamProfile:${_id}`;
+
         // Step 1: Check cache
         const cachedData = await getTeamManagement(cacheKey);
         if (cachedData) {
-            const parsedData = JSON.parse(cachedData);
-            return res.status(200).json(reply.success(Lang.TEAM_FOUND, parsedData));
+            return res.status(200).json(reply.success(Lang.TEAM_FOUND, JSON.parse(cachedData)));
         }
 
-        const team = await teamServices.findTeam(_id)
+        const profile = await getTeamProfileData(teamId);
+        await storeTeamManagement(cacheKey, profile);
+        return res.status(200).json(reply.success(Lang.TEAM_FOUND, profile));
+        // const team = await teamServices.findTeam(_id)
 
-        // simply formating the createddate into string
-        const foundedDate = new Date(team?.createdAt).toDateString()
+        // // simply formating the createddate into string
+        // const foundedDate = new Date(team?.createdAt).toDateString()
 
-        // fetching the members of the team
-        const players = await AddTeamMemberModel.find({ teamId: _id, status: { $lte: 2 } });
+        // // fetching the members of the team
+        // const players = await AddTeamMemberModel.find({ teamId: _id, status: { $lte: 2 } });
 
-        // filtering the userIDs from the playser to get details of user from user service 
-        const fetchPlayers = await fetchPlayersId(players)
+        // // filtering the userIDs from the playser to get details of user from user service 
+        // const fetchPlayers = await fetchPlayersId(players)
 
-        // fetching the data from grpc services
-        const finalResponse = await dataGathering(fetchPlayers)
+        // // fetching the data from grpc services
+        // const finalResponse = await dataGathering(fetchPlayers)
 
-        //formating the data in right formate
-        const enrichedTeamsData = await enrichedTeams(players, finalResponse)
+        // //formating the data in right formate
+        // const enrichedTeamsData = await enrichedTeams(players, finalResponse)
 
-        if (!team) {
-            return res.status(404).json(reply.failure(Lang.TEAM_NOT_FETCHED));
-        }
+        // if (!team) {
+        //     return res.status(404).json(reply.failure(Lang.TEAM_NOT_FETCHED));
+        // }
 
-        // simply formating the data for frontend
-        const teamData = await formateTeamData(team?._id,
-            team?.teamName, team?.games,
-            team?.description, team?.addressOfGround,
-            foundedDate, team?.logo, "", enrichedTeamsData,
-            team?.joinTeam, team?.teamVisibility, team?.memberVisibility,
-            team?.openPositions
-        )
+        // // simply formating the data for frontend
+        // const teamData = await formateTeamData(team?._id,
+        //     team?.teamName, team?.games,
+        //     team?.description, team?.addressOfGround,
+        //     foundedDate, team?.logo, "", enrichedTeamsData,
+        //     team?.joinTeam, team?.teamVisibility, team?.memberVisibility,
+        //     team?.openPositions
+        // )
 
-        // Step 3: Store in Redis
-        await storeTeamManagement(cacheKey, teamData);
+        // // Step 3: Store in Redis
+        // await storeTeamManagement(cacheKey, teamData);
 
-        return res.status(200).json(reply.success(Lang.TEAM_FOUND, teamData));
+        // return res.status(200).json(reply.success(Lang.TEAM_FOUND, teamData));
     } catch (error) {
-        console.log(error)
-        return res.status(500).json({ message: "Error fetching team profile", error });
+        console.log("Error occuring in the getteamprofile in team-controler")
+        return res.status(error.statusCode || 500).json({ message: "Error fetching team profile", error: error.message });
     }
 };
 
@@ -191,8 +184,7 @@ const handleMatchRequest = async (req, res) => {
         const home = await teamServices.checkGameExisting(user, sport)
 
         if (!home) {
-            console.log("here")
-            return res.status(200).json(reply.failure(Lang.TEAM_NOT_FOUND));
+            return res.status(404).json(reply.failure(Lang.TEAM_NOT_FOUND));
         }
 
         const matchData = {
@@ -213,10 +205,8 @@ const handleMatchRequest = async (req, res) => {
 
         const match = await teamServices.ScheduledMatch(matchData)
 
-        console.log()
         if (!match) {
-            console.log("dhjiu")
-            return res.status(404).json(reply.failure(Lang.MATCH_NOT_SCHEDULED));
+            return res.status(500).json(reply.failure(Lang.MATCH_NOT_SCHEDULED));
         }
 
         const notificationData = {
@@ -235,7 +225,7 @@ const handleMatchRequest = async (req, res) => {
 
         await sendMessage("friend-request", notificationData)
 
-        return res.status(200).json(reply.success(Lang.SCHEDULED))
+        return res.status(201).json(reply.success(Lang.SCHEDULED))
 
     } catch (error) {
         console.log("Error scheduling match", error);
@@ -546,40 +536,11 @@ const handleTeamRequest = async (req, res) => {
 //     }
 // }
 
-// const addFriend = async (req, res) => {
-//     try {
-//         const _id = req.user._id;
-//         const { playerId, userName, teamId, type, teamName } = req.body;
 
-//         // const team = await TeamModel.findOne({ teamName });
-//         const addplayer = new AddTeamMemberModel({
-//             userId: _id,
-//             playerId,
-//             userName,
-//             teamId,
-//             status: 1,
-//             commit: "Player"
-//         });
-
-//         const notif = new NotificationModel({
-//             type_id: addplayer._id,
-//             user_id: playerId,
-//             type: "request",
-//             message: `${teamName} added you in team `,
-//             status: 1,
-//         })
-//         notif.save()
-//         addplayer.save()
-//         return res.json(reply.success(Lang.SUCCESS))
-//     } catch (err) {
-//         return res.json(err)
-//     }
-// }
 
 module.exports = {
     getTeam,
     handleTeamRequest,
-    manageScore,
     getTeamProfile,
     handleMatchRequest,
     getTeamsForRequest,

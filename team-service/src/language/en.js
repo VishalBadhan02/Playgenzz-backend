@@ -8,7 +8,9 @@ const Lang = {
     "TEAM_NOT_FOUND": "Team not found",
     "TEAM_NOT_FETCHED": "Team not fetched",
     "MATCH_NOT_SCHEDULED": "Failed scheduling match",
-    "SCHEDULED": "Your challenge has been sent to "
+    "SCHEDULED": "Your challenge has been sent to ",
+    "PLAYER_NOT_REGISTERD": "Failed to register player",
+    "TEAM_NOT_REGISTERD": "Failed to register team",
 
 };
 
